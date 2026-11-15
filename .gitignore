@@ -1,0 +1,14 @@
+node_modules
+.next
+out
+.env
+.env.*
+!.env.example
+.vercel
+*.pem
+*.log
+coverage
+playwright-report
+test-results
+next-env.d.ts
+tsconfig.tsbuildinfo
