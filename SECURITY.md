@@ -7,6 +7,9 @@
 - **Least data out.** Explicit `select` everywhere. No hashes, session tokens or internal flags reach the UI.
 - **Uninformative errors.** Clients get a generic message plus a correlation id; details stay in server logs.
 
+- **Nonce CSP needs dynamic rendering.** The root layout sets `dynamic = "force-dynamic"`. Do not remove it: statically prerendered pages have no nonce and the browser would block all scripts.
+- **Credentials never travel in URLs.** Auth forms use `method="post"` so a failed script load cannot cause a GET submit.
+
 ## Checklist mapping
 | Prompt | Where it is handled |
 |---|---|

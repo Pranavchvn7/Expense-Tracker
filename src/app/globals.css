@@ -33,7 +33,7 @@ h1 { font-size: 1.5rem; margin: 0 0 16px; }
 h2 { font-size: 1.1rem; margin: 24px 0 8px; }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
 .stack { display: grid; gap: 12px; }
-.row { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
+.row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
 label { display: grid; gap: 4px; font-size: 0.9rem; color: var(--muted); }
 input, select, textarea {
   font: inherit; color: var(--text); background: var(--bg);

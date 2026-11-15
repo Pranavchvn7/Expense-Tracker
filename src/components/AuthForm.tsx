@@ -34,7 +34,9 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="card stack" autoComplete="on">
+    // method="post": if JavaScript ever fails to load, the browser must never fall back
+    // to a GET submit that would put the email and password into the URL.
+    <form method="post" onSubmit={onSubmit} className="card stack" autoComplete="on">
       {mode === "signup" && (
         <label>
           Name
