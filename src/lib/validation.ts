@@ -62,6 +62,34 @@ export const shareInput = z.object({
   days: z.coerce.number().int().min(1).max(30).default(7),
 });
 
+export const budgetInput = z.object({
+  categoryId: uuid,
+  amount: amountSchema,
+  currency: currencySchema.default("INR"),
+});
+
+/**
+ * Parse the expense list query string. Each field is validated on its own and falls back
+ * to a safe default, so a tampered URL never throws and never reaches the database unchecked.
+ */
+type SearchParams = Record<string, string | string[] | undefined>;
+const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+
+export function parseListQuery(sp: SearchParams, defaultMonth: string) {
+  const month = monthSchema.safeParse(first(sp.month));
+  const categoryId = uuid.safeParse(first(sp.categoryId));
+  const page = z.coerce.number().int().min(1).max(400).safeParse(first(sp.page));
+  const rawQ = first(sp.q);
+  const q =
+    typeof rawQ === "string" ? rawQ.replace(CONTROL, "").trim().slice(0, 60) : "";
+  return {
+    month: month.success ? month.data : defaultMonth,
+    categoryId: categoryId.success ? categoryId.data : undefined,
+    page: page.success ? page.data : 1,
+    q: q || undefined,
+  };
+}
+
 export const deleteAccountInput = z.object({
   confirm: z.literal("DELETE"),
 });

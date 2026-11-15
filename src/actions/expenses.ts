@@ -5,19 +5,10 @@ import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
 import { notFound, safely, type ActionResult } from "@/lib/errors";
+import { assertOwnCategory } from "@/lib/ownership";
 import { expenseInput, expenseUpdate, formToObject, idInput } from "@/lib/validation";
 
 const MAX_EXPENSES_PER_USER = 50_000;
-
-async function assertOwnCategory(userId: string, categoryId?: string) {
-  if (!categoryId) return;
-  // BOLA guard: the category must belong to the authenticated user.
-  const cat = await prisma.category.findFirst({
-    where: { id: categoryId, userId },
-    select: { id: true },
-  });
-  if (!cat) throw notFound();
-}
 
 export async function createExpense(fd: FormData): Promise<ActionResult> {
   return safely(async () => {
