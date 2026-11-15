@@ -2,9 +2,12 @@
 
 A secure, multi-user expense tracker. Next.js (App Router) · TypeScript · Better Auth · Prisma · Neon Postgres · Zod · Vercel.
 
-## Features (v0.1)
+## Features (v0.2)
 - Email + password accounts (Better Auth, scrypt hashing, 12+ char passwords)
+- Optional email verification and password reset by email (needs a verified sending domain), change-password in Settings, closable registration
 - Expenses with categories, integer minor-unit money, multi-currency
+- Edit, search, category filter and pagination
+- Monthly budgets with progress bars
 - Monthly dashboard totals by category
 - Opt-in, expiring, read-only share links (aggregates only)
 - Account deletion that removes all data
@@ -31,5 +34,7 @@ See [SECURITY.md](./SECURITY.md) for the threat model and the mapping to the 5-p
 > If a secret was ever committed, it stays in git history. Rotate it immediately.
 
 ## Roadmap
-- v0.2: receipt uploads (presigned S3/R2 URLs, MIME allowlist, UUID keys), CSV export
-- v0.3: Playwright e2e suite (page objects, API tests, CI)
+- v0.2.1: authenticator-app 2FA, active sessions list, CSV export
+- v0.3: recurring expenses, income, charts, shared household
+- v0.4: receipt uploads (presigned S3/R2 URLs, MIME allowlist, UUID keys)
+- Playwright e2e suite (page objects, API tests, CI)

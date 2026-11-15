@@ -18,6 +18,25 @@ npm run setup
 ```
 This creates `.env` with a freshly generated `BETTER_AUTH_SECRET`, initialises git on branch `main`, and makes the first commit. `.env` is git-ignored and is never committed.
 
+## Email is optional (v0.2)
+Email verification and "forgot password" by email only switch on when you set BOTH `RESEND_API_KEY` and `EMAIL_FROM`. Without them (the default) the app runs in **no-email mode**:
+- Sign-up signs the user in straight away, with no verification step.
+- There is no "forgot password" email. Signed-in users can change their password under **Settings > Change password**.
+- If someone forgets their password, the owner resets it from their own computer: `npm run reset-password -- their@email.com` (see "Forgotten passwords" below).
+- **Close registration once you and your family have signed up:** set `SIGNUPS_ENABLED="false"` (in `.env` locally and in Vercel). Because email is not verified in this mode, anyone on the internet could otherwise create an account.
+
+To turn email on later: create a free account at resend.com, add and verify a sending domain (DNS records), create an API key, then set `RESEND_API_KEY` and `EMAIL_FROM` (an address on that domain, e.g. `Expense Tracker <no-reply@yourdomain.com>`). Resend's shared test sender only delivers to your own account email, so a verified domain is needed for other users.
+
+## Forgotten passwords (no-email mode)
+Run on your own computer, in an interactive terminal:
+```bash
+# local database
+node --env-file=.env scripts/reset-password.mjs their@email.com
+# production database: set both Neon strings for this one command only, then
+DATABASE_URL="<neon pooled string>" DIRECT_URL="<neon direct string>" node scripts/reset-password.mjs their@email.com
+```
+You type the new password at a hidden prompt. The script signs that user out everywhere. Tell them the new password in person and ask them to change it under Settings.
+
 ## 3. Create the Neon database
 1. Sign in at neon.tech and click **New project**. Pick the region closest to your users (and to your Vercel region).
 2. Open **Connect** on the project dashboard.
@@ -69,6 +88,9 @@ Use conventional commit messages (`feat:`, `fix:`, `chore:`, `docs:`, `test:`) s
 | `DIRECT_URL` | Neon direct string |
 | `BETTER_AUTH_SECRET` | a NEW value: run `openssl rand -base64 32` (do not reuse your local one) |
 | `BETTER_AUTH_URL` | your final `https://` URL, no trailing slash |
+| `SIGNUPS_ENABLED` | `true` while registering accounts, then `false` |
+| `RESEND_API_KEY` | optional: only if you turn email on (set together with `EMAIL_FROM`) |
+| `EMAIL_FROM` | optional: verified sender address |
 
 4. Click **Deploy**. The first deploy gives you a URL like `https://expense-tracker-xxxx.vercel.app`. If it differs from the `BETTER_AUTH_URL` you entered, update the variable and redeploy.
 
