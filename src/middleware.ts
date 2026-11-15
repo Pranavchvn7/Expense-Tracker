@@ -8,6 +8,9 @@ import { NextResponse, type NextRequest } from "next/server";
 export function middleware(req: NextRequest) {
   const nonce = btoa(crypto.randomUUID());
   const isDev = process.env.NODE_ENV !== "production";
+  // Only force https upgrades when the site is actually served over https; on a local
+  // http://localhost production build it would try to load assets over https and fail.
+  const secureOrigin = process.env.BETTER_AUTH_URL?.startsWith("https://") ?? false;
 
   const csp = [
     "default-src 'self'",
@@ -20,7 +23,7 @@ export function middleware(req: NextRequest) {
     "base-uri 'none'",
     "form-action 'self'",
     "frame-ancestors 'none'",
-    "upgrade-insecure-requests",
+    ...(secureOrigin ? ["upgrade-insecure-requests"] : []),
   ].join("; ");
 
   const { pathname } = req.nextUrl;
