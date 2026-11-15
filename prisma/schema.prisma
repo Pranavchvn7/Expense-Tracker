@@ -25,6 +25,7 @@ model User {
   expenses      Expense[]
   categories    Category[]
   shares        SharedReport[]
+  budgets       Budget[]
 
   @@map("user")
 }
@@ -95,6 +96,7 @@ model Category {
   name      String    @db.VarChar(40)
   createdAt DateTime  @default(now())
   expenses  Expense[]
+  budgets   Budget[]
 
   @@unique([userId, name])
   @@index([userId])
@@ -117,6 +119,22 @@ model Expense {
 
   @@index([userId, spentOn])
   @@index([userId, categoryId])
+}
+
+// Monthly budget for one category in one currency (applies to every month).
+model Budget {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  amountMinor Int
+  currency    String   @db.VarChar(3)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, categoryId, currency])
+  @@index([userId])
 }
 
 // Opt-in, read-only monthly summary link. The id is an unguessable UUIDv4.
