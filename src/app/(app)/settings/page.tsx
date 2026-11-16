@@ -1,5 +1,8 @@
 import { ActionForm } from "@/components/ActionForm";
 import { ChangePasswordForm } from "@/components/ChangePasswordForm";
+import { TwoFactorSetup } from "@/components/TwoFactorSetup";
+import { revokeSession, revokeOtherSessions } from "@/actions/sessions";
+import { getSecurityInfo, listSessions } from "@/lib/account-queries";
 import { createCategory, deleteCategory } from "@/actions/categories";
 import { setBudget, deleteBudget } from "@/actions/budgets";
 import { createShare, revokeShare } from "@/actions/share";
@@ -8,10 +11,12 @@ import { listBudgets, listCategories, listShares } from "@/lib/queries";
 import { currentMonth, formatMoney } from "@/lib/money";
 
 export default async function SettingsPage() {
-  const [cats, shares, budgets] = await Promise.all([
+  const [cats, shares, budgets, security, sessions] = await Promise.all([
     listCategories(),
     listShares(),
     listBudgets(),
+    getSecurityInfo(),
+    listSessions(),
   ]);
 
   return (
@@ -20,6 +25,50 @@ export default async function SettingsPage() {
 
       <h2>Change password</h2>
       <ChangePasswordForm />
+
+      <h2>Two-factor authentication</h2>
+      <p className="muted">
+        Adds a 6-digit code from an authenticator app (Google Authenticator, Microsoft
+        Authenticator, Authy, 1Password) to sign-in, so a stolen password alone is not enough.
+      </p>
+      <TwoFactorSetup enabled={security.twoFactorEnabled} />
+
+      <h2>Signed-in devices</h2>
+      <p className="muted">
+        If you do not recognise a device, sign it out and change your password.
+      </p>
+      <ul className="devices">
+        {sessions.map((s) => (
+          <li key={s.ref}>
+            {s.current ? (
+              <strong>This device</strong>
+            ) : (
+              <ActionForm
+                action={revokeSession}
+                submitLabel="Sign out"
+                danger
+                className="row"
+                confirmMessage="Sign out this device?"
+              >
+                <input type="hidden" name="ref" value={s.ref} />
+                <strong>Another device</strong>
+              </ActionForm>
+            )}
+            <div className="muted">{s.device}</div>
+            <div className="muted">
+              IP {s.ipAddress} · signed in {s.createdAt.toISOString().slice(0, 16).replace("T", " ")} UTC
+            </div>
+          </li>
+        ))}
+      </ul>
+      {sessions.length > 1 && (
+        <ActionForm
+          action={revokeOtherSessions}
+          submitLabel="Sign out all other devices"
+          danger
+          confirmMessage="Sign out every device except this one?"
+        />
+      )}
 
       <h2>Categories</h2>
       <ActionForm action={createCategory} submitLabel="Add" className="card row" resetOnSuccess>
