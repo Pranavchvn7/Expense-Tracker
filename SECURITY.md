@@ -27,6 +27,13 @@
 | 4. Deep audit | Auth on every action; no IDOR; server-side money parsing (no client totals); XSS-safe rendering (no `dangerouslySetInnerHTML`); no payments or uploads in v0.1 |
 | 5. Attacker's view | UUIDv4 ids; ownership checks; per-user caps (expenses, categories, shares); rate limits on signup, actions, shares; no admin roles; no exposed docs or debug routes |
 
+## Accepted dependency advisories
+CI runs `audit-ci` and fails on any high or critical advisory that is not listed in `audit-ci.jsonc`. Two are accepted for now, each with its reason written next to it in that file:
+- **postcss (inside next):** build-time only, runs on this repo's own CSS, never on user input. Fix = Next 16 (breaking).
+- **zod:** the flaw needs a client-supplied array/set/map; no schema here accepts one, and request bodies are capped at 100 kb. Fix = zod 4 (breaking).
+
+Both upgrades are planned as their own branches with the full build and, later, the e2e suite to catch breakage. Remove the allowlist entry when each upgrade lands.
+
 ## Known limits / to do before real launch
 - Email verification and password reset by email need a mail provider with a verified domain; until then the app runs in no-email mode (see above).
 - Better Auth rate limiting keys on `x-forwarded-for`; Vercel sets this, but verify in your deployment.

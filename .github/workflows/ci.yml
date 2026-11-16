@@ -26,7 +26,8 @@ jobs:
           DIRECT_URL: postgresql://user:pass@localhost:5432/db?sslmode=require
       - run: npm run typecheck
       - run: npm run lint
-      - run: npm audit --audit-level=high
+      # Fails on high/critical advisories except the reviewed ones in audit-ci.jsonc.
+      - run: npx --yes audit-ci@^7 --config audit-ci.jsonc
       - name: Secret scan
         uses: gitleaks/gitleaks-action@v2
         env:

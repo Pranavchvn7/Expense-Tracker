@@ -17,8 +17,12 @@ const schema = z.object({
   RESEND_API_KEY: z.preprocess(blankToUndefined, z.string().min(10).optional()),
   EMAIL_FROM: z.preprocess(blankToUndefined, z.string().min(5).max(200).optional()),
   // Set to "false" once everyone who needs an account has registered.
+  // Forgiving about case and spaces ("True", " false ") so a typo in Vercel cannot stop a build.
   SIGNUPS_ENABLED: z
-    .preprocess(blankToUndefined, z.enum(["true", "false"]).default("true"))
+    .preprocess(
+      (v) => (typeof v === "string" ? blankToUndefined(v.trim().toLowerCase()) : v),
+      z.enum(["true", "false"]).default("true"),
+    )
     .transform((v) => v === "true"),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
@@ -33,7 +37,12 @@ if (!parsed.success) {
 export const env = parsed.data;
 
 if (Boolean(env.RESEND_API_KEY) !== Boolean(env.EMAIL_FROM)) {
-  throw new Error("Set both RESEND_API_KEY and EMAIL_FROM, or neither");
+  // Names only, never values.
+  throw new Error(
+    `Set both RESEND_API_KEY and EMAIL_FROM, or neither (RESEND_API_KEY is ${
+      env.RESEND_API_KEY ? "set" : "missing"
+    }, EMAIL_FROM is ${env.EMAIL_FROM ? "set" : "missing"})`,
+  );
 }
 
 /** True only when a mail provider is fully configured. Gates every email-based feature. */
