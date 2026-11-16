@@ -2,6 +2,8 @@
 
 Follow the steps in order. Every command is for a terminal opened in this project folder.
 
+> **Staging, branch protection and the daily workflow are in [ENVIRONMENTS.md](./ENVIRONMENTS.md).** Set that up once production works. From then on, your local `.env` should point at the **staging** database, not production.
+
 ## Prerequisites
 - Node.js 20.11 or newer (`node -v`)
 - Git (`git --version`)
@@ -26,6 +28,13 @@ Email verification and "forgot password" by email only switch on when you set BO
 - **Close registration once you and your family have signed up:** set `SIGNUPS_ENABLED="false"` (in `.env` locally and in Vercel). Because email is not verified in this mode, anyone on the internet could otherwise create an account.
 
 To turn email on later: create a free account at resend.com, add and verify a sending domain (DNS records), create an API key, then set `RESEND_API_KEY` and `EMAIL_FROM` (an address on that domain, e.g. `Expense Tracker <no-reply@yourdomain.com>`). Resend's shared test sender only delivers to your own account email, so a verified domain is needed for other users.
+
+## Lost authenticator and backup codes
+If someone turned on 2FA and lost both their phone and their backup codes, the owner can switch it off for them (only after you are sure it really is them):
+```bash
+node --env-file=.env scripts/disable-2fa.mjs their@email.com
+```
+For the production database, set the two Neon strings for that one command, as with the password reset below. It asks you to type YES, signs the user out everywhere, and they can set 2FA up again.
 
 ## Forgotten passwords (no-email mode)
 Run on your own computer, in an interactive terminal:
@@ -94,10 +103,10 @@ Use conventional commit messages (`feat:`, `fix:`, `chore:`, `docs:`, `test:`) s
 
 4. Click **Deploy**. The first deploy gives you a URL like `https://expense-tracker-xxxx.vercel.app`. If it differs from the `BETTER_AUTH_URL` you entered, update the variable and redeploy.
 
-### Branch and pull-request deployments are switched off
-Vercel builds every pushed branch as a **Preview** deployment, and Preview has its own environment variables. Without them the build fails with `Invalid environment configuration: DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL`. `vercel.json` makes Vercel skip every branch except `main` (skipped builds show as "Canceled", not "Failed"); GitHub Actions CI still checks every pull request.
-- Before relying on this, confirm **Settings > Git > Production Branch** in Vercel is `main`. If it is a different name, change `main` in `vercel.json`, or production builds would be skipped.
-- If you ever want working previews, give them their own Neon branch, their own `BETTER_AUTH_SECRET`, and Preview-scoped variables. Never point previews at the production database. Login also fails on preview URLs unless `BETTER_AUTH_URL` matches each preview's address, so previews are of limited use for this app.
+### Only `main` and `staging` are built
+Vercel builds every pushed branch as a **Preview** deployment, and Preview has its own environment variables. Without them the build fails with `Invalid environment configuration: DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL`. `vercel.json` makes Vercel skip every branch except `main` (production) and `staging` (see ENVIRONMENTS.md); skipped builds show as "Canceled", not "Failed". GitHub Actions CI still checks every pull request.
+- Confirm **Settings > Git > Production Branch** in Vercel is `main`. If it is a different name, change it in `vercel.json`, or production builds would be skipped.
+- Never point Preview/staging at the production database.
 
 ## 8. Apply migrations to the production database
 Run once from your machine, pointing at the production Neon database (use a temporary shell variable, do not put it in a file):

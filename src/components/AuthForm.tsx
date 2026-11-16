@@ -58,6 +58,13 @@ export function AuthForm({
       );
       return;
     }
+    // Password was right but the account has 2FA: no session yet, ask for the code first.
+    const needsSecondFactor =
+      (res.data as { twoFactorRedirect?: boolean } | null)?.twoFactorRedirect === true;
+    if (needsSecondFactor) {
+      router.replace("/two-factor");
+      return;
+    }
     router.replace("/dashboard");
     router.refresh();
   }

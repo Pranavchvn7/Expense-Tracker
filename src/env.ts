@@ -7,11 +7,22 @@ import { z } from "zod";
 // Treat an empty value (e.g. `RESEND_API_KEY=""` copied from .env.example) as "not set".
 const blankToUndefined = (v: unknown) => (typeof v === "string" && v.trim() === "" ? undefined : v);
 
+// Trim spaces and trailing slashes so a copy-paste slip cannot break a deployment.
+// The scheme (https://) must still be written out explicitly.
+const normalizeOrigin = (v: unknown) =>
+  typeof v === "string" ? blankToUndefined(v.trim().replace(/\/+$/, "")) : v;
+
 const schema = z.object({
   DATABASE_URL: z.string().url().startsWith("postgres"),
   DIRECT_URL: z.string().url().startsWith("postgres").optional(),
   BETTER_AUTH_SECRET: z.string().min(32),
-  BETTER_AUTH_URL: z.string().url().refine((u) => !u.endsWith("/"), "no trailing slash"),
+  BETTER_AUTH_URL: z.preprocess(
+    normalizeOrigin,
+    z
+      .string({ required_error: "is missing or empty for this environment" })
+      .url("must be a full URL such as https://your-app.vercel.app")
+      .refine((u) => /^https?:\/\//i.test(u), "must start with https://"),
+  ),
   // Optional transactional email (Resend). Set BOTH to turn on email verification and
   // password reset by email; leave both empty to run without email.
   RESEND_API_KEY: z.preprocess(blankToUndefined, z.string().min(10).optional()),
@@ -24,14 +35,25 @@ const schema = z.object({
       z.enum(["true", "false"]).default("true"),
     )
     .transform((v) => v === "true"),
+  // "staging" shows a visible banner on every page so staging is never mistaken for production.
+  APP_ENV: z.preprocess(
+    (v) => (typeof v === "string" ? blankToUndefined(v.trim().toLowerCase()) : v),
+    z.enum(["production", "staging"]).default("production"),
+  ),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 
 const parsed = schema.safeParse(process.env);
 if (!parsed.success) {
-  // Log only the variable names, never values.
-  const names = parsed.error.issues.map((i) => i.path.join(".")).join(", ");
-  throw new Error(`Invalid environment configuration: ${names}`);
+  // Say WHAT is wrong with each variable, but never print a value. Zod's enum message quotes
+  // the received value, so that one case gets a fixed text.
+  const problems = parsed.error.issues
+    .map((i) => {
+      const reason = i.code === "invalid_enum_value" ? "is not an allowed value" : i.message;
+      return `${i.path.join(".")} (${reason})`;
+    })
+    .join("; ");
+  throw new Error(`Invalid environment configuration: ${problems}`);
 }
 
 export const env = parsed.data;
@@ -62,4 +84,22 @@ if (env.NODE_ENV === "production" && !isLocalOrigin) {
   if (!/sslmode=require|sslmode=verify-full/.test(env.DATABASE_URL)) {
     throw new Error("DATABASE_URL must enforce TLS (sslmode=require) in production");
   }
+}
+
+// Deployment guards. Only active on Vercel, where VERCEL_ENV is set ("production" | "preview"),
+// so local builds are unaffected. They make mixing up staging and production fail loudly at
+// build time, even if someone picks the wrong option in Vercel's Redeploy dialog.
+const vercelEnv = process.env.VERCEL_ENV;
+const gitBranch = process.env.VERCEL_GIT_COMMIT_REF;
+if (vercelEnv === "production") {
+  if (env.APP_ENV === "staging") {
+    throw new Error("APP_ENV=staging on a production deployment: wrong variables for this environment");
+  }
+  // Skipped if Vercel does not expose the branch name; then vercel.json is the only branch gate.
+  if (gitBranch && gitBranch !== "main") {
+    throw new Error("Production deployments must be built from the main branch");
+  }
+}
+if (vercelEnv === "preview" && env.APP_ENV !== "staging") {
+  throw new Error("Preview deployments must set APP_ENV=staging (are production variables in use?)");
 }

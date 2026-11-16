@@ -90,6 +90,8 @@ export function parseListQuery(sp: SearchParams, defaultMonth: string) {
   };
 }
 
+export const sessionRefInput = z.object({ ref: z.string().regex(/^[a-f0-9]{24}$/) });
+
 export const deleteAccountInput = z.object({
   confirm: z.literal("DELETE"),
 });

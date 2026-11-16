@@ -7,7 +7,7 @@ import { requireSession } from "@/lib/session";
 
 export const PAGE_SIZE = 25;
 
-function monthRange(month: string) {
+export function monthRange(month: string) {
   const start = new Date(`${month}-01T00:00:00Z`);
   const end = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 1));
   return { start, end };
