@@ -3,6 +3,8 @@ import type { NextConfig } from "next";
 const config: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  // Linting is CI's job (npm run lint). A lint rule must never be able to block a deployment.
+  eslint: { ignoreDuringBuilds: true },
   experimental: {
     serverActions: {
       // Hard cap on action payload size (defense against oversized bodies).

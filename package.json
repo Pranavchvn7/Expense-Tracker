@@ -1,14 +1,15 @@
 {
   "name": "expense-tracker",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "engines": { "node": ">=20.11" },
   "scripts": {
     "setup": "node scripts/setup.mjs",
+    "reset-password": "node scripts/reset-password.mjs",
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
@@ -24,6 +25,7 @@
     "zod": "^3.25.0"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.0.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

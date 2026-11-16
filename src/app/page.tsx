@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { env } from "@/env";
 
 export default function Home() {
   return (
@@ -7,7 +8,9 @@ export default function Home() {
       <p className="muted">Private, secure expense tracking for you and your family.</p>
       <div className="row">
         <Link className="btn" href="/login">Sign in</Link>
-        <Link className="btn ghost" href="/signup">Create account</Link>
+        {env.SIGNUPS_ENABLED && (
+          <Link className="btn ghost" href="/signup">Create account</Link>
+        )}
       </div>
     </main>
   );

@@ -4,7 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 
-export function AuthForm({ mode }: { mode: "login" | "signup" }) {
+export function AuthForm({
+  mode,
+  emailEnabled,
+}: {
+  mode: "login" | "signup";
+  emailEnabled: boolean;
+}) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -18,15 +24,38 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     const password = String(fd.get("password") ?? "");
     const name = String(fd.get("name") ?? "").trim().slice(0, 60);
 
-    const res =
-      mode === "signup"
-        ? await authClient.signUp.email({ email, password, name: name || "User" })
-        : await authClient.signIn.email({ email, password });
+    if (mode === "signup") {
+      const res = await authClient.signUp.email({
+        email,
+        password,
+        name: name || "User",
+        callbackURL: "/dashboard",
+      });
+      setPending(false);
+      if (res.error) {
+        // Generic on purpose: no user enumeration, no server detail.
+        setError("Could not create account");
+        return;
+      }
+      if (emailEnabled) {
+        router.replace("/verify-email?sent=1");
+      } else {
+        // No email verification configured: signing up also signs you in.
+        router.replace("/dashboard");
+        router.refresh();
+      }
+      return;
+    }
 
+    const res = await authClient.signIn.email({ email, password, callbackURL: "/dashboard" });
     setPending(false);
     if (res.error) {
-      // Generic on purpose: no user enumeration, no server detail.
-      setError(mode === "login" ? "Invalid email or password" : "Could not create account");
+      // 403 only happens after the password was correct, so this reveals nothing to a guesser.
+      setError(
+        res.error.status === 403
+          ? "Please verify your email first. We have sent you a new link."
+          : "Invalid email or password",
+      );
       return;
     }
     router.replace("/dashboard");
