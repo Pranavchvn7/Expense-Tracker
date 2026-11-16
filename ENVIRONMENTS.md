@@ -42,11 +42,15 @@ Rules that keep this safe:
    | `DATABASE_URL` | staging pooled string |
    | `DIRECT_URL` | staging direct string |
    | `BETTER_AUTH_SECRET` | a NEW secret: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` |
-   | `BETTER_AUTH_URL` | the staging `https://` address from step 2 |
+   | `BETTER_AUTH_URL` | the staging address from step 2, **including `https://`**, e.g. `https://expense-tracker-git-staging-yourname.vercel.app`. Copy it from Deployments, the staging deployment, Domains. No spaces; a trailing `/` is tolerated. |
    | `SIGNUPS_ENABLED` | `true` |
    | `APP_ENV` | `staging` |
 4. **Keep staging private.** **Settings, Deployment Protection**: make sure **Vercel Authentication** is on for preview deployments, so only people signed in to your Vercel account can open staging. If it cannot be enabled on your plan, set staging's `SIGNUPS_ENABLED` to `false` and create test users by hand, or do not leave staging running.
 5. **First deploy** is done by pushing a branch to `staging` (see Part 3). `vercel.json` makes Vercel build only `main` and `staging`.
+   - With option B the first staging build fails until `BETTER_AUTH_URL` is set to the staging address. That is expected: set the variable (Preview, branch `staging`), then open the failed deployment, click **Redeploy**, and leave it as a Preview deployment.
+   - Never use **Promote to Production** on a staging deployment, and never tick Production on a staging variable.
+   - **Never choose "Production" in the Redeploy dialog for a staging deployment.** That rebuilds staging code with your PRODUCTION variables (production database, production secret) and can publish it on your live site. If a staging build fails, read its log, fix the Preview variables, then rebuild by pushing an empty commit to `staging` (see Part 3).
+   - As a safety net the app now refuses to build when a production deployment is not from `main` or uses `APP_ENV=staging`, or when a preview deployment lacks `APP_ENV=staging`.
 6. **Check it:** the page shows a red **STAGING** banner, you can sign up, and the new user appears in the Neon **staging** project, not production.
 
 ## Part 3: daily workflow
@@ -65,6 +69,10 @@ npx prisma migrate deploy
 git push --force-with-lease origin feat/my-change:staging
 #    First time ever, when the branch does not exist yet:
 #    git push origin feat/my-change:staging
+#    If Vercel shows no deployment, the same commit was probably already pushed to another
+#    branch. Push a new commit instead:
+#    git commit --allow-empty -m "chore: trigger staging deploy"
+#    git push origin HEAD:staging
 
 # 3. Test on the staging address.
 
@@ -111,7 +119,20 @@ And confirm **Settings, Code security** has Dependabot alerts, Dependabot securi
 
 After this, nobody (including you) can push straight to `main`, so every change goes through a pull request with passing CI.
 
+## Check that staging is isolated from production
+Do this once after the first staging deployment, and again if you ever change variables.
+1. Vercel, **Deployments**: the staging deployment's environment must say **Preview**, its address must not be your production address, and your production deployment must still be the one marked **Current**.
+2. The red **STAGING** banner shows on every page (this only works if the Preview `APP_ENV` variable applied).
+3. Create a test user on staging. In Neon, that user must appear in the **staging** project's `user` table and must **not** appear in the production project.
+4. Production still works: sign in on the production address, and its `BETTER_AUTH_URL` variable is still the production address.
+5. **Settings, Environment Variables**: each staging variable is ticked for Preview only (branch `staging`), and staging `DATABASE_URL` points at a different Neon host than production's.
+
+If any check fails, stop using staging, tell me what you saw, and rotate anything that may have been exposed.
+
 ## If something goes wrong
+- **No Vercel deployment after pushing to `staging`**: the same commit was already pushed elsewhere. Push a new commit (see Part 3).
+- **First staging build fails with `Invalid environment configuration: NAME (reason)`**: the reason says what is wrong (for example "is missing or empty for this environment" means the variable is not applied to the `staging` branch; "must be a full URL" or "must start with https://" means the value is wrong). Fix the Preview variable, then rebuild by pushing an empty commit to `staging`.
+- **A variable change has no effect**: Vercel applies variables only to NEW deployments, and a branch-specific Preview variable applies only when its branch field is exactly `staging`.
 
 - **Staging build fails with `Invalid environment configuration: ...`**: a staging variable is missing or not scoped to the `staging` branch. The message lists names only.
 - **Staging login loops**: `BETTER_AUTH_URL` does not exactly match the address in the browser bar.

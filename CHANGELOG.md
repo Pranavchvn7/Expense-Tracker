@@ -10,12 +10,16 @@
 
 ### Security
 - 2FA code guessing rate limited; session references are opaque HMACs; exports are rate limited and capped
+- Environment guards: on Vercel the build fails if a production deployment is not from `main` or has `APP_ENV=staging`, or if a preview deployment does not have `APP_ENV=staging` (prevents staging running on production variables)
 
 ### Operations
 - New migration: `TwoFactor` table and `twoFactorEnabled` on `user`
 - New optional env var: `APP_ENV`
 - New dependency: `qrcode` (and `@types/qrcode`); run `npm install` and commit `package-lock.json`
 - Local `.env` should now point at the staging database
+
+### Fixed
+- Environment errors now say what is wrong with each variable (missing, not a URL, wrong scheme) without ever printing a value; `BETTER_AUTH_URL` tolerates surrounding spaces and trailing slashes
 
 ## 0.2.0
 ### Added

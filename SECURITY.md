@@ -32,6 +32,7 @@
 - **Signed-in devices.** The page lists only the caller's own sessions and shows an opaque HMAC reference, never the session id or token. Revoking looks the reference up among the caller's own sessions, so another user's session can never be targeted; the current session cannot be revoked from the list.
 - **CSV export.** Authenticated, `userId` in the filter, 10 exports an hour, 20,000-row cap, `Cache-Control: private, no-store`, filename built only from validated input. Text cells that start with `=`, `+`, `-`, `@`, tab or CR get a leading apostrophe so spreadsheets cannot run them as formulas (CSV injection).
 - **Environment separation.** Production, staging and local use different Neon projects and different secrets; staging shows a banner and sits behind Vercel Authentication. See ENVIRONMENTS.md.
+- **Environment guards.** `src/env.ts` refuses to start a production deployment that is not built from `main` or carries `APP_ENV=staging`, and a preview deployment without `APP_ENV=staging`. This stops staging code from running on production variables (for example by choosing Production in Vercel's Redeploy dialog).
 - **Branch protection.** `main` accepts changes only through pull requests with passing CI; force pushes and deletion are blocked.
 
 ## Accepted dependency advisories
