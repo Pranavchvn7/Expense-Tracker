@@ -77,6 +77,11 @@ export default async function ExpensesPage({
       </form>
 
       <h2>{month}</h2>
+      {/* Plain <a>, not <Link>: prefetching a download would count against the export limit. */}
+      <p className="row">
+        <a className="btn ghost" href={`/expenses/export?month=${month}`}>Download CSV (this month)</a>
+        <a className="btn ghost" href="/expenses/export?all=1">Download CSV (everything, latest 20,000)</a>
+      </p>
       {totals.length > 0 && (
         <p className="muted">
           Total for this view:{" "}
