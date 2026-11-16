@@ -17,6 +17,7 @@ model User {
   email         String    @unique
   emailVerified Boolean   @default(false)
   image         String?
+  twoFactorEnabled Boolean? @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -26,6 +27,7 @@ model User {
   categories    Category[]
   shares        SharedReport[]
   budgets       Budget[]
+  twoFactor     TwoFactor[]
 
   @@map("user")
 }
@@ -75,6 +77,21 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+// Authenticator-app 2FA (Better Auth twoFactor plugin). `secret` and `backupCodes` are
+// stored encrypted by the plugin and are never selected by any app query.
+model TwoFactor {
+  id          String   @id
+  secret      String
+  backupCodes String
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Newer plugin versions track whether the first code was confirmed. Harmless if unused.
+  verified    Boolean? @default(true)
+
+  @@index([userId])
+  @@map("twoFactor")
 }
 
 // Better Auth's built-in DB-backed rate limiter storage
