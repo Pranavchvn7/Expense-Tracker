@@ -94,6 +94,11 @@ Use conventional commit messages (`feat:`, `fix:`, `chore:`, `docs:`, `test:`) s
 
 4. Click **Deploy**. The first deploy gives you a URL like `https://expense-tracker-xxxx.vercel.app`. If it differs from the `BETTER_AUTH_URL` you entered, update the variable and redeploy.
 
+### Branch and pull-request deployments are switched off
+Vercel builds every pushed branch as a **Preview** deployment, and Preview has its own environment variables. Without them the build fails with `Invalid environment configuration: DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL`. `vercel.json` makes Vercel skip every branch except `main` (skipped builds show as "Canceled", not "Failed"); GitHub Actions CI still checks every pull request.
+- Before relying on this, confirm **Settings > Git > Production Branch** in Vercel is `main`. If it is a different name, change `main` in `vercel.json`, or production builds would be skipped.
+- If you ever want working previews, give them their own Neon branch, their own `BETTER_AUTH_SECRET`, and Preview-scoped variables. Never point previews at the production database. Login also fails on preview URLs unless `BETTER_AUTH_URL` matches each preview's address, so previews are of limited use for this app.
+
 ## 8. Apply migrations to the production database
 Run once from your machine, pointing at the production Neon database (use a temporary shell variable, do not put it in a file):
 ```bash
