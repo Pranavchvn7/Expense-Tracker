@@ -19,6 +19,8 @@
 - Local `.env` should now point at the staging database
 
 ### Fixed
+- 2FA sign-in failed with `SCHEMA_MISMATCH`: Better Auth 1.7 needs `failedVerificationCount` and `lockedUntil` on the `twoFactor` table (new migration `add_two_factor_lockout`)
+- `prisma` (CLI) and `@prisma/client` had drifted apart (6.12.0 vs 6.19.3) after `npm audit fix`; both are now pinned to 6.19.3
 - Environment errors now say what is wrong with each variable (missing, not a URL, wrong scheme) without ever printing a value; `BETTER_AUTH_URL` tolerates surrounding spaces and trailing slashes
 
 ## 0.2.0

@@ -36,7 +36,8 @@
 - **Branch protection.** `main` accepts changes only through pull requests with passing CI; force pushes and deletion are blocked.
 
 ## Accepted dependency advisories
-CI runs `audit-ci` and fails on any high or critical advisory that is not listed in `audit-ci.jsonc`. Two are accepted for now, each with its reason written next to it in that file:
+CI runs `audit-ci` and fails on any high or critical advisory that is not listed in `audit-ci.jsonc`. Three are accepted for now, each with its reason written next to it in that file:
+- **deepmerge-ts (inside the `prisma` CLI, dev only):** never runs in the deployed app or on user input. `prisma` and `@prisma/client` are pinned to the same version (6.19.3) because a mismatched pair is a bigger risk than this advisory. Fix = Prisma 7 (breaking).
 - **postcss (inside next):** build-time only, runs on this repo's own CSS, never on user input. Fix = Next 16 (breaking).
 - **zod:** the flaw needs a client-supplied array/set/map; no schema here accepts one, and request bodies are capped at 100 kb. Fix = zod 4 (breaking).
 

@@ -89,6 +89,10 @@ model TwoFactor {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   // Newer plugin versions track whether the first code was confirmed. Harmless if unused.
   verified    Boolean? @default(true)
+  // Account lockout after repeated wrong codes (Better Auth 1.7+). Nullable with defaults
+  // so the plugin can write or omit them.
+  failedVerificationCount Int?      @default(0)
+  lockedUntil             DateTime?
 
   @@index([userId])
   @@map("twoFactor")
