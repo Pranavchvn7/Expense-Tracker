@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.2.1
+### Added
+- Authenticator-app two-factor authentication (QR setup, backup codes, second sign-in step, turn off, new backup codes)
+- Signed-in devices list with per-device and "all other devices" sign-out
+- CSV export (this month, or everything up to the latest 20,000 rows) with spreadsheet formula-injection protection
+- Staging environment support: `APP_ENV=staging` banner, `vercel.json` builds `main` and `staging`, `ENVIRONMENTS.md` (staging database, Vercel variables, daily workflow, branch protection)
+- `scripts/disable-2fa.mjs` owner-only recovery
+
+### Security
+- 2FA code guessing rate limited; session references are opaque HMACs; exports are rate limited and capped
+
+### Operations
+- New migration: `TwoFactor` table and `twoFactorEnabled` on `user`
+- New optional env var: `APP_ENV`
+- New dependency: `qrcode` (and `@types/qrcode`); run `npm install` and commit `package-lock.json`
+- Local `.env` should now point at the staging database
+
 ## 0.2.0
 ### Added
 - Edit expenses (previously only add and delete)

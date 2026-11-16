@@ -28,13 +28,16 @@ Create a project at neon.tech. Use the **pooled** string for `DATABASE_URL` and 
 1. Import the repo. 2. Add `DATABASE_URL`, `DIRECT_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` (your `https://` domain) as environment variables.
 3. Run `npx prisma migrate deploy` against Neon once (or add it to a deploy step).
 
+## Environments and workflow
+Local, staging and production use separate databases and secrets. See [ENVIRONMENTS.md](./ENVIRONMENTS.md).
+
 ## Security
 See [SECURITY.md](./SECURITY.md) for the threat model and the mapping to the 5-prompt launch checklist.
 
 > If a secret was ever committed, it stays in git history. Rotate it immediately.
 
 ## Roadmap
-- v0.2.1: authenticator-app 2FA, active sessions list, CSV export
+- v0.2.1 (done): authenticator-app 2FA, signed-in devices list, CSV export, staging environment
 - v0.3: recurring expenses, income, charts, shared household
 - v0.4: receipt uploads (presigned S3/R2 URLs, MIME allowlist, UUID keys)
 - Playwright e2e suite (page objects, API tests, CI)

@@ -27,6 +27,13 @@
 | 4. Deep audit | Auth on every action; no IDOR; server-side money parsing (no client totals); XSS-safe rendering (no `dangerouslySetInnerHTML`); no payments or uploads in v0.1 |
 | 5. Attacker's view | UUIDv4 ids; ownership checks; per-user caps (expenses, categories, shares); rate limits on signup, actions, shares; no admin roles; no exposed docs or debug routes |
 
+## v0.2.1 additions
+- **2FA (authenticator app).** Better Auth `twoFactor` plugin; enabling needs the password, and the first code must be confirmed before 2FA turns on. Backup codes are shown once, only after that confirmation. Code guessing is limited to 5 tries a minute per IP. The secret and backup codes are stored encrypted by the plugin and no app query selects them. Lost-device recovery is owner-only (`scripts/disable-2fa.mjs`), not a web endpoint.
+- **Signed-in devices.** The page lists only the caller's own sessions and shows an opaque HMAC reference, never the session id or token. Revoking looks the reference up among the caller's own sessions, so another user's session can never be targeted; the current session cannot be revoked from the list.
+- **CSV export.** Authenticated, `userId` in the filter, 10 exports an hour, 20,000-row cap, `Cache-Control: private, no-store`, filename built only from validated input. Text cells that start with `=`, `+`, `-`, `@`, tab or CR get a leading apostrophe so spreadsheets cannot run them as formulas (CSV injection).
+- **Environment separation.** Production, staging and local use different Neon projects and different secrets; staging shows a banner and sits behind Vercel Authentication. See ENVIRONMENTS.md.
+- **Branch protection.** `main` accepts changes only through pull requests with passing CI; force pushes and deletion are blocked.
+
 ## Accepted dependency advisories
 CI runs `audit-ci` and fails on any high or critical advisory that is not listed in `audit-ci.jsonc`. Two are accepted for now, each with its reason written next to it in that file:
 - **postcss (inside next):** build-time only, runs on this repo's own CSS, never on user input. Fix = Next 16 (breaking).
