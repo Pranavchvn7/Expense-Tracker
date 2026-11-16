@@ -2,6 +2,7 @@ import "server-only";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
+import { twoFactor } from "better-auth/plugins";
 import { after } from "next/server";
 import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
@@ -100,6 +101,12 @@ export const auth = betterAuth({
       "/send-verification-email": { window: 3600, max: 3 },
       "/verify-email": { window: 3600, max: 20 },
       "/change-password": { window: 3600, max: 5 },
+      // 6-digit codes: keep guessing very slow (5 tries a minute per IP).
+      "/two-factor/verify-totp": { window: 60, max: 5 },
+      "/two-factor/verify-backup-code": { window: 60, max: 5 },
+      "/two-factor/enable": { window: 3600, max: 10 },
+      "/two-factor/disable": { window: 3600, max: 10 },
+      "/two-factor/generate-backup-codes": { window: 3600, max: 10 },
     },
   },
   advanced: {
@@ -111,5 +118,5 @@ export const auth = betterAuth({
     },
     ipAddress: { ipAddressHeaders: ["x-forwarded-for"] },
   },
-  plugins: [nextCookies()], // must be last
+  plugins: [twoFactor({ issuer: "Expense Tracker" }), nextCookies()], // nextCookies must be last
 });
