@@ -8,9 +8,9 @@
     // postcss (bundled inside next): the advisories need attacker-controlled CSS or source
     // maps. postcss only runs at build time on this repo's own globals.css, never on user
     // input. The real fix is next@16, a breaking upgrade that gets its own tested branch.
-    "GHSA-qx2v-qp2m-jg93",
+    // (GHSA-qx2v-qp2m-jg93 and GHSA-fxqj-rqcc-2cmp were removed: the audit reported them as
+    // no longer present after `npm audit fix`.)
     "GHSA-6g55-p6wh-862q",
-    "GHSA-fxqj-rqcc-2cmp",
     "GHSA-r28c-9q8g-f849",
 
     // zod: memory exhaustion when validating oversized constrained collections (arrays,

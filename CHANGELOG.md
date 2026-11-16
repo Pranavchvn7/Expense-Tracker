@@ -19,6 +19,7 @@
 - Added `SIGNUPS_ENABLED` to close registration, Settings > Change password, and an owner-only `reset-password` script for forgotten passwords
 
 ### Fixed
+- CI secret scan (gitleaks) failed with 403 on pull requests: the workflow now grants `pull-requests: read`; two audit allowlist entries that no longer apply were removed
 - Vercel branch/PR deployments failed because the Preview environment has no variables: `vercel.json` now skips every branch except `main`
 - CI audit step failed on transitive advisories: it now uses `audit-ci` with a short, documented allowlist (`audit-ci.jsonc`); `npm audit fix` updates the rest
 - `SIGNUPS_ENABLED` accepts any case ("True"), and the mail-settings error says which variable is missing
