@@ -24,6 +24,11 @@ const schema = z.object({
       z.enum(["true", "false"]).default("true"),
     )
     .transform((v) => v === "true"),
+  // "staging" shows a visible banner on every page so staging is never mistaken for production.
+  APP_ENV: z.preprocess(
+    (v) => (typeof v === "string" ? blankToUndefined(v.trim().toLowerCase()) : v),
+    z.enum(["production", "staging"]).default("production"),
+  ),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 

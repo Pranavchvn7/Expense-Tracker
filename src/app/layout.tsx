@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { env } from "@/env";
 
 // The CSP uses a per-request nonce (src/middleware.ts). Next.js can only attach that
 // nonce to its scripts when pages are rendered per request, so static prerendering
@@ -15,7 +16,14 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {env.APP_ENV === "staging" && (
+          <div className="env-banner" role="note">
+            STAGING: test data only, not the real app
+          </div>
+        )}
+        {children}
+      </body>
     </html>
   );
 }
