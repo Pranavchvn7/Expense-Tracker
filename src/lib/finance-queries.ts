@@ -3,30 +3,22 @@ import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 import { monthRange } from "@/lib/queries";
 import { bucketByMonth, monthKeys } from "@/lib/chart-math";
+import { getUserCurrency } from "@/lib/preferences";
 
 // Every query: session first, userId in where, explicit select.
 
-const CURRENCIES = ["INR", "USD", "EUR", "GBP"] as const;
-type Currency = (typeof CURRENCIES)[number];
-
-export async function getDashboardData(month: string, preferred?: Currency) {
+export async function getDashboardData(month: string) {
   const { userId } = await requireSession();
   const { start, end } = monthRange(month);
-
-  // Which currencies has this user used at all? (drives the currency chips)
-  const [expCur, incCur] = await Promise.all([
-    prisma.expense.groupBy({ by: ["currency"], where: { userId }, _count: { _all: true } }),
-    prisma.income.groupBy({ by: ["currency"], where: { userId }, _count: { _all: true } }),
-  ]);
-  const used = new Set<string>([...expCur, ...incCur].map((r) => r.currency));
-  const currencies = CURRENCIES.filter((c) => used.has(c));
-  const currency: Currency =
-    preferred && used.has(preferred) ? preferred : (currencies[0] ?? "INR");
+  // The currency comes from Settings (database), never from the URL or the client.
+  const currency = await getUserCurrency();
 
   const keys = monthKeys(month, 6);
   const trendStart = new Date(`${keys[0] ?? month}-01T00:00:00Z`);
 
-  const [spentAgg, incomeAgg, byCategory, expTrend, incTrend, recent] = await Promise.all([
+  // Entries recorded in some other currency are not mixed into the totals; they are counted so
+  // the page can say so instead of silently hiding money. All queries run in parallel.
+  const [spentAgg, incomeAgg, byCategory, expTrend, incTrend, recent, otherExp, otherInc] = await Promise.all([
     prisma.expense.aggregate({
       where: { userId, currency, spentOn: { gte: start, lt: end } },
       _sum: { amountMinor: true },
@@ -63,6 +55,8 @@ export async function getDashboardData(month: string, preferred?: Currency) {
         category: { select: { name: true } },
       },
     }),
+    prisma.expense.count({ where: { userId, currency: { not: currency } } }),
+    prisma.income.count({ where: { userId, currency: { not: currency } } }),
   ]);
 
   const cats = await prisma.category.findMany({
@@ -79,7 +73,7 @@ export async function getDashboardData(month: string, preferred?: Currency) {
 
   return {
     currency,
-    currencies,
+    otherCurrencyEntries: otherExp + otherInc,
     spentMinor,
     incomeMinor,
     expenseCount: spentAgg._count._all,

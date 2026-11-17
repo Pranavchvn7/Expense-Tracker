@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
 import { HttpError, notFound, safely, type ActionResult } from "@/lib/errors";
+import { getUserCurrency } from "@/lib/preferences";
 import { assertOwnCategory } from "@/lib/ownership";
 import { budgetInput, formToObject, idInput } from "@/lib/validation";
 
@@ -17,6 +18,7 @@ export async function setBudget(fd: FormData): Promise<ActionResult> {
     await rateLimit(`budget:set:${userId}`, 30, 60);
     const input = budgetInput.parse(formToObject(fd));
     await assertOwnCategory(userId, input.categoryId);
+    const currency = await getUserCurrency();
 
     const count = await prisma.budget.count({ where: { userId } });
     if (count >= MAX_BUDGETS) throw new HttpError(400, "Budget limit reached");
@@ -26,13 +28,13 @@ export async function setBudget(fd: FormData): Promise<ActionResult> {
         userId_categoryId_currency: {
           userId,
           categoryId: input.categoryId,
-          currency: input.currency,
+          currency,
         },
       },
       create: {
         userId,
         categoryId: input.categoryId,
-        currency: input.currency,
+        currency,
         amountMinor: input.amount,
       },
       update: { amountMinor: input.amount },

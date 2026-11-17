@@ -40,6 +40,10 @@
 - **Charts** are plain SVG rendered on the server from numbers the server computed; labels are React-escaped text. Colours come from CSS classes so the strict `style-src` nonce policy still holds.
 - **Dashboard query strings** (`month`, `cur`) are validated; a tampered value falls back to the current month / the first currency you use.
 
+## v0.3.1 additions
+- **Request-scoped session cache.** `getSession()` uses React `cache()`, so it is shared only inside one request. It does not keep sessions between requests, so revoking a device still takes effect immediately.
+- **Currency preference** lives on the user row, is read server-side and is never accepted from the client on entries.
+
 ## Accepted dependency advisories
 CI runs `audit-ci` and fails on any high or critical advisory that is not listed in `audit-ci.jsonc`. Three are accepted for now, each with its reason written next to it in that file:
 - **deepmerge-ts (inside the `prisma` CLI, dev only):** never runs in the deployed app or on user input. `prisma` and `@prisma/client` are pinned to the same version (6.19.3) because a mismatched pair is a bigger risk than this advisory. Fix = Prisma 7 (breaking).

@@ -3,7 +3,7 @@ import { listBudgets, monthTotalsByCategory } from "@/lib/queries";
 import { getDashboardData } from "@/lib/finance-queries";
 import { currentMonth, formatMoney, monthLabel } from "@/lib/money";
 import { addMonthsKey } from "@/lib/chart-math";
-import { monthSchema, parseCurrencyParam } from "@/lib/validation";
+import { monthSchema } from "@/lib/validation";
 import { DonutChart } from "@/components/charts/DonutChart";
 import { BarChart } from "@/components/charts/BarChart";
 import {
@@ -25,10 +25,10 @@ export default async function DashboardPage({
   // Query strings are untrusted: validate, fall back to safe defaults.
   const rawMonth = monthSchema.safeParse(Array.isArray(sp.month) ? sp.month[0] : sp.month);
   const month = rawMonth.success && rawMonth.data <= now ? rawMonth.data : now;
-  const preferred = parseCurrencyParam(sp.cur);
 
-  const data = await getDashboardData(month, preferred);
-  const [budgets, totals] = await Promise.all([
+  // One round of parallel queries (the session lookup is shared per request).
+  const [data, budgets, totals] = await Promise.all([
+    getDashboardData(month),
     listBudgets(),
     monthTotalsByCategory(month),
   ]);
@@ -36,7 +36,7 @@ export default async function DashboardPage({
   const { currency } = data;
   const net = data.incomeMinor - data.spentMinor;
   const rate = data.incomeMinor > 0 ? Math.round((net / data.incomeMinor) * 100) : null;
-  const href = (m: string, c = currency) => `/dashboard?month=${m}&cur=${c}`;
+  const href = (m: string) => `/dashboard?month=${m}`;
 
   const spent = new Map<string, number>();
   for (const t of totals) {
@@ -68,14 +68,12 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      {data.currencies.length > 1 && (
-        <div className="chips" role="group" aria-label="Currency">
-          {data.currencies.map((c) => (
-            <Link key={c} className="chip" href={href(month, c)} aria-current={c === currency ? "true" : undefined}>
-              {c}
-            </Link>
-          ))}
-        </div>
+      {data.otherCurrencyEntries > 0 && (
+        <p className="notice" role="note">
+          {data.otherCurrencyEntries} older {data.otherCurrencyEntries === 1 ? "entry is" : "entries are"} recorded in another
+          currency and {data.otherCurrencyEntries === 1 ? "is" : "are"} not included below. Your currency is {currency}; change it in{" "}
+          <Link href="/settings#preferences">Settings</Link>.
+        </p>
       )}
 
       <div className="grid stats section">

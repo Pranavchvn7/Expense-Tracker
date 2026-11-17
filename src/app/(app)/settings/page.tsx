@@ -8,16 +8,19 @@ import { createCategory, deleteCategory } from "@/actions/categories";
 import { setBudget, deleteBudget } from "@/actions/budgets";
 import { createShare, revokeShare } from "@/actions/share";
 import { deleteAccount } from "@/actions/account";
+import { setCurrency } from "@/actions/preferences";
+import { getUserCurrency } from "@/lib/preferences";
 import { listBudgets, listCategories, listShares } from "@/lib/queries";
 import { currentMonth, formatMoney } from "@/lib/money";
 
 export default async function SettingsPage() {
-  const [cats, shares, budgets, security, sessions] = await Promise.all([
+  const [cats, shares, budgets, security, sessions, currency] = await Promise.all([
     listCategories(),
     listShares(),
     listBudgets(),
     getSecurityInfo(),
     listSessions(),
+    getUserCurrency(),
   ]);
 
   return (
@@ -28,6 +31,7 @@ export default async function SettingsPage() {
           <p>Security, categories, budgets and sharing</p>
         </div>
         <nav className="chips" aria-label="Jump to section">
+          <Link className="chip" href="#preferences">Preferences</Link>
           <Link className="chip" href="#security">Security</Link>
           <Link className="chip" href="#categories">Categories</Link>
           <Link className="chip" href="#budgets">Budgets</Link>
@@ -35,6 +39,26 @@ export default async function SettingsPage() {
           <Link className="chip" href="#danger">Delete</Link>
         </nav>
       </div>
+
+      <section id="preferences" className="section">
+        <h2>Currency</h2>
+        <p className="lead muted">
+          Used for every new expense, income entry and budget. Existing entries keep the currency
+          they were saved with and are not converted; the dashboard only totals your current currency.
+        </p>
+        <div className="card">
+          <ActionForm action={setCurrency} submitLabel="Save currency" className="row">
+            <label>Currency
+              <select name="currency" defaultValue={currency}>
+                <option value="INR">INR – Indian rupee</option>
+                <option value="USD">USD – US dollar</option>
+                <option value="EUR">EUR – Euro</option>
+                <option value="GBP">GBP – British pound</option>
+              </select>
+            </label>
+          </ActionForm>
+        </div>
+      </section>
 
       <section id="security" className="section">
         <h2>Password</h2>
@@ -119,7 +143,7 @@ export default async function SettingsPage() {
       <section id="budgets" className="section">
         <h2>Monthly budgets</h2>
         <p className="lead muted">
-          A budget applies to every month. Setting one again for the same category and currency updates it.
+          A budget applies to every month. Budgets use your currency. Setting one again for the same category updates it.
         </p>
         <div className="card stack">
           {cats.length === 0 ? (
@@ -134,11 +158,6 @@ export default async function SettingsPage() {
               </label>
               <label>Amount
                 <input name="amount" inputMode="decimal" pattern="\d{1,9}(\.\d{1,2})?" required />
-              </label>
-              <label>Currency
-                <select name="currency" defaultValue="INR">
-                  <option>INR</option><option>USD</option><option>EUR</option><option>GBP</option>
-                </select>
               </label>
             </ActionForm>
           )}

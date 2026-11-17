@@ -31,7 +31,7 @@
   --hero-b: #1e3a8a;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #0b0f14;
     --surface: #131920;
     --card: #151b23;
@@ -61,6 +61,36 @@
     --hero-a: #0f766e;
     --hero-b: #1e3a8a;
   }
+}
+:root[data-theme="dark"] {
+  --bg: #0b0f14;
+  --surface: #131920;
+  --card: #151b23;
+  --raised: #1a222c;
+  --text: #e8edf3;
+  --muted: #96a1b0;
+  --line: #26303c;
+  --brand: #2dd4bf;
+  --brand-strong: #5eead4;
+  --brand-soft: #123530;
+  --on-brand: #04201d;
+  --danger: #f97066;
+  --danger-soft: #3a1714;
+  --income: #4ade80;
+  --income-soft: #12301d;
+  --spend: #fb923c;
+  --spend-soft: #3a2111;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 16px rgb(0 0 0 / 0.25);
+  --c1: #2dd4bf;
+  --c2: #818cf8;
+  --c3: #fbbf24;
+  --c4: #f472b6;
+  --c5: #38bdf8;
+  --c6: #a3e635;
+  --c7: #c084fc;
+  --c8: #64748b;
+  --hero-a: #0f766e;
+  --hero-b: #1e3a8a;
 }
 
 /* ===== Base ===== */
@@ -314,3 +344,18 @@ main.auth { max-width: 440px; padding-top: 7vh; }
 .devices li { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; word-break: break-word; background: var(--raised); }
 @media (max-width: 560px) { .row > * { flex: 1 1 100%; } .donut { margin: 0 auto; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* ===== Theme toggle ===== */
+.theme-toggle { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: 10px; background: var(--raised); }
+.theme-toggle button { display: grid; place-items: center; width: 30px; height: 28px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; }
+.theme-toggle button .icon { width: 16px; height: 16px; }
+.theme-toggle button:hover { color: var(--text); }
+.theme-toggle button[aria-pressed="true"] { background: var(--surface); color: var(--brand-strong); box-shadow: var(--shadow); }
+
+/* ===== Loading skeletons (shown instantly while a page streams in) ===== */
+.skeleton { background: linear-gradient(90deg, var(--line) 25%, var(--raised) 50%, var(--line) 75%); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; border-radius: 10px; }
+.skeleton.title { height: 30px; width: 220px; margin-bottom: 20px; }
+.skeleton.stat { height: 92px; }
+.skeleton.block { height: 260px; }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
