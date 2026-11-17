@@ -27,6 +27,7 @@ model User {
   categories    Category[]
   shares        SharedReport[]
   budgets       Budget[]
+  incomes       Income[]
   twoFactor     TwoFactor[]
 
   @@map("user")
@@ -140,6 +141,22 @@ model Expense {
 
   @@index([userId, spentOn])
   @@index([userId, categoryId])
+}
+
+// Money coming in (salary, refunds, gifts...). Same integer-minor-units rule as Expense.
+model Income {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amountMinor Int
+  currency    String   @db.VarChar(3) @default("INR")
+  source      String   @db.VarChar(80)
+  note        String?  @db.VarChar(500)
+  receivedOn  DateTime @db.Date
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, receivedOn])
 }
 
 // Monthly budget for one category in one currency (applies to every month).

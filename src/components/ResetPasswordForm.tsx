@@ -30,7 +30,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
   }
 
   return (
-    <form method="post" onSubmit={onSubmit} className="card stack">
+    <form method="post" onSubmit={onSubmit} className="stack">
       <label>
         New password
         <input

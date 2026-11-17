@@ -35,6 +35,11 @@
 - **Environment guards.** `src/env.ts` refuses to start a production deployment that is not built from `main` or carries `APP_ENV=staging`, and a preview deployment without `APP_ENV=staging`. This stops staging code from running on production variables (for example by choosing Production in Vercel's Redeploy dialog).
 - **Branch protection.** `main` accepts changes only through pull requests with passing CI; force pushes and deletion are blocked.
 
+## v0.3.0 additions
+- **Income** follows the same rules as expenses: `requireSession()` first, `userId` in every `where`, Zod before the database, rate limits, per-user cap.
+- **Charts** are plain SVG rendered on the server from numbers the server computed; labels are React-escaped text. Colours come from CSS classes so the strict `style-src` nonce policy still holds.
+- **Dashboard query strings** (`month`, `cur`) are validated; a tampered value falls back to the current month / the first currency you use.
+
 ## Accepted dependency advisories
 CI runs `audit-ci` and fails on any high or critical advisory that is not listed in `audit-ci.jsonc`. Three are accepted for now, each with its reason written next to it in that file:
 - **deepmerge-ts (inside the `prisma` CLI, dev only):** never runs in the deployed app or on user input. `prisma` and `@prisma/client` are pinned to the same version (6.19.3) because a mismatched pair is a bigger risk than this advisory. Fix = Prisma 7 (breaking).

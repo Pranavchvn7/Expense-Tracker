@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.3.0
+### Added
+- Complete visual redesign: design system in plain CSS, responsive app shell (sidebar / bottom tab bar), dark mode, new landing and sign-in pages, empty states, 404 and error pages
+- Income tracking (add, edit, delete, per month) with its own page
+- Dashboard: Income / Spent / Balance / Savings rate cards, category donut chart, six-month income-vs-spending bars, month switcher, currency chips, latest expenses
+- Settings reorganised into sections with a jump bar
+
+### Security
+- New `Income` table: every query and mutation uses the session user id in `where`, explicit `select`, Zod validation, rate limits and a 20,000-row cap
+- Charts are server-rendered SVG with CSS-class colours: no chart library, no client JavaScript, no inline styles (CSP unchanged)
+- `?month=` and `?cur=` query values are validated and fall back to safe defaults
+- `/income` is auth-protected in middleware and sent with `no-store`
+
+### Operations
+- New migration: run `npx prisma migrate dev --name add_income`. No new dependencies and no new environment variables
+
 ## 0.2.1
 ### Added
 - Authenticator-app two-factor authentication (QR setup, backup codes, second sign-in step, turn off, new backup codes)

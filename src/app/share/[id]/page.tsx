@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPublicReport } from "@/lib/queries";
-import { formatMoney } from "@/lib/money";
+import { formatMoney, monthLabel } from "@/lib/money";
 import { uuid } from "@/lib/validation";
 
 export const metadata: Metadata = {
@@ -17,8 +17,8 @@ export default async function SharePage({ params }: { params: Promise<{ id: stri
   if (!report) notFound();
 
   return (
-    <main>
-      <h1>Summary for {report.month}</h1>
+    <main className="plain">
+      <h1>Summary for {monthLabel(report.month)}</h1>
       <div className="card">
         <table>
           <thead><tr><th>Category</th><th className="num">Total</th></tr></thead>

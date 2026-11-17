@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ResetPasswordForm } from "@/components/ResetPasswordForm";
+import { LogoMark } from "@/components/icons";
 import { isEmailEnabled } from "@/env";
 
 // The reset token is in the URL, so never leak it through the Referer header.
@@ -21,16 +22,19 @@ export default async function ResetPasswordPage({
   const token = raw && /^[A-Za-z0-9_-]{10,200}$/.test(raw) ? raw : null;
 
   return (
-    <main>
+    <main className="auth">
+      <Link href="/" className="auth-brand"><LogoMark /> Expense Tracker</Link>
       <h1>Choose a new password</h1>
-      {token ? (
-        <ResetPasswordForm token={token} />
-      ) : (
-        <p className="card" role="alert">
-          This reset link is invalid or has expired.{" "}
-          <Link href="/forgot-password">Request a new one</Link>.
-        </p>
-      )}
+      <div className="card">
+        {token ? (
+          <ResetPasswordForm token={token} />
+        ) : (
+          <p role="alert">
+            This reset link is invalid or has expired.{" "}
+            <Link href="/forgot-password">Request a new one</Link>.
+          </p>
+        )}
+      </div>
     </main>
   );
 }

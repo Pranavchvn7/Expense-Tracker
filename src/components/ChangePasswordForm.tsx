@@ -35,7 +35,7 @@ export function ChangePasswordForm() {
   }
 
   return (
-    <form method="post" onSubmit={onSubmit} className="card stack">
+    <form method="post" onSubmit={onSubmit} className="stack">
       <label>
         Current password
         <input name="current" type="password" maxLength={128} autoComplete="current-password" required />

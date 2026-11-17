@@ -2,7 +2,12 @@
 
 A secure, multi-user expense tracker. Next.js (App Router) · TypeScript · Better Auth · Prisma · Neon Postgres · Zod · Vercel.
 
-## Features (v0.2)
+## Features (v0.3.0)
+- New responsive design: sidebar on desktop, bottom tab bar on phones, light and dark mode
+- Income tracking and a monthly balance (income minus spending, savings rate)
+- Dashboard charts (category donut, six-month income vs spending) drawn as server-side SVG, month switcher and currency chips
+
+### Earlier features
 - Email + password accounts (Better Auth, scrypt hashing, 12+ char passwords)
 - Optional email verification and password reset by email (needs a verified sending domain), change-password in Settings, closable registration
 - Expenses with categories, integer minor-unit money, multi-currency
@@ -38,6 +43,8 @@ See [SECURITY.md](./SECURITY.md) for the threat model and the mapping to the 5-p
 
 ## Roadmap
 - v0.2.1 (done): authenticator-app 2FA, signed-in devices list, CSV export, staging environment
-- v0.3: recurring expenses, income, charts, shared household
+- v0.3.0 (done): new UI, income, balance, charts
+- v0.3.1: recurring expenses
+- v0.3.2: shared household
 - v0.4: receipt uploads (presigned S3/R2 URLs, MIME allowlist, UUID keys)
 - Playwright e2e suite (page objects, API tests, CI)
