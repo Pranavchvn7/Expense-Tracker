@@ -1,8 +1,10 @@
 {
   "name": "expense-tracker",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "private": true,
-  "engines": { "node": ">=20.11" },
+  "engines": {
+    "node": ">=20.11"
+  },
   "scripts": {
     "setup": "node scripts/setup.mjs",
     "reset-password": "node scripts/reset-password.mjs",

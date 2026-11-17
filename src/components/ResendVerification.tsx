@@ -22,14 +22,14 @@ export function ResendVerification() {
 
   if (done) {
     return (
-      <p className="card" role="status">
+      <p className="notice" role="status">
         If that address needs verifying, a new link is on its way.
       </p>
     );
   }
 
   return (
-    <form method="post" onSubmit={onSubmit} className="card row">
+    <form method="post" onSubmit={onSubmit} className="row">
       <label>
         Email
         <input name="email" type="email" maxLength={254} autoComplete="email" required />

@@ -30,7 +30,7 @@ export function TwoFactorLoginForm() {
   }
 
   return (
-    <form method="post" onSubmit={onSubmit} className="card stack" autoComplete="off">
+    <form method="post" onSubmit={onSubmit} className="stack" autoComplete="off">
       <label>
         {useBackup ? "Backup code" : "6-digit code from your authenticator app"}
         {useBackup ? (

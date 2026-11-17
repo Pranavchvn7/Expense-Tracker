@@ -1,69 +1,184 @@
-import { listBudgets, listCategories, monthTotalsByCategory } from "@/lib/queries";
-import { currentMonth, formatMoney } from "@/lib/money";
+import Link from "next/link";
+import { listBudgets, monthTotalsByCategory } from "@/lib/queries";
+import { getDashboardData } from "@/lib/finance-queries";
+import { currentMonth, formatMoney, monthLabel } from "@/lib/money";
+import { addMonthsKey } from "@/lib/chart-math";
+import { monthSchema, parseCurrencyParam } from "@/lib/validation";
+import { DonutChart } from "@/components/charts/DonutChart";
+import { BarChart } from "@/components/charts/BarChart";
+import {
+  IconArrowDown,
+  IconArrowUp,
+  IconChevronLeft,
+  IconChevronRight,
+  IconInbox,
+  IconScale,
+} from "@/components/icons";
 
-export default async function DashboardPage() {
-  const month = currentMonth();
-  const [totals, cats, budgets] = await Promise.all([
-    monthTotalsByCategory(month),
-    listCategories(),
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const sp = await searchParams;
+  const now = currentMonth();
+  // Query strings are untrusted: validate, fall back to safe defaults.
+  const rawMonth = monthSchema.safeParse(Array.isArray(sp.month) ? sp.month[0] : sp.month);
+  const month = rawMonth.success && rawMonth.data <= now ? rawMonth.data : now;
+  const preferred = parseCurrencyParam(sp.cur);
+
+  const data = await getDashboardData(month, preferred);
+  const [budgets, totals] = await Promise.all([
     listBudgets(),
+    monthTotalsByCategory(month),
   ]);
-  const names = new Map(cats.map((c) => [c.id, c.name]));
+
+  const { currency } = data;
+  const net = data.incomeMinor - data.spentMinor;
+  const rate = data.incomeMinor > 0 ? Math.round((net / data.incomeMinor) * 100) : null;
+  const href = (m: string, c = currency) => `/dashboard?month=${m}&cur=${c}`;
 
   const spent = new Map<string, number>();
   for (const t of totals) {
     if (t.categoryId) spent.set(`${t.categoryId}|${t.currency}`, t._sum.amountMinor ?? 0);
   }
+  const shownBudgets = budgets.filter((b) => b.currency === currency);
+  const empty = data.expenseCount === 0 && data.incomeMinor === 0;
 
   return (
     <>
-      <h1>This month ({month})</h1>
-
-      {budgets.length > 0 && (
-        <>
-          <h2>Budgets</h2>
-          <div className="card stack">
-            {budgets.map((b) => {
-              const used = spent.get(`${b.category.id}|${b.currency}`) ?? 0;
-              const over = used > b.amountMinor;
-              const pct = Math.round((used * 100) / b.amountMinor);
-              return (
-                <div key={b.id}>
-                  <div className="row between">
-                    <strong>{b.category.name}</strong>
-                    <span className={over ? "error" : "muted"}>
-                      {formatMoney(used, b.currency)} of {formatMoney(b.amountMinor, b.currency)} ({pct}%)
-                      {over ? ` — over by ${formatMoney(used - b.amountMinor, b.currency)}` : ""}
-                    </span>
-                  </div>
-                  {/* <progress> instead of a styled div: the CSP forbids inline style attributes. */}
-                  <progress
-                    className={over ? "over" : undefined}
-                    max={b.amountMinor}
-                    value={Math.min(used, b.amountMinor)}
-                    aria-label={`${b.category.name} budget used`}
-                  />
-                </div>
-              );
-            })}
+      <div className="page-head">
+        <div>
+          <h1>Overview</h1>
+          <p>Your money in {monthLabel(month)}</p>
+        </div>
+        <div className="actions">
+          <div className="month-nav" aria-label="Choose month">
+            <Link href={href(addMonthsKey(month, -1))} aria-label="Previous month"><IconChevronLeft /></Link>
+            <span className="current">{monthLabel(month)}</span>
+            <Link
+              href={href(addMonthsKey(month, 1))}
+              aria-label="Next month"
+              aria-disabled={month >= now}
+              tabIndex={month >= now ? -1 : undefined}
+            >
+              <IconChevronRight />
+            </Link>
           </div>
-        </>
+        </div>
+      </div>
+
+      {data.currencies.length > 1 && (
+        <div className="chips" role="group" aria-label="Currency">
+          {data.currencies.map((c) => (
+            <Link key={c} className="chip" href={href(month, c)} aria-current={c === currency ? "true" : undefined}>
+              {c}
+            </Link>
+          ))}
+        </div>
       )}
 
-      <h2>Spending by category</h2>
-      {totals.length === 0 ? (
-        <p className="muted">No expenses yet this month.</p>
-      ) : (
-        <div className="card">
+      <div className="grid stats section">
+        <div className="card stat income">
+          <span className="label"><span className="pill-icon income"><IconArrowDown /></span>Income</span>
+          <span className="value">{formatMoney(data.incomeMinor, currency)}</span>
+        </div>
+        <div className="card stat spend">
+          <span className="label"><span className="pill-icon spend"><IconArrowUp /></span>Spent</span>
+          <span className="value">{formatMoney(data.spentMinor, currency)}</span>
+          <span className="hint">{data.expenseCount} expense{data.expenseCount === 1 ? "" : "s"}</span>
+        </div>
+        <div className={`card stat ${net >= 0 ? "pos" : "neg"}`}>
+          <span className="label"><span className="pill-icon net"><IconScale /></span>Balance</span>
+          <span className="value">{formatMoney(net, currency)}</span>
+          <span className="hint">Income minus spending</span>
+        </div>
+        <div className="card stat">
+          <span className="label">Savings rate</span>
+          <span className="value">{rate === null ? "–" : `${rate}%`}</span>
+          <span className="hint">{rate === null ? "Add income to see this" : "Of income kept"}</span>
+        </div>
+      </div>
+
+      {empty && (
+        <div className="card section">
+          <div className="empty">
+            <IconInbox />
+            <strong>Nothing recorded for {monthLabel(month)}</strong>
+            <span>Add an expense or some income to see your charts.</span>
+            <div className="actions">
+              <Link className="btn" href="/expenses">Add expense</Link>
+              <Link className="btn ghost" href="/income">Add income</Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!empty && (
+        <div className="grid two section">
+          <div className="card">
+            <h2>Where it went</h2>
+            {data.categories.length === 0 ? (
+              <p className="muted">No expenses this month.</p>
+            ) : (
+              <DonutChart items={data.categories} currency={currency} />
+            )}
+          </div>
+          <div className="card">
+            <div className="row between">
+              <h2>Last 6 months</h2>
+              <div className="key">
+                <span><i className="dot income" />Income</span>
+                <span><i className="dot spend" />Spent</span>
+              </div>
+            </div>
+            <BarChart months={data.trend.months} income={data.trend.income} spent={data.trend.spent} currency={currency} />
+          </div>
+        </div>
+      )}
+
+      {shownBudgets.length > 0 && (
+        <div className="card section">
+          <h2>Budgets</h2>
+          {shownBudgets.map((b) => {
+            const used = spent.get(`${b.category.id}|${b.currency}`) ?? 0;
+            const over = used > b.amountMinor;
+            const pct = Math.round((used * 100) / b.amountMinor);
+            return (
+              <div key={b.id} className="budget">
+                <div className="row between">
+                  <strong>{b.category.name}</strong>
+                  <span className={over ? "error" : "muted"}>
+                    {formatMoney(used, b.currency)} of {formatMoney(b.amountMinor, b.currency)} ({pct}%)
+                    {over ? ` · over by ${formatMoney(used - b.amountMinor, b.currency)}` : ""}
+                  </span>
+                </div>
+                {/* <progress> instead of a styled div: the CSP forbids inline style attributes. */}
+                <progress
+                  className={over ? "over" : undefined}
+                  max={b.amountMinor}
+                  value={Math.min(used, b.amountMinor)}
+                  aria-label={`${b.category.name} budget used`}
+                />
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {data.recent.length > 0 && (
+        <div className="card section">
+          <div className="row between">
+            <h2>Latest expenses</h2>
+            <Link href={`/expenses?month=${month}`}>See all</Link>
+          </div>
           <table>
-            <thead>
-              <tr><th>Category</th><th className="num">Total</th></tr>
-            </thead>
             <tbody>
-              {totals.map((t) => (
-                <tr key={`${t.categoryId ?? "none"}-${t.currency}`}>
-                  <td>{t.categoryId ? (names.get(t.categoryId) ?? "Other") : "Uncategorised"}</td>
-                  <td className="num">{formatMoney(t._sum.amountMinor ?? 0, t.currency)}</td>
+              {data.recent.map((e) => (
+                <tr key={e.id}>
+                  <td>{e.description}<div className="muted">{e.spentOn.toISOString().slice(0, 10)}</div></td>
+                  <td>{e.category ? <span className="tag">{e.category.name}</span> : null}</td>
+                  <td className="num">{formatMoney(e.amountMinor, currency)}</td>
                 </tr>
               ))}
             </tbody>

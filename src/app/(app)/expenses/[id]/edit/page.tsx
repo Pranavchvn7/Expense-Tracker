@@ -16,7 +16,7 @@ export default async function EditExpensePage({ params }: { params: Promise<{ id
 
   return (
     <>
-      <h1>Edit expense</h1>
+      <div className="page-head"><h1>Edit expense</h1></div>
       <ActionForm
         action={updateExpense}
         submitLabel="Save changes"

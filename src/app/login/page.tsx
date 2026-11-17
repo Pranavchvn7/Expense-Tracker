@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AuthForm } from "@/components/AuthForm";
+import { LogoMark } from "@/components/icons";
 import { env, isEmailEnabled } from "@/env";
 
 export default async function LoginPage({
@@ -11,24 +12,22 @@ export default async function LoginPage({
   const justReset = sp.reset === "1";
 
   return (
-    <main>
-      <h1>Sign in</h1>
-      {justReset && (
-        <p className="card" role="status">
-          Password updated. Please sign in with your new password.
-        </p>
-      )}
-      <AuthForm mode="login" emailEnabled={isEmailEnabled} />
-      {isEmailEnabled && (
-        <p className="muted">
-          <Link href="/forgot-password">Forgot password?</Link>
-        </p>
-      )}
-      {env.SIGNUPS_ENABLED && (
-        <p className="muted">
-          No account? <Link href="/signup">Create one</Link>
-        </p>
-      )}
+    <main className="auth">
+      <Link href="/" className="auth-brand"><LogoMark /> Expense Tracker</Link>
+      <h1>Welcome back</h1>
+      <p className="lead">Sign in to your account</p>
+      <div className="card">
+        {justReset && (
+          <p className="notice" role="status">
+            Password updated. Please sign in with your new password.
+          </p>
+        )}
+        <AuthForm mode="login" emailEnabled={isEmailEnabled} />
+      </div>
+      <p className="foot-links">
+        {isEmailEnabled && <><Link href="/forgot-password">Forgot password?</Link>{" · "}</>}
+        {env.SIGNUPS_ENABLED && <>No account? <Link href="/signup">Create one</Link></>}
+      </p>
     </main>
   );
 }

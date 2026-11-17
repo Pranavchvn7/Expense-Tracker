@@ -62,6 +62,22 @@ export const shareInput = z.object({
   days: z.coerce.number().int().min(1).max(30).default(7),
 });
 
+export const incomeInput = z.object({
+  amount: amountSchema,
+  currency: currencySchema.default("INR"),
+  source: cleanText(80),
+  note: optionalCleanText(500),
+  receivedOn: dateSchema,
+});
+
+export const incomeUpdate = incomeInput.extend({ id: uuid });
+
+/** ?cur= query value: a known currency or undefined. */
+export function parseCurrencyParam(v: string | string[] | undefined) {
+  const r = currencySchema.safeParse(Array.isArray(v) ? v[0] : v);
+  return r.success ? r.data : undefined;
+}
+
 export const budgetInput = z.object({
   categoryId: uuid,
   amount: amountSchema,

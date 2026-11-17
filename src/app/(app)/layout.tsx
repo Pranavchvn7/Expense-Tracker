@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { SignOutButton } from "@/components/SignOutButton";
+import { AppNav } from "@/components/AppNav";
 
 export const dynamic = "force-dynamic";
 
@@ -12,15 +11,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!session?.user?.id) redirect("/login");
 
   return (
-    <>
-      <nav>
-        <Link href="/dashboard">Dashboard</Link>
-        <Link href="/expenses">Expenses</Link>
-        <Link href="/settings">Settings</Link>
-        <span className="spacer" />
-        <SignOutButton />
-      </nav>
-      <main>{children}</main>
-    </>
+    <div className="shell">
+      <AppNav name={session.user.name} />
+      <main className="content">{children}</main>
+    </div>
   );
 }

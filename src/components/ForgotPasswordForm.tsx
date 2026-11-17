@@ -22,14 +22,14 @@ export function ForgotPasswordForm() {
 
   if (done) {
     return (
-      <p className="card" role="status">
+      <p className="notice" role="status">
         If an account exists for that email, we have sent a reset link. It is valid for 15 minutes.
       </p>
     );
   }
 
   return (
-    <form method="post" onSubmit={onSubmit} className="card stack">
+    <form method="post" onSubmit={onSubmit} className="stack">
       <label>
         Email
         <input name="email" type="email" maxLength={254} autoComplete="email" required />
