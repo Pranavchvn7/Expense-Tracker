@@ -19,6 +19,9 @@ const optionalCleanText = (max: number) =>
 
 export const uuid = z.string().uuid();
 
+/** An optional id from a <select>: the empty option ("Uncategorised") arrives as "" and means "none". */
+export const optionalUuid = z.preprocess((v) => (v === "" ? undefined : v), uuid.optional());
+
 /** "123.45" -> 12345 (integer minor units). Rejects >2 decimals, negatives, zero, absurd values. */
 export const amountSchema = z
   .string()
@@ -47,7 +50,7 @@ export const expenseInput = z.object({
   description: cleanText(120),
   note: optionalCleanText(500),
   spentOn: dateSchema,
-  categoryId: uuid.optional(),
+  categoryId: optionalUuid,
 });
 
 export const expenseUpdate = expenseInput.extend({ id: uuid });
@@ -72,6 +75,91 @@ export const incomeInput = z.object({
 });
 
 export const incomeUpdate = incomeInput.extend({ id: uuid });
+
+/** Recurring start date: at most a year back or ahead, so a rule cannot backfill thousands of rows. */
+const ruleDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((s) => !Number.isNaN(Date.parse(`${s}T00:00:00Z`)), "Invalid date")
+  .refine((s) => {
+    const d = new Date(`${s}T00:00:00Z`).getTime();
+    const now = Date.now();
+    return Math.abs(d - now) <= 366 * 86_400_000;
+  }, "Date out of range")
+  .transform((s) => new Date(`${s}T00:00:00Z`));
+
+const optionalRuleDate = z
+  .string()
+  .transform((s) => s.trim())
+  .pipe(z.union([z.literal(""), ruleDateSchema]))
+  .optional()
+  .transform((d) => (d instanceof Date ? d : undefined));
+
+export const recurringCreate = z
+  .object({
+    kind: z.enum(["EXPENSE", "INCOME"]),
+    amount: amountSchema,
+    label: cleanText(80),
+    note: optionalCleanText(500),
+    categoryId: optionalUuid,
+    frequency: z.enum(["WEEKLY", "MONTHLY", "YEARLY"]),
+    startDate: ruleDateSchema,
+    endDate: optionalRuleDate,
+  })
+  .refine((v) => !v.endDate || v.endDate >= v.startDate, {
+    message: "End date is before start date",
+    path: ["endDate"],
+  });
+
+/** Editing keeps kind, frequency and start date fixed; amount, label, category, note, end date change. */
+export const recurringUpdate = z
+  .object({
+    id: uuid,
+    amount: amountSchema,
+    label: cleanText(80),
+    note: optionalCleanText(500),
+    categoryId: optionalUuid,
+    endDate: optionalRuleDate,
+  });
+
+/** Goal target date: any day up to 50 years ahead (optional; empty string means none). */
+const goalDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((s) => !Number.isNaN(Date.parse(`${s}T00:00:00Z`)), "Invalid date")
+  .refine((s) => {
+    const d = new Date(`${s}T00:00:00Z`).getTime();
+    return d >= Date.UTC(2000, 0, 1) && d <= Date.now() + 50 * 366 * 86_400_000;
+  }, "Date out of range")
+  .transform((s) => new Date(`${s}T00:00:00Z`));
+
+const optionalGoalDate = z
+  .string()
+  .transform((s) => s.trim())
+  .pipe(z.union([z.literal(""), goalDateSchema]))
+  .optional()
+  .transform((d) => (d instanceof Date ? d : undefined));
+
+export const goalInput = z.object({
+  name: cleanText(80),
+  target: amountSchema,
+  targetDate: optionalGoalDate,
+});
+
+export const goalUpdate = goalInput.extend({ id: uuid });
+
+export const contributionInput = z.object({
+  goalId: uuid,
+  amount: amountSchema,
+  contributedOn: dateSchema,
+});
+
+/** CSV import. 80k characters keeps the request under the 100 kb server-action limit. */
+export const importInput = z.object({
+  kind: z.enum(["EXPENSE", "INCOME"]),
+  dateFormat: z.enum(["YMD", "DMY", "MDY"]),
+  csv: z.string().min(1).max(80_000),
+});
 
 export const budgetInput = z.object({
   categoryId: uuid,

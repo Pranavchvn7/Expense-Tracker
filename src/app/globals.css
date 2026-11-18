@@ -147,10 +147,10 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; word-break: 
   backdrop-filter: blur(10px); border-bottom: 1px solid var(--line);
 }
 .bottom-bar {
-  position: fixed; inset: auto 0 0 0; z-index: 30; display: grid; grid-template-columns: repeat(4, 1fr);
+  position: fixed; inset: auto 0 0 0; z-index: 30; display: grid; grid-template-columns: repeat(6, 1fr);
   background: var(--surface); border-top: 1px solid var(--line); padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
 }
-.tab { display: grid; justify-items: center; gap: 2px; padding: 6px 4px; border-radius: 10px; color: var(--muted); text-decoration: none; font-size: 0.72rem; font-weight: 600; }
+.tab { display: grid; justify-items: center; gap: 2px; padding: 6px 2px; border-radius: 10px; color: var(--muted); text-decoration: none; font-size: 0.66rem; font-weight: 600; }
 .tab[aria-current="page"] { color: var(--brand-strong); background: var(--brand-soft); }
 .content { max-width: 1040px; margin: 0 auto; padding: 20px 16px 96px; }
 @media (min-width: 900px) {
@@ -250,6 +250,7 @@ tbody tr:last-child td { border-bottom: 0; }
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 td.num { font-weight: 600; }
 td.income { color: var(--income); }
+.tag.done { background: var(--income-soft); color: var(--income); border-color: transparent; }
 .tag { display: inline-block; padding: 2px 9px; border-radius: 999px; background: var(--raised); border: 1px solid var(--line); font-size: 0.78rem; font-weight: 600; color: var(--muted); }
 .cell-actions { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
 @media (max-width: 719px) {

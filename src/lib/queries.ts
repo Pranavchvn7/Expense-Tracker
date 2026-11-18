@@ -50,6 +50,7 @@ export async function listExpenses(opts: {
         description: true,
         note: true,
         spentOn: true,
+        recurringRuleId: true,
         category: { select: { id: true, name: true } },
       },
     }),

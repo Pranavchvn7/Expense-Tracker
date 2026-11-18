@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { materializeRecurring } from "@/lib/recurring";
 import { ActionForm } from "@/components/ActionForm";
 import { createExpense, deleteExpense } from "@/actions/expenses";
 import { listCategories, listExpenses } from "@/lib/queries";
 import { currentMonth, formatMoney, monthLabel } from "@/lib/money";
 import { parseListQuery } from "@/lib/validation";
-import { IconDownload, IconInbox } from "@/components/icons";
+import { IconDownload, IconInbox, IconUpload } from "@/components/icons";
 
 export default async function ExpensesPage({
   searchParams,
@@ -12,6 +13,8 @@ export default async function ExpensesPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { month, q, categoryId, page } = parseListQuery(await searchParams, currentMonth());
+  // Create anything that fell due since the last visit before reading the data.
+  await materializeRecurring();
   const [{ rows, hasNext, totals }, cats] = await Promise.all([
     listExpenses({ month, q, categoryId, page }),
     listCategories(),
@@ -35,6 +38,7 @@ export default async function ExpensesPage({
         </div>
         {/* Plain <a>, not <Link>: prefetching a download would count against the export limit. */}
         <div className="actions">
+          <Link className="btn ghost small" href="/import"><IconUpload />Import CSV</Link>
           <a className="btn ghost small" href={`/expenses/export?month=${month}`}><IconDownload />This month CSV</a>
           <a className="btn ghost small" href="/expenses/export?all=1"><IconDownload />All CSV</a>
         </div>
@@ -102,7 +106,7 @@ export default async function ExpensesPage({
                   <td data-label="Date">{e.spentOn.toISOString().slice(0, 10)}</td>
                   <td data-label="Description">
                     <span>
-                      {e.description}
+                      {e.description}{e.recurringRuleId && <> <span className="tag">Recurring</span></>}
                       {e.note && <div className="muted">{e.note}</div>}
                     </span>
                   </td>

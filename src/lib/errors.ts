@@ -1,4 +1,5 @@
 import "server-only";
+import { ZodError } from "zod";
 
 /**
  * Deliberately uninformative errors. Details go to server logs with a
@@ -29,6 +30,10 @@ export async function safely<T>(fn: () => Promise<T>): Promise<ActionResult<T>> 
   } catch (err) {
     if (err instanceof HttpError) {
       return { ok: false, message: err.message };
+    }
+    // Bad input is the caller's problem, not a server fault: say so, without echoing values.
+    if (err instanceof ZodError) {
+      return { ok: false, message: "Please check your input and try again" };
     }
     const ref = crypto.randomUUID();
     // Server-side only. Never log request bodies, tokens or PII.

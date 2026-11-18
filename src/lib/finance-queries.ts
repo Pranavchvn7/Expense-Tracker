@@ -113,6 +113,7 @@ export async function listIncome(month: string) {
         source: true,
         note: true,
         receivedOn: true,
+        recurringRuleId: true,
       },
     }),
     prisma.income.groupBy({ by: ["currency"], where, _sum: { amountMinor: true } }),

@@ -4,12 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/SignOutButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { IconDashboard, IconReceipt, IconSettings, IconWallet, LogoMark } from "@/components/icons";
+import { IconDashboard, IconReceipt, IconRepeat, IconSettings, IconTarget, IconWallet, LogoMark } from "@/components/icons";
 
 const items = [
   { href: "/dashboard", label: "Dashboard", icon: <IconDashboard /> },
   { href: "/expenses", label: "Expenses", icon: <IconReceipt /> },
   { href: "/income", label: "Income", icon: <IconWallet /> },
+  { href: "/recurring", label: "Recurring", icon: <IconRepeat /> },
+  { href: "/goals", label: "Goals", icon: <IconTarget /> },
   { href: "/settings", label: "Settings", icon: <IconSettings /> },
 ];
 

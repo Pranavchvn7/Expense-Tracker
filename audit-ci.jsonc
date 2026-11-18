@@ -22,7 +22,7 @@
     // repo's own Prisma config, never in the deployed app or on user input. The "fix" npm
     // suggests is downgrading only the CLI, which leaves it out of step with @prisma/client,
     // so both stay pinned to the same version instead. Real fix = Prisma 7 (major upgrade).
-        "GHSA-ggr8-5vv4-36mx",
+    "GHSA-ggr8-5vv4-36mx",
 
     // picomatch (inside eslint, typescript-eslint, fast-glob, tinyglobby: lint and build tooling
     // only): glob matching over this repo's own file paths at lint/build time. It never runs in
