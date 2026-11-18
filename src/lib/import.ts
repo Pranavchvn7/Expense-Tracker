@@ -28,9 +28,9 @@ export type Analysis = {
 export async function analyzeImport(input: { kind: Kind; dateFormat: DateFormat; csv: string }): Promise<Analysis> {
   const { userId } = await requireSession();
   const { rows, tooManyRows } = parseCsv(input.csv, MAX_IMPORT_ROWS);
-  if (tooManyRows) throw new HttpError(400, `Too many rows: the limit is ${MAX_IMPORT_ROWS} per import`);
+  if (tooManyRows) throw new HttpError(400, `The file has more than ${MAX_IMPORT_ROWS.toLocaleString("en-US")} rows. Split it into smaller files and import them one at a time.`);
   const [header, ...data] = rows;
-  if (!header || data.length === 0) throw new HttpError(400, "The file has no data rows");
+  if (!header || data.length === 0) throw new HttpError(400, "The file has a header row but no data rows. Add at least one row below the column names.");
 
   const mapped = mapColumns(header, input.kind);
   if ("error" in mapped) throw new HttpError(400, mapped.error);
@@ -93,7 +93,7 @@ export async function analyzeImport(input: { kind: Kind; dateFormat: DateFormat;
       ? await prisma.expense.count({ where: { userId } })
       : await prisma.income.count({ where: { userId } });
   if (current + toInsert.length > (input.kind === "EXPENSE" ? MAX_EXPENSES : MAX_INCOME)) {
-    throw new HttpError(400, "This import would exceed the entry limit for your account");
+    throw new HttpError(400, "Importing this file would take you over the entry limit for your account. Delete old entries or import fewer rows.");
   }
 
   return {

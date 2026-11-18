@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
-import { HttpError, notFound, safely, type ActionResult } from "@/lib/errors";
+import { HttpError, notFound, safely, type ActionResult, limitReached } from "@/lib/errors";
 import { getUserCurrency } from "@/lib/preferences";
 import { contributionInput, formToObject, goalInput, goalUpdate, idInput } from "@/lib/validation";
 
@@ -22,7 +22,7 @@ export async function createGoal(fd: FormData): Promise<ActionResult> {
     await rateLimit(`goal:create:${userId}`, 20, 60);
     const input = goalInput.parse(formToObject(fd));
     if ((await prisma.savingsGoal.count({ where: { userId } })) >= MAX_GOALS) {
-      throw new HttpError(400, "Goal limit reached");
+      throw limitReached("savings goals", MAX_GOALS);
     }
     await prisma.savingsGoal.create({
       data: {
@@ -79,7 +79,7 @@ export async function addContribution(fd: FormData): Promise<ActionResult> {
     });
     if (!goal) throw notFound();
     if ((await prisma.goalContribution.count({ where: { userId } })) >= MAX_CONTRIBUTIONS) {
-      throw new HttpError(400, "Contribution limit reached");
+      throw limitReached("contributions", MAX_CONTRIBUTIONS);
     }
     await prisma.goalContribution.create({
       data: {

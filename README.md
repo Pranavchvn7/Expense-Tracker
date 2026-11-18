@@ -2,7 +2,10 @@
 
 A secure, multi-user expense tracker. Next.js (App Router) · TypeScript · Better Auth · Prisma · Neon Postgres · Zod · Vercel.
 
-## Features (v0.3.3)
+## Features (v0.3.4)
+- Profile (name, country, timezone), pagination, sortable lists, coloured categories, modern charts, mobile bottom navigation
+
+### v0.3.3
 - Savings goals with progress and a monthly target
 - CSV import with preview, duplicate skipping and category matching
 
@@ -60,6 +63,10 @@ See [SECURITY.md](./SECURITY.md) for the threat model and the mapping to the 5-p
 - v0.3.1 (done): currency in Settings, theme toggle, speed
 - v0.3.2 (done): recurring expenses and income
 - v0.3.3 (done): savings goals and CSV import
-- v0.3.4: monthly and yearly PDF reports
+- v0.3.4 (done): polish, profile, pagination, charts, mobile
+- v0.4.0: Budgets page, payment methods, goal templates
+- v0.4.1: reports with filters and PDF downloads
+- v0.4.2: debt payoff tracker
+- v0.5.0: offline mode and push notifications
 - v0.4: receipt uploads (presigned S3/R2 URLs, MIME allowlist, UUID keys)
 - Playwright e2e suite (page objects, API tests, CI)

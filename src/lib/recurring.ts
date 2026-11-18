@@ -1,7 +1,9 @@
 import "server-only";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
-import { dueOccurrences, utcToday } from "@/lib/recurrence";
+import { dueOccurrences } from "@/lib/recurrence";
+import { getUserPrefs } from "@/lib/preferences";
+import { todayDate } from "@/lib/tz";
 
 const MAX_PER_RULE_PER_RUN = 120;
 const MAX_EXPENSES = 50_000; // same caps as manual entry
@@ -20,7 +22,9 @@ const MAX_INCOME = 20_000;
 export async function materializeRecurring(): Promise<void> {
   try {
     const { userId } = await requireSession();
-    const today = utcToday();
+    // "Due today" means today in the user's own timezone (Profile), not UTC.
+    const { timezone } = await getUserPrefs();
+    const today = todayDate(timezone);
     const rules = await prisma.recurringRule.findMany({
       where: { userId, active: true, nextDue: { lte: today } },
       take: 50,

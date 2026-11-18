@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
-import { HttpError, notFound, safely, type ActionResult } from "@/lib/errors";
+import { HttpError, notFound, safely, type ActionResult, limitReached } from "@/lib/errors";
 import { assertOwnCategory } from "@/lib/ownership";
 import { getUserCurrency } from "@/lib/preferences";
 import { formToObject, idInput, recurringCreate, recurringUpdate } from "@/lib/validation";
@@ -28,7 +28,7 @@ export async function createRule(fd: FormData): Promise<ActionResult> {
     await assertOwnCategory(userId, categoryId);
 
     const count = await prisma.recurringRule.count({ where: { userId } });
-    if (count >= MAX_RULES) throw new HttpError(400, "Recurring limit reached");
+    if (count >= MAX_RULES) throw limitReached("recurring items", MAX_RULES);
 
     await prisma.recurringRule.create({
       data: {
@@ -65,7 +65,7 @@ export async function updateRule(fd: FormData): Promise<ActionResult> {
     if (!rule) throw notFound();
     const categoryId = rule.kind === "EXPENSE" ? input.categoryId : undefined;
     await assertOwnCategory(userId, categoryId);
-    if (input.endDate && input.endDate < rule.startDate) throw new HttpError(400, "Invalid input");
+    if (input.endDate && input.endDate < rule.startDate) throw new HttpError(400, "The end date cannot be before the first date.");
 
     // Only future occurrences change; rows already generated are left alone.
     const res = await prisma.recurringRule.updateMany({

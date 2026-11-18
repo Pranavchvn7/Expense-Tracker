@@ -1,8 +1,13 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/session";
 import { env } from "@/env";
 import { IconChart, IconShield, IconWallet, LogoMark, IconCheck } from "@/components/icons";
 
-export default function Home() {
+export default async function Home() {
+  // Someone who is already signed in never needs the landing page.
+  const session = await getSession();
+  if (session?.user?.id) redirect("/dashboard");
   return (
     <>
       <section className="hero">

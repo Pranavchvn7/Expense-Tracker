@@ -9,29 +9,41 @@ import { setBudget, deleteBudget } from "@/actions/budgets";
 import { createShare, revokeShare } from "@/actions/share";
 import { deleteAccount } from "@/actions/account";
 import { setCurrency } from "@/actions/preferences";
-import { getUserCurrency } from "@/lib/preferences";
+import { getUserPrefs } from "@/lib/preferences";
+import { updateProfile } from "@/actions/profile";
+import { countryOptions } from "@/lib/countries";
+import { listTimeZones } from "@/lib/tz";
+import { TimezoneField } from "@/components/TimezoneField";
+import { SettingsControls } from "@/components/SettingsControls";
+import { CategoryTag } from "@/components/CategoryTag";
 import { listBudgets, listCategories, listShares } from "@/lib/queries";
-import { currentMonth, formatMoney } from "@/lib/money";
+import { formatMoney } from "@/lib/money";
 
 export default async function SettingsPage() {
-  const [cats, shares, budgets, security, sessions, currency] = await Promise.all([
+  const [cats, shares, budgets, security, sessions, prefs] = await Promise.all([
     listCategories(),
     listShares(),
     listBudgets(),
     getSecurityInfo(),
     listSessions(),
-    getUserCurrency(),
+    getUserPrefs(),
   ]);
+  const { currency } = prefs;
+  const countries = countryOptions();
+  const zones = listTimeZones();
+  const thisMonth = new Date().toISOString().slice(0, 7);
 
   return (
     <>
       <div className="page-head">
         <div>
           <h1>Settings</h1>
-          <p>Security, categories, budgets and sharing</p>
+          <p>Profile, security, categories, budgets and sharing</p>
         </div>
+        <SettingsControls />
         <nav className="chips" aria-label="Jump to section">
-          <Link className="chip" href="#preferences">Preferences</Link>
+          <Link className="chip" href="#profile">Profile</Link>
+          <Link className="chip" href="#preferences">Currency</Link>
           <Link className="chip" href="#security">Security</Link>
           <Link className="chip" href="#categories">Categories</Link>
           <Link className="chip" href="#budgets">Budgets</Link>
@@ -40,8 +52,35 @@ export default async function SettingsPage() {
         </nav>
       </div>
 
-      <section id="preferences" className="section">
-        <h2>Currency</h2>
+      <details id="profile" className="module" open>
+        <summary><h2>Profile</h2></summary>
+        <div className="module-body">
+          <p className="lead muted">
+            Only non-sensitive details. Your country and timezone decide what &ldquo;today&rdquo; means for new
+            entries and when recurring items are added. Email and password are not editable here.
+          </p>
+          <div className="card">
+            <ActionForm action={updateProfile} submitLabel="Save profile" className="stack">
+              <label>Display name
+                <input name="name" maxLength={60} defaultValue={prefs.name} required autoComplete="name" />
+              </label>
+              <div className="row">
+                <label>Country
+                  <select name="country" defaultValue={prefs.country ?? ""}>
+                    <option value="">Not set</option>
+                    {countries.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
+                  </select>
+                </label>
+                <TimezoneField zones={zones} defaultValue={prefs.timezoneSet ? prefs.timezone : ""} />
+              </div>
+            </ActionForm>
+          </div>
+        </div>
+      </details>
+
+      <details id="preferences" className="module" open>
+        <summary><h2>Currency</h2></summary>
+        <div className="module-body">
         <p className="lead muted">
           Used for every new expense, income entry and budget. Existing entries keep the currency
           they were saved with and are not converted; the dashboard only totals your current currency.
@@ -58,10 +97,12 @@ export default async function SettingsPage() {
             </label>
           </ActionForm>
         </div>
-      </section>
+      </div>
+      </details>
 
-      <section id="security" className="section">
-        <h2>Password</h2>
+      <details id="security" className="module" open>
+        <summary><h2>Password</h2></summary>
+        <div className="module-body">
         <div className="card"><ChangePasswordForm /></div>
 
         <div className="section">
@@ -109,10 +150,12 @@ export default async function SettingsPage() {
             />
           )}
         </div>
-      </section>
+      </div>
+      </details>
 
-      <section id="categories" className="section">
-        <h2>Categories</h2>
+      <details id="categories" className="module" open>
+        <summary><h2>Categories</h2></summary>
+        <div className="module-body">
         <div className="card stack">
           <ActionForm action={createCategory} submitLabel="Add category" className="row" resetOnSuccess>
             <label>Name<input name="name" maxLength={40} required /></label>
@@ -131,17 +174,19 @@ export default async function SettingsPage() {
                     confirmMessage="Remove this category? Its expenses become uncategorised and its budgets are deleted."
                   >
                     <input type="hidden" name="id" value={c.id} />
-                    <span className="tag">{c.name}</span>
+                    <CategoryTag name={c.name} color={c.color} />
                   </ActionForm>
                 </li>
               ))}
             </ul>
           )}
         </div>
-      </section>
+      </div>
+      </details>
 
-      <section id="budgets" className="section">
-        <h2>Monthly budgets</h2>
+      <details id="budgets" className="module" open>
+        <summary><h2>Monthly budgets</h2></summary>
+        <div className="module-body">
         <p className="lead muted">
           A budget applies to every month. Budgets use your currency. Setting one again for the same category updates it.
         </p>
@@ -173,23 +218,25 @@ export default async function SettingsPage() {
                     confirmMessage="Remove this budget?"
                   >
                     <input type="hidden" name="id" value={b.id} />
-                    <span>{b.category.name}: <strong>{formatMoney(b.amountMinor, b.currency)}</strong> / month</span>
+                    <span><CategoryTag name={b.category.name} color={b.category.color} /> <strong>{formatMoney(b.amountMinor, b.currency)}</strong> / month</span>
                   </ActionForm>
                 </li>
               ))}
             </ul>
           )}
         </div>
-      </section>
+      </div>
+      </details>
 
-      <section id="sharing" className="section">
-        <h2>Share a monthly summary</h2>
+      <details id="sharing" className="module" open>
+        <summary><h2>Share a monthly summary</h2></summary>
+        <div className="module-body">
         <p className="lead muted">
           Creates a read-only link with category totals only (no descriptions or notes). It expires automatically.
         </p>
         <div className="card stack">
           <ActionForm action={createShare} submitLabel="Create link" className="row">
-            <label>Month<input type="month" name="month" defaultValue={currentMonth()} required /></label>
+            <label>Month<input type="month" name="month" defaultValue={thisMonth} required /></label>
             <label>Valid for (days)<input type="number" name="days" min={1} max={30} defaultValue={7} required /></label>
           </ActionForm>
           {shares.length > 0 && (
@@ -214,10 +261,12 @@ export default async function SettingsPage() {
             </ul>
           )}
         </div>
-      </section>
+      </div>
+      </details>
 
-      <section id="danger" className="section">
-        <h2>Delete account</h2>
+      <details id="danger" className="module">
+        <summary><h2>Delete account</h2></summary>
+        <div className="module-body">
         <p className="lead muted">Permanently removes your account and all expenses and income. This cannot be undone.</p>
         <div className="card">
           <ActionForm
@@ -230,7 +279,8 @@ export default async function SettingsPage() {
             <label>Type DELETE to confirm<input name="confirm" autoComplete="off" required /></label>
           </ActionForm>
         </div>
-      </section>
+      </div>
+      </details>
     </>
   );
 }

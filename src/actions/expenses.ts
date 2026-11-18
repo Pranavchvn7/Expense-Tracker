@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
-import { notFound, safely, type ActionResult } from "@/lib/errors";
+import { notFound, safely, type ActionResult, limitReached } from "@/lib/errors";
 import { getUserCurrency } from "@/lib/preferences";
 import { assertOwnCategory } from "@/lib/ownership";
 import { expenseInput, expenseUpdate, formToObject, idInput } from "@/lib/validation";
@@ -19,7 +19,7 @@ export async function createExpense(fd: FormData): Promise<ActionResult> {
     await assertOwnCategory(userId, input.categoryId);
 
     const total = await prisma.expense.count({ where: { userId } });
-    if (total >= MAX_EXPENSES_PER_USER) throw notFound();
+    if (total >= MAX_EXPENSES_PER_USER) throw limitReached("expenses", MAX_EXPENSES_PER_USER);
 
     await prisma.expense.create({
       data: {
