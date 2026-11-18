@@ -50,10 +50,16 @@
 - **Bounded work.** Start dates are limited to ±1 year, at most 120 entries per rule per visit, 50 rules per user, and the existing per-account entry caps apply to generated rows.
 - **On-open generation** needs no cron endpoint, so there is no extra public URL or shared secret to protect.
 
+## v0.3.3 additions
+- **Savings goals** follow the standard rules. A contribution's goal id comes from the client, so it is checked to belong to the caller before anything is written.
+- **CSV import is untrusted input.** Parsed on the server by a small pure parser; cells are cleaned and capped; amounts and dates are strictly validated; the 80 kb request cap bounds file size; row, rate and account caps bound the work; the commit step re-runs the full validation and inserts in one transaction. Nothing from the file is ever evaluated, and display is React-escaped.
+- **Formula injection** is handled on the way out (export prefixes risky cells) and the matching apostrophe is removed on the way in so round trips are lossless.
+
 ## Accepted dependency advisories
-CI runs `audit-ci` and fails on any high or critical advisory that is not listed in `audit-ci.jsonc`. Three are accepted for now, each with its reason written next to it in that file:
+CI runs `audit-ci` and fails on any high or critical advisory that is not listed in `audit-ci.jsonc`. Several are accepted for now (picomatch, postcss, zod, deepmerge-ts), each with its reason written next to it in that file:
 - **deepmerge-ts (inside the `prisma` CLI, dev only):** never runs in the deployed app or on user input. `prisma` and `@prisma/client` are pinned to the same version (6.19.3) because a mismatched pair is a bigger risk than this advisory. Fix = Prisma 7 (breaking).
 - **postcss (inside next):** build-time only, runs on this repo's own CSS, never on user input. Fix = Next 16 (breaking).
+- **picomatch (dev tooling only):** glob matching inside eslint/typescript-eslint at lint time; never in the deployed app. Remove when the tooling ships a patched version.
 - **zod:** the flaw needs a client-supplied array/set/map; no schema here accepts one, and request bodies are capped at 100 kb. Fix = zod 4 (breaking).
 
 Both upgrades are planned as their own branches with the full build and, later, the e2e suite to catch breakage. Remove the allowlist entry when each upgrade lands.

@@ -46,6 +46,10 @@ export default async function IncomePage({
         </div>
       </div>
 
+      <p><Link href="/import">Import income from a CSV file</Link></p>
+
+      <p><Link href="/import">Import income from a CSV file</Link></p>
+
       <details className="add">
         <summary>Add income</summary>
         <div className="body">

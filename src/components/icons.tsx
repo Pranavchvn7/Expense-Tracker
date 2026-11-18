@@ -91,6 +91,18 @@ export const IconRepeat = () => (
     <path d="M21 13v2a3 3 0 0 1-3 3H3" />
   </Icon>
 );
+export const IconTarget = () => (
+  <Icon>
+    <circle cx="12" cy="12" r="9" />
+    <circle cx="12" cy="12" r="5" />
+    <circle cx="12" cy="12" r="1" />
+  </Icon>
+);
+export const IconUpload = () => (
+  <Icon>
+    <path d="M12 15V3M7 8l5-5 5 5M4 21h16" />
+  </Icon>
+);
 export const IconSun = () => (
   <Icon>
     <circle cx="12" cy="12" r="4" />

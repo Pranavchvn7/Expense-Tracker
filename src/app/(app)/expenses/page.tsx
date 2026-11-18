@@ -5,7 +5,7 @@ import { createExpense, deleteExpense } from "@/actions/expenses";
 import { listCategories, listExpenses } from "@/lib/queries";
 import { currentMonth, formatMoney, monthLabel } from "@/lib/money";
 import { parseListQuery } from "@/lib/validation";
-import { IconDownload, IconInbox } from "@/components/icons";
+import { IconDownload, IconInbox, IconUpload } from "@/components/icons";
 
 export default async function ExpensesPage({
   searchParams,
@@ -38,6 +38,7 @@ export default async function ExpensesPage({
         </div>
         {/* Plain <a>, not <Link>: prefetching a download would count against the export limit. */}
         <div className="actions">
+          <Link className="btn ghost small" href="/import"><IconUpload />Import CSV</Link>
           <a className="btn ghost small" href={`/expenses/export?month=${month}`}><IconDownload />This month CSV</a>
           <a className="btn ghost small" href="/expenses/export?all=1"><IconDownload />All CSV</a>
         </div>

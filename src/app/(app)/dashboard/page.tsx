@@ -2,6 +2,8 @@ import Link from "next/link";
 import { materializeRecurring } from "@/lib/recurring";
 import { listBudgets, monthTotalsByCategory } from "@/lib/queries";
 import { getDashboardData } from "@/lib/finance-queries";
+import { listGoals } from "@/lib/goal-queries";
+import { percent } from "@/lib/goal-math";
 import { currentMonth, formatMoney, monthLabel } from "@/lib/money";
 import { addMonthsKey } from "@/lib/chart-math";
 import { monthSchema } from "@/lib/validation";
@@ -30,10 +32,11 @@ export default async function DashboardPage({
   // Create anything that fell due since the last visit before reading the data.
   await materializeRecurring();
   // One round of parallel queries (the session lookup is shared per request).
-  const [data, budgets, totals] = await Promise.all([
+  const [data, budgets, totals, goals] = await Promise.all([
     getDashboardData(month),
     listBudgets(),
     monthTotalsByCategory(month),
+    listGoals({ limit: 3 }),
   ]);
 
   const { currency } = data;
@@ -164,6 +167,26 @@ export default async function DashboardPage({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {goals.length > 0 && (
+        <div className="card section">
+          <div className="row between">
+            <h2>Savings goals</h2>
+            <Link href="/goals">Manage</Link>
+          </div>
+          {goals.map((g) => (
+            <div key={g.id} className="budget">
+              <div className="row between">
+                <strong>{g.name}</strong>
+                <span className="muted">
+                  {formatMoney(g.savedMinor, g.currency)} of {formatMoney(g.targetMinor, g.currency)} ({percent(g.savedMinor, g.targetMinor)}%)
+                </span>
+              </div>
+              <progress max={g.targetMinor} value={Math.min(g.savedMinor, g.targetMinor)} aria-label={`${g.name} progress`} />
+            </div>
+          ))}
         </div>
       )}
 

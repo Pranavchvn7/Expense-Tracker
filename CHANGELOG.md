@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.3.3 (includes 0.3.2)
+### Added
+- **Savings goals:** set a target (and optional date), add money by hand, see progress, the monthly amount needed to hit the date, and a summary on the dashboard. Edit, delete, and undo single contributions
+- **CSV import** (expenses or income): choose the date format, preview what will be imported, then import. Skips rows that already exist so importing twice is safe, matches categories by name, reports bad rows by line number. Files exported from this app import as they are. Up to 1,000 rows / about 80 KB per file
+- Goals in the navigation (mobile bar now has six tabs)
+
+### Fixed
+- Choosing "Uncategorised" made the recurring form (and the expense form) fail with "Something went wrong": the empty option was rejected as an invalid id. Empty now means "no category"
+- Invalid input now says "Please check your input and try again" instead of "Something went wrong"
+
+### Security
+- Goals and contributions: session first, user id on every query, the goal id from the form must belong to you, Zod validation, rate limits, caps (50 goals, 5,000 contributions)
+- Import: the file is parsed by a small RFC 4180 parser on the server (nothing is executed), every cell is stripped of control characters and length-capped, amounts and dates are strictly validated, and the commit step re-validates the whole file instead of trusting the preview. Rate limited (30 previews and 10 imports an hour), the same per-account caps apply, and the insert is one transaction (all or nothing)
+- Text that this app's export protected with a leading apostrophe (spreadsheet formula guard) is restored on import; exports still protect it again
+
+### Operations
+- New migrations: `add_recurring_rules` (if not applied yet) and `add_savings_goals`. Run `npx prisma migrate dev --name add_savings_goals`. No new dependencies or environment variables
+
 ## 0.3.2
 ### Added
 - Recurring expenses and income (weekly, monthly, yearly) on a new Recurring page: add, edit, pause/resume, delete, optional end date and category

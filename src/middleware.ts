@@ -27,7 +27,7 @@ export function middleware(req: NextRequest) {
   ].join("; ");
 
   const { pathname } = req.nextUrl;
-  const protectedPrefixes = ["/dashboard", "/expenses", "/income", "/recurring", "/settings"];
+  const protectedPrefixes = ["/dashboard", "/expenses", "/income", "/recurring", "/goals", "/import", "/settings"];
   if (protectedPrefixes.some((p) => pathname.startsWith(p))) {
     const hasCookie =
       req.cookies.has("__Secure-better-auth.session_token") ||

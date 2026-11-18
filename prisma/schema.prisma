@@ -31,6 +31,8 @@ model User {
   budgets       Budget[]
   incomes       Income[]
   recurringRules RecurringRule[]
+  goals         SavingsGoal[]
+  goalContributions GoalContribution[]
   twoFactor     TwoFactor[]
 
   @@map("user")
@@ -208,6 +210,35 @@ model RecurringRule {
   incomes     Income[]
 
   @@index([userId, active, nextDue])
+}
+
+// A savings target. Progress is the sum of its contributions (added by hand).
+model SavingsGoal {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String   @db.VarChar(80)
+  targetMinor   Int
+  currency      String   @db.VarChar(3)
+  targetDate    DateTime? @db.Date
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  contributions GoalContribution[]
+
+  @@index([userId])
+}
+
+model GoalContribution {
+  id            String      @id @default(uuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goalId        String
+  goal          SavingsGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  amountMinor   Int
+  contributedOn DateTime    @db.Date
+  createdAt     DateTime    @default(now())
+
+  @@index([userId, goalId])
 }
 
 // Monthly budget for one category in one currency (applies to every month).
