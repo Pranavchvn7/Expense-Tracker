@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
 import { notFound, safely, type ActionResult } from "@/lib/errors";
+import { getUserCurrency } from "@/lib/preferences";
 import { assertOwnCategory } from "@/lib/ownership";
 import { expenseInput, expenseUpdate, formToObject, idInput } from "@/lib/validation";
 
@@ -25,7 +26,7 @@ export async function createExpense(fd: FormData): Promise<ActionResult> {
         userId,
         categoryId: input.categoryId ?? null,
         amountMinor: input.amount,
-        currency: input.currency,
+        currency: await getUserCurrency(),
         description: input.description,
         note: input.note ?? null,
         spentOn: input.spentOn,
@@ -51,7 +52,7 @@ export async function updateExpense(fd: FormData): Promise<ActionResult> {
       data: {
         categoryId: input.categoryId ?? null,
         amountMinor: input.amount,
-        currency: input.currency,
+        // currency is intentionally not editable: it was fixed when the entry was created
         description: input.description,
         note: input.note ?? null,
         spentOn: input.spentOn,

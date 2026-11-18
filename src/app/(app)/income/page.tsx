@@ -51,11 +51,6 @@ export default async function IncomePage({
               <label>Amount
                 <input name="amount" inputMode="decimal" pattern="\d{1,9}(\.\d{1,2})?" placeholder="0.00" required />
               </label>
-              <label>Currency
-                <select name="currency" defaultValue="INR">
-                  <option>INR</option><option>USD</option><option>EUR</option><option>GBP</option>
-                </select>
-              </label>
               <label>Date received
                 <input name="receivedOn" type="date" defaultValue={today} max={today} required />
               </label>

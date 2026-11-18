@@ -18,6 +18,8 @@ model User {
   emailVerified Boolean   @default(false)
   image         String?
   twoFactorEnabled Boolean? @default(false)
+  // Chosen once in Settings; used for every new expense, income and budget.
+  currency      String    @default("INR") @db.VarChar(3)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

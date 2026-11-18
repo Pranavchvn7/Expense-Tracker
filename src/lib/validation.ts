@@ -44,7 +44,6 @@ export const currencySchema = z.enum(["INR", "USD", "EUR", "GBP"]);
 
 export const expenseInput = z.object({
   amount: amountSchema,
-  currency: currencySchema.default("INR"),
   description: cleanText(120),
   note: optionalCleanText(500),
   spentOn: dateSchema,
@@ -55,6 +54,9 @@ export const expenseUpdate = expenseInput.extend({ id: uuid });
 
 export const categoryInput = z.object({ name: cleanText(40) });
 
+/** Currency is chosen once in Settings; entry forms never send one. */
+export const currencyInput = z.object({ currency: currencySchema });
+
 export const idInput = z.object({ id: uuid });
 
 export const shareInput = z.object({
@@ -64,7 +66,6 @@ export const shareInput = z.object({
 
 export const incomeInput = z.object({
   amount: amountSchema,
-  currency: currencySchema.default("INR"),
   source: cleanText(80),
   note: optionalCleanText(500),
   receivedOn: dateSchema,
@@ -72,16 +73,9 @@ export const incomeInput = z.object({
 
 export const incomeUpdate = incomeInput.extend({ id: uuid });
 
-/** ?cur= query value: a known currency or undefined. */
-export function parseCurrencyParam(v: string | string[] | undefined) {
-  const r = currencySchema.safeParse(Array.isArray(v) ? v[0] : v);
-  return r.success ? r.data : undefined;
-}
-
 export const budgetInput = z.object({
   categoryId: uuid,
   amount: amountSchema,
-  currency: currencySchema.default("INR"),
 });
 
 /**

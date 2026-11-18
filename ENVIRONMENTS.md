@@ -72,7 +72,7 @@ git push --force-with-lease origin feat/my-change:staging
 #    If Vercel shows no deployment, the same commit was probably already pushed to another
 #    branch. Push a new commit instead:
 #    git commit --allow-empty -m "chore: trigger staging deploy"
-#    git push origin HEAD:staging
+#    git push --force-with-lease origin HEAD:staging
 
 # 3. Test on the staging address.
 

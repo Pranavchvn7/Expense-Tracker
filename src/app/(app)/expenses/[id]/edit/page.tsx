@@ -34,11 +34,6 @@ export default async function EditExpensePage({ params }: { params: Promise<{ id
               required
             />
           </label>
-          <label>Currency
-            <select name="currency" defaultValue={expense.currency}>
-              <option>INR</option><option>USD</option><option>EUR</option><option>GBP</option>
-            </select>
-          </label>
           <label>Date
             <input
               name="spentOn"

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/SignOutButton";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { IconDashboard, IconReceipt, IconSettings, IconWallet, LogoMark } from "@/components/icons";
 
 const items = [
@@ -12,7 +13,7 @@ const items = [
   { href: "/settings", label: "Settings", icon: <IconSettings /> },
 ];
 
-export function AppNav({ name }: { name: string }) {
+export function AppNav({ name, theme }: { name: string; theme: "light" | "dark" | "system" }) {
   const pathname = usePathname();
   const active = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
   const initial = (name.trim()[0] ?? "?").toUpperCase();
@@ -34,6 +35,7 @@ export function AppNav({ name }: { name: string }) {
             <span className="avatar" aria-hidden="true">{initial}</span>
             <span className="who-name">{name}</span>
           </div>
+          <ThemeToggle initial={theme} />
           <SignOutButton />
         </div>
       </aside>
@@ -42,7 +44,10 @@ export function AppNav({ name }: { name: string }) {
         <Link href="/dashboard" className="brand">
           <LogoMark /> Expense Tracker
         </Link>
-        <SignOutButton />
+        <div className="actions">
+          <ThemeToggle initial={theme} />
+          <SignOutButton />
+        </div>
       </header>
 
       <nav className="bottom-bar" aria-label="Main">

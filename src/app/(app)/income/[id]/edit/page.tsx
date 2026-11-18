@@ -28,11 +28,6 @@ export default async function EditIncomePage({ params }: { params: Promise<{ id:
               required
             />
           </label>
-          <label>Currency
-            <select name="currency" defaultValue={income.currency}>
-              <option>INR</option><option>USD</option><option>EUR</option><option>GBP</option>
-            </select>
-          </label>
           <label>Date received
             <input name="receivedOn" type="date" defaultValue={income.receivedOn.toISOString().slice(0, 10)} max={today} required />
           </label>

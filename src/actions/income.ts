@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
 import { notFound, safely, type ActionResult } from "@/lib/errors";
+import { getUserCurrency } from "@/lib/preferences";
 import { formToObject, idInput, incomeInput, incomeUpdate } from "@/lib/validation";
 
 const MAX_INCOME_PER_USER = 20_000;
@@ -27,7 +28,7 @@ export async function createIncome(fd: FormData): Promise<ActionResult> {
       data: {
         userId,
         amountMinor: input.amount,
-        currency: input.currency,
+        currency: await getUserCurrency(),
         source: input.source,
         note: input.note ?? null,
         receivedOn: input.receivedOn,
@@ -48,7 +49,6 @@ export async function updateIncome(fd: FormData): Promise<ActionResult> {
       where: { id: input.id, userId },
       data: {
         amountMinor: input.amount,
-        currency: input.currency,
         source: input.source,
         note: input.note ?? null,
         receivedOn: input.receivedOn,
