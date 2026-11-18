@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { materializeRecurring } from "@/lib/recurring";
 import { ActionForm } from "@/components/ActionForm";
 import { createIncome, deleteIncome } from "@/actions/income";
 import { listIncome } from "@/lib/finance-queries";
@@ -16,6 +17,8 @@ export default async function IncomePage({
   const now = currentMonth();
   const parsed = monthSchema.safeParse(Array.isArray(sp.month) ? sp.month[0] : sp.month);
   const month = parsed.success && parsed.data <= now ? parsed.data : now;
+  // Create anything that fell due since the last visit before reading the data.
+  await materializeRecurring();
   const { rows, totals } = await listIncome(month);
   const today = new Date().toISOString().slice(0, 10);
 
@@ -83,7 +86,7 @@ export default async function IncomePage({
                   <td data-label="Date">{r.receivedOn.toISOString().slice(0, 10)}</td>
                   <td data-label="Source">
                     <span>
-                      {r.source}
+                      {r.source}{r.recurringRuleId && <> <span className="tag">Recurring</span></>}
                       {r.note && <div className="muted">{r.note}</div>}
                     </span>
                   </td>

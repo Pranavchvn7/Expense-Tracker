@@ -44,6 +44,12 @@
 - **Request-scoped session cache.** `getSession()` uses React `cache()`, so it is shared only inside one request. It does not keep sessions between requests, so revoking a device still takes effect immediately.
 - **Currency preference** lives on the user row, is read server-side and is never accepted from the client on entries.
 
+## v0.3.2 additions
+- **Recurring rules** follow the standard rules (session, `userId` in `where`, Zod, rate limits, caps).
+- **No double generation.** Occurrences are created inside a transaction that first claims the rule with `updateMany` on the `nextDue` it read; a concurrent request matches nothing. `(recurringRuleId, date)` is unique in the database as a backstop.
+- **Bounded work.** Start dates are limited to ±1 year, at most 120 entries per rule per visit, 50 rules per user, and the existing per-account entry caps apply to generated rows.
+- **On-open generation** needs no cron endpoint, so there is no extra public URL or shared secret to protect.
+
 ## Accepted dependency advisories
 CI runs `audit-ci` and fails on any high or critical advisory that is not listed in `audit-ci.jsonc`. Three are accepted for now, each with its reason written next to it in that file:
 - **deepmerge-ts (inside the `prisma` CLI, dev only):** never runs in the deployed app or on user input. `prisma` and `@prisma/client` are pinned to the same version (6.19.3) because a mismatched pair is a bigger risk than this advisory. Fix = Prisma 7 (breaking).

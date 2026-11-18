@@ -1,5 +1,46 @@
 # Changelog
 
+## 0.3.2
+### Added
+- Recurring expenses and income (weekly, monthly, yearly) on a new Recurring page: add, edit, pause/resume, delete, optional end date and category
+- Due items are created automatically the next time you open the dashboard, Expenses or Income, including ones missed while you were away
+- "Recurring" tag on generated entries; a Recurring item in the navigation
+
+### Security
+- Every rule query and mutation is session-first, scoped by the session user id, Zod validated and rate limited; categories are checked to belong to you; 50 rules per account
+- Generation is idempotent: each rule is claimed with a conditional update inside the same database transaction as the inserts, and (rule, date) is unique, so two tabs or a retry can never create an entry twice
+- A start date can be at most a year back or ahead, at most 120 entries are created per rule per visit, and the normal per-account entry caps still apply
+- A generation failure is logged without data and never breaks the page
+
+### Fixed
+- Added a favicon (the browser console showed a 404 for /favicon.ico)
+
+### Notes
+- Dates use UTC, so the day changes at 05:30 in India
+- Currency is fixed when the rule is created. Editing changes future entries only; entries already created are never rewritten
+
+### Operations
+- New migration: run `npx prisma migrate dev --name add_recurring_rules`. No new dependencies or environment variables
+
+## 0.3.1
+### Added
+- Currency is now chosen once in Settings > Currency and applied to every new expense, income entry and budget. The currency pickers are gone from all forms
+- Light / system / dark theme toggle (sidebar and top bar), remembered in a cookie and applied on the server, so there is no flash and no inline script
+- Loading skeletons while pages load
+
+### Changed
+- Faster navigation: the session is looked up once per request instead of 5-6 times, dashboard queries run in parallel, and Vercel functions are pinned to `cle1` (Cleveland) next to the Neon database in AWS US East 2 (Ohio)
+- Existing entries in other currencies are not converted. They keep their saved currency, are left out of dashboard totals and charts, and the dashboard says how many there are
+- Editing an entry no longer changes its currency
+
+### Security
+- The currency is read from the database for the signed-in user; no form field, query string or cookie can set it. Updating it uses the session user id and is rate limited
+- The theme cookie holds only light/dark and is allowlisted again on the server
+
+### Operations
+- New migration: run `npx prisma migrate dev --name add_user_currency`. No new dependencies or environment variables
+- `vercel.json` now sets `regions: ["cle1"]`. If your Neon project is elsewhere, change it to the nearest region
+
 ## 0.3.0
 ### Added
 - Complete visual redesign: design system in plain CSS, responsive app shell (sidebar / bottom tab bar), dark mode, new landing and sign-in pages, empty states, 404 and error pages

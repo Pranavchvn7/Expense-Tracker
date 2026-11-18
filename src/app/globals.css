@@ -147,7 +147,7 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; word-break: 
   backdrop-filter: blur(10px); border-bottom: 1px solid var(--line);
 }
 .bottom-bar {
-  position: fixed; inset: auto 0 0 0; z-index: 30; display: grid; grid-template-columns: repeat(4, 1fr);
+  position: fixed; inset: auto 0 0 0; z-index: 30; display: grid; grid-template-columns: repeat(5, 1fr);
   background: var(--surface); border-top: 1px solid var(--line); padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
 }
 .tab { display: grid; justify-items: center; gap: 2px; padding: 6px 4px; border-radius: 10px; color: var(--muted); text-decoration: none; font-size: 0.72rem; font-weight: 600; }

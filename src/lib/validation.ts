@@ -73,6 +73,52 @@ export const incomeInput = z.object({
 
 export const incomeUpdate = incomeInput.extend({ id: uuid });
 
+/** Recurring start date: at most a year back or ahead, so a rule cannot backfill thousands of rows. */
+const ruleDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((s) => !Number.isNaN(Date.parse(`${s}T00:00:00Z`)), "Invalid date")
+  .refine((s) => {
+    const d = new Date(`${s}T00:00:00Z`).getTime();
+    const now = Date.now();
+    return Math.abs(d - now) <= 366 * 86_400_000;
+  }, "Date out of range")
+  .transform((s) => new Date(`${s}T00:00:00Z`));
+
+const optionalRuleDate = z
+  .string()
+  .transform((s) => s.trim())
+  .pipe(z.union([z.literal(""), ruleDateSchema]))
+  .optional()
+  .transform((d) => (d instanceof Date ? d : undefined));
+
+export const recurringCreate = z
+  .object({
+    kind: z.enum(["EXPENSE", "INCOME"]),
+    amount: amountSchema,
+    label: cleanText(80),
+    note: optionalCleanText(500),
+    categoryId: uuid.optional(),
+    frequency: z.enum(["WEEKLY", "MONTHLY", "YEARLY"]),
+    startDate: ruleDateSchema,
+    endDate: optionalRuleDate,
+  })
+  .refine((v) => !v.endDate || v.endDate >= v.startDate, {
+    message: "End date is before start date",
+    path: ["endDate"],
+  });
+
+/** Editing keeps kind, frequency and start date fixed; amount, label, category, note, end date change. */
+export const recurringUpdate = z
+  .object({
+    id: uuid,
+    amount: amountSchema,
+    label: cleanText(80),
+    note: optionalCleanText(500),
+    categoryId: uuid.optional(),
+    endDate: optionalRuleDate,
+  });
+
 export const budgetInput = z.object({
   categoryId: uuid,
   amount: amountSchema,

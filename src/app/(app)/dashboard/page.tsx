@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { materializeRecurring } from "@/lib/recurring";
 import { listBudgets, monthTotalsByCategory } from "@/lib/queries";
 import { getDashboardData } from "@/lib/finance-queries";
 import { currentMonth, formatMoney, monthLabel } from "@/lib/money";
@@ -26,6 +27,8 @@ export default async function DashboardPage({
   const rawMonth = monthSchema.safeParse(Array.isArray(sp.month) ? sp.month[0] : sp.month);
   const month = rawMonth.success && rawMonth.data <= now ? rawMonth.data : now;
 
+  // Create anything that fell due since the last visit before reading the data.
+  await materializeRecurring();
   // One round of parallel queries (the session lookup is shared per request).
   const [data, budgets, totals] = await Promise.all([
     getDashboardData(month),
