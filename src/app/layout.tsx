@@ -28,6 +28,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const theme = await getTheme();
   return (
     <html lang="en" data-theme={theme === "system" ? undefined : theme}>
+      <head>
+        {/* use-credentials: the manifest is requested with the sign-in cookie, so hosts that sit behind a login (e.g. Vercel preview protection) do not redirect it elsewhere. */}
+        <link rel="manifest" href="/manifest.webmanifest" crossOrigin="use-credentials" />
+      </head>
       <body>
         {env.APP_ENV === "staging" && (
           <div className="env-banner" role="note">
