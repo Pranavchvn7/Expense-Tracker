@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { SignOutButton } from "@/components/SignOutButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
+  IconCard,
   IconDashboard,
   IconMore,
   IconPie,
@@ -25,6 +26,7 @@ const items = [
   { href: "/income", label: "Income", icon: <IconWallet /> },
   { href: "/budgets", label: "Budgets", icon: <IconPie /> },
   { href: "/reports", label: "Reports", icon: <IconReport /> },
+  { href: "/debts", label: "Debts", icon: <IconCard /> },
   { href: "/recurring", label: "Recurring", icon: <IconRepeat /> },
   { href: "/goals", label: "Goals", icon: <IconTarget /> },
   { href: "/settings", label: "Settings", icon: <IconSettings /> },

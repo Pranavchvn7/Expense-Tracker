@@ -44,6 +44,22 @@ export const dateSchema = z
   }, "cannot be in the future or before the year 2000")
   .transform((s) => new Date(`${s}T00:00:00Z`));
 
+/** Yearly interest rate as a percentage with up to 2 decimals ("12.5") -> basis points (1250). */
+export const rateSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{1,2}(\.\d{1,2})?$/, "must be a percentage such as 12 or 8.75 (under 100)")
+  .transform((s) => Math.round(Number(s) * 100));
+
+/** Like amountSchema but zero is allowed (interest charged can be nothing). */
+const moneyOrZero = z
+  .string()
+  .trim()
+  .regex(/^\d{1,9}(\.\d{1,2})?$/, "must be an amount such as 0 or 249.50")
+  .transform((s) => Math.round(Number(s) * 100));
+
+const optionalInterest = z.preprocess((v) => (v === "" || v === undefined ? undefined : v), moneyOrZero.optional());
+
 export const monthSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "must be a month written like 2026-03");
 
 export const currencySchema = z.enum(["INR", "USD", "EUR", "GBP"]);
@@ -159,6 +175,25 @@ export const goalInput = z.object({
 });
 
 export const goalUpdate = goalInput.extend({ id: uuid });
+
+export const debtInput = z.object({
+  name: cleanText(80),
+  kind: z.enum(["CREDIT_CARD", "LOAN"], { errorMap: () => ({ message: "Choose credit card or loan." }) }),
+  original: amountSchema,
+  apr: rateSchema,
+  minPayment: amountSchema,
+  startDate: dateSchema,
+});
+
+export const debtUpdate = debtInput.extend({ id: uuid });
+
+export const debtPaymentInput = z.object({
+  debtId: uuid,
+  amount: amountSchema,
+  paidOn: dateSchema,
+  interest: optionalInterest,
+  note: optionalCleanText(200),
+});
 
 export const contributionInput = z.object({
   goalId: uuid,

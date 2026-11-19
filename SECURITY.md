@@ -71,6 +71,11 @@
 - PDF route: session first, rate limited, Latin-1 sanitising of every string, validated filename, no-store, nosniff
 - pdf-lib: pure JS, runs in the function, makes no network calls
 
+## v0.4.2 additions
+- Debt and payment actions: session first, ownership of the debt id checked (BOLA), Zod, rate limits, per-user caps
+- Balances are derived (replayed from payments) rather than stored, so a tampered or stale value cannot exist
+- Rates are parsed with a strict regex into integer basis points; money stays in integer minor units
+
 ## Accepted dependency advisories
 CI runs `audit-ci` and fails on any high or critical advisory that is not listed in `audit-ci.jsonc`. Several are accepted for now (picomatch, postcss, zod, deepmerge-ts), each with its reason written next to it in that file:
 - **deepmerge-ts (inside the `prisma` CLI, dev only):** never runs in the deployed app or on user input. `prisma` and `@prisma/client` are pinned to the same version (6.19.3) because a mismatched pair is a bigger risk than this advisory. Fix = Prisma 7 (breaking).
