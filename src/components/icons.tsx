@@ -164,3 +164,11 @@ export const IconPie = () => (
     <path d="M15 3.5A9 9 0 0 1 20.5 9H15z" />
   </Icon>
 );
+
+export const IconReport = () => (
+  <Icon>
+    <path d="M6 3h9l4 4v14H6z" />
+    <path d="M14 3v5h5" />
+    <path d="M9 17v-3M12 17v-6M15 17v-4" />
+  </Icon>
+);
