@@ -1,5 +1,5 @@
 import "server-only";
-import type { Prisma } from "@prisma/client";
+import type { PaymentMethod, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 import { nextColor } from "@/lib/category-color";
@@ -38,6 +38,8 @@ export async function listExpenses(opts: {
   perPage: number;
   sort: "date" | "amount" | "description" | "category";
   dir: "asc" | "desc";
+  paymentMethod?: PaymentMethod;
+  reconciled?: "yes" | "no";
 }) {
   const { userId } = await requireSession();
   const { start, end } = monthRange(opts.month);
@@ -47,6 +49,8 @@ export async function listExpenses(opts: {
     userId,
     spentOn: { gte: start, lt: end },
     ...(opts.categoryId ? { categoryId: opts.categoryId } : {}),
+    ...(opts.paymentMethod ? { paymentMethod: opts.paymentMethod } : {}),
+    ...(opts.reconciled ? { reconciled: opts.reconciled === "yes" } : {}),
     ...(opts.q
       ? {
           OR: [
@@ -71,6 +75,8 @@ export async function listExpenses(opts: {
         note: true,
         spentOn: true,
         recurringRuleId: true,
+        paymentMethod: true,
+        reconciled: true,
         category: { select: { id: true, name: true, color: true } },
       },
     }),
@@ -96,6 +102,7 @@ export async function getExpense(id: string) {
       note: true,
       spentOn: true,
       categoryId: true,
+      paymentMethod: true,
     },
   });
 }
@@ -130,6 +137,24 @@ export async function monthTotalsByCategory(month: string) {
     where: { userId, spentOn: { gte: start, lt: end } },
     _sum: { amountMinor: true },
   });
+}
+
+/** Month spending per payment method (user's currency only), for reconciling statements. */
+export async function paymentBreakdown(month: string, currency: string) {
+  const { userId } = await requireSession();
+  const { start, end } = monthRange(month);
+  const rows = await prisma.expense.groupBy({
+    by: ["paymentMethod", "reconciled"],
+    where: { userId, currency, spentOn: { gte: start, lt: end } },
+    _sum: { amountMinor: true },
+    _count: { _all: true },
+  });
+  return rows.map((r) => ({
+    method: r.paymentMethod,
+    reconciled: r.reconciled,
+    totalMinor: r._sum.amountMinor ?? 0,
+    count: r._count._all,
+  }));
 }
 
 export async function listBudgets() {

@@ -5,7 +5,6 @@ import { TwoFactorSetup } from "@/components/TwoFactorSetup";
 import { revokeSession, revokeOtherSessions } from "@/actions/sessions";
 import { getSecurityInfo, listSessions } from "@/lib/account-queries";
 import { createCategory, deleteCategory } from "@/actions/categories";
-import { setBudget, deleteBudget } from "@/actions/budgets";
 import { createShare, revokeShare } from "@/actions/share";
 import { deleteAccount } from "@/actions/account";
 import { setCurrency } from "@/actions/preferences";
@@ -16,14 +15,12 @@ import { listTimeZones } from "@/lib/tz";
 import { TimezoneField } from "@/components/TimezoneField";
 import { SettingsControls } from "@/components/SettingsControls";
 import { CategoryTag } from "@/components/CategoryTag";
-import { listBudgets, listCategories, listShares } from "@/lib/queries";
-import { formatMoney } from "@/lib/money";
+import { listCategories, listShares } from "@/lib/queries";
 
 export default async function SettingsPage() {
-  const [cats, shares, budgets, security, sessions, prefs] = await Promise.all([
+  const [cats, shares, security, sessions, prefs] = await Promise.all([
     listCategories(),
     listShares(),
-    listBudgets(),
     getSecurityInfo(),
     listSessions(),
     getUserPrefs(),
@@ -184,48 +181,12 @@ export default async function SettingsPage() {
       </div>
       </details>
 
-      <details id="budgets" className="module" open>
-        <summary><h2>Monthly budgets</h2></summary>
+      <details id="budgets" className="module">
+        <summary><h2>Budgets</h2></summary>
         <div className="module-body">
-        <p className="lead muted">
-          A budget applies to every month. Budgets use your currency. Setting one again for the same category updates it.
-        </p>
-        <div className="card stack">
-          {cats.length === 0 ? (
-            <p className="muted">Add a category first.</p>
-          ) : (
-            <ActionForm action={setBudget} submitLabel="Save budget" className="row" resetOnSuccess>
-              <label>Category
-                <select name="categoryId" required defaultValue="">
-                  <option value="" disabled>Choose…</option>
-                  {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-              </label>
-              <label>Amount
-                <input name="amount" inputMode="decimal" pattern="\d{1,9}(\.\d{1,2})?" required />
-              </label>
-            </ActionForm>
-          )}
-          {budgets.length > 0 && (
-            <ul className="devices">
-              {budgets.map((b) => (
-                <li key={b.id}>
-                  <ActionForm
-                    action={deleteBudget}
-                    submitLabel="Remove"
-                    danger
-                    className="row between"
-                    confirmMessage="Remove this budget?"
-                  >
-                    <input type="hidden" name="id" value={b.id} />
-                    <span><CategoryTag name={b.category.name} color={b.category.color} /> <strong>{formatMoney(b.amountMinor, b.currency)}</strong> / month</span>
-                  </ActionForm>
-                </li>
-              ))}
-            </ul>
-          )}
+          <p className="lead muted">Budgets now have their own page with a card for each category.</p>
+          <Link className="btn soft small" href="/budgets">Open budgets</Link>
         </div>
-      </div>
       </details>
 
       <details id="sharing" className="module" open>

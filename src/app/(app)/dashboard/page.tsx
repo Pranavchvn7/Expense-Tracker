@@ -200,7 +200,10 @@ export default async function DashboardPage({
 
       {shownBudgets.length > 0 && (
         <div className="card section">
-          <h2>Budgets</h2>
+          <div className="row between">
+            <h2>Budgets</h2>
+            <Link className="btn soft small" href="/budgets">Manage <IconArrowRight /></Link>
+          </div>
           {shownBudgets.map((b) => {
             const used = spent.get(`${b.category.id}|${b.currency}`) ?? 0;
             const over = used > b.amountMinor;

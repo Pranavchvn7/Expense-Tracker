@@ -25,3 +25,8 @@ export function monthLabel(month: string, short = false): string {
   const name = MONTHS[m - 1] ?? month;
   return short ? name : `${name} ${y}`;
 }
+
+/** "123.45" -> 12345. Callers validate the string with a strict regex first. */
+export function amountToMinor(s: string): number {
+  return Math.round(Number(s) * 100);
+}

@@ -61,6 +61,11 @@
 - Error messages describe the cause (field, limit, wait time) but never echo submitted values, SQL, stack traces or schema; unexpected errors show a reference id only
 - Sorting and paging: column whitelist, validated integers, fixed page-size set
 
+## v0.4.0 additions
+- Reconcile toggle and payment method are validated server-side (enum, boolean flag) and always scoped by userId
+- Budget page queries use the session user and the user's own currency only; per-category totals never include other users' rows
+- Goal suggestion inputs (price, rate) come from the query string: regex-validated, length-capped, only used for display and for a prefilled form that is re-validated by Zod on submit
+
 ## Accepted dependency advisories
 CI runs `audit-ci` and fails on any high or critical advisory that is not listed in `audit-ci.jsonc`. Several are accepted for now (picomatch, postcss, zod, deepmerge-ts), each with its reason written next to it in that file:
 - **deepmerge-ts (inside the `prisma` CLI, dev only):** never runs in the deployed app or on user input. `prisma` and `@prisma/client` are pinned to the same version (6.19.3) because a mismatched pair is a bigger risk than this advisory. Fix = Prisma 7 (breaking).

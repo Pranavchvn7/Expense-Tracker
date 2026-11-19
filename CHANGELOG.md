@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.4.0
+### Added
+- **Budgets page** (in the navigation): one card per category with spent, limit, percentage, left or over by, number of expenses, daily average, largest expense, projected month-end spending, a safe amount per remaining day, and a status (on track / close to limit at 80% / over). Month picker, total across all budgets, inline limit change, a link to that category's expenses, and spending in categories that have no budget
+- **Payment methods**: tag each expense as cash, credit card, debit card, UPI, bank transfer, wallet or other. Filter by method, see totals per method for the month, and tick expenses as "matched" against your bank or card statement (filter by matched / not matched yet). Both fields are included in the CSV export
+- **Goal suggestions**: emergency fund (3 and 6 months, from your own average spending), the 20/4/10 car rule (down payment, loan, monthly payment, income needed), home deposit (20%), and vacation, education, gadget, wedding and debt-free templates. Each creates a normal goal you can edit
+
+### Changed
+- Budgets moved out of Settings (Settings links to the new page)
+
+### Security
+- New action `setReconciled`: session first, id and flag validated with Zod, update scoped by userId, rate limited
+- Payment method is validated against a fixed enum on the server; suggestion inputs from the URL are parsed with strict regexes and capped
+- /budgets is protected by the same middleware and cache headers as the other private pages
+
+### Operations
+- New migration: `npx prisma migrate dev --name add_payment_method_and_reconciled`. Run it on production with `prisma migrate deploy` BEFORE merging. No new dependencies or environment variables
+
 ## 0.3.4
 ### Added
 - **Profile** module in Settings: display name, country and timezone (nothing sensitive; email and password are not editable there). The timezone decides what "today" and "this month" mean and when recurring items are added. "Use this device" fills it in
