@@ -8,6 +8,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   IconDashboard,
   IconMore,
+  IconPie,
   IconPlus,
   IconReceipt,
   IconRepeat,
@@ -21,6 +22,7 @@ const items = [
   { href: "/dashboard", label: "Dashboard", icon: <IconDashboard /> },
   { href: "/expenses", label: "Expenses", icon: <IconReceipt /> },
   { href: "/income", label: "Income", icon: <IconWallet /> },
+  { href: "/budgets", label: "Budgets", icon: <IconPie /> },
   { href: "/recurring", label: "Recurring", icon: <IconRepeat /> },
   { href: "/goals", label: "Goals", icon: <IconTarget /> },
   { href: "/settings", label: "Settings", icon: <IconSettings /> },

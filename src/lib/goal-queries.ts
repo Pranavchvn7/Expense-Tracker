@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
+import { getUserCurrency } from "@/lib/preferences";
 
 const GOAL_SELECT = { id: true, name: true, targetMinor: true, currency: true, targetDate: true } as const;
 const MAX_CONTRIBUTIONS_PER_GOAL = 100;
@@ -63,4 +64,21 @@ export async function getGoal(id: string) {
     where: { id, userId },
     select: { id: true, name: true, targetMinor: true, targetDate: true },
   });
+}
+
+/**
+ * Average monthly spending over the last three complete months (user's currency), used to size
+ * an emergency fund. Returns null when there is no history yet.
+ */
+export async function averageMonthlySpend(currentMonth: string): Promise<number | null> {
+  const { userId } = await requireSession();
+  const currency = await getUserCurrency();
+  const end = new Date(`${currentMonth}-01T00:00:00Z`);
+  const start = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth() - 3, 1));
+  const agg = await prisma.expense.aggregate({
+    where: { userId, currency, spentOn: { gte: start, lt: end } },
+    _sum: { amountMinor: true },
+  });
+  const total = agg._sum.amountMinor ?? 0;
+  return total > 0 ? Math.round(total / 3) : null;
 }

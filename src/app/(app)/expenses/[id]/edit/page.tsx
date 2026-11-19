@@ -4,6 +4,8 @@ import { ActionForm } from "@/components/ActionForm";
 import { updateExpense } from "@/actions/expenses";
 import { getExpense, listCategories } from "@/lib/queries";
 import { uuid } from "@/lib/validation";
+import { PAYMENT_METHODS } from "@/lib/payment-method";
+import { getUserToday } from "@/lib/preferences";
 
 export default async function EditExpensePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -12,7 +14,7 @@ export default async function EditExpensePage({ params }: { params: Promise<{ id
   const [expense, cats] = await Promise.all([getExpense(id), listCategories()]);
   if (!expense) notFound();
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = (await getUserToday()).iso;
 
   return (
     <>
@@ -51,6 +53,12 @@ export default async function EditExpensePage({ params }: { params: Promise<{ id
           <select name="categoryId" defaultValue={expense.categoryId ?? ""}>
             <option value="">Uncategorised</option>
             {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </label>
+        <label>Paid with
+          <select name="paymentMethod" defaultValue={expense.paymentMethod ?? ""}>
+            <option value="">Not set</option>
+            {PAYMENT_METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
           </select>
         </label>
         <label>Note (optional)

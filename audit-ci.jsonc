@@ -12,11 +12,13 @@
     // no longer present after `npm audit fix`.)
     "GHSA-6g55-p6wh-862q",
     "GHSA-r28c-9q8g-f849",
+
     // zod: memory exhaustion when validating oversized constrained collections (arrays,
     // sets, maps). No schema in this app accepts a collection from the client; every field
     // is a string or number, and server actions cap the request body at 100kb.
     // The real fix is zod@4, a breaking upgrade that gets its own tested branch.
     "GHSA-mrhx-c7xc-m3w5",
+
     // deepmerge-ts (inside the `prisma` CLI, a devDependency): stack exhaustion when merging
     // deeply recursive objects. It only runs on developer machines and at build time on this
     // repo's own Prisma config, never in the deployed app or on user input. The "fix" npm

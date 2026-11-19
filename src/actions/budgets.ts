@@ -41,6 +41,7 @@ export async function setBudget(fd: FormData): Promise<ActionResult> {
       select: { id: true },
     });
     revalidatePath("/settings");
+    revalidatePath("/budgets");
     revalidatePath("/dashboard");
     return undefined;
   });
@@ -54,6 +55,7 @@ export async function deleteBudget(fd: FormData): Promise<ActionResult> {
     const res = await prisma.budget.deleteMany({ where: { id, userId } });
     if (res.count !== 1) throw notFound();
     revalidatePath("/settings");
+    revalidatePath("/budgets");
     revalidatePath("/dashboard");
     return undefined;
   });

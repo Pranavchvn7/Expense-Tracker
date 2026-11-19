@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PAYMENT_METHOD_VALUES } from "@/lib/payment-method";
 import { isCountryCode } from "@/lib/countries";
 import { isValidTimeZone } from "@/lib/tz";
 
@@ -47,13 +48,22 @@ export const monthSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "must be 
 
 export const currencySchema = z.enum(["INR", "USD", "EUR", "GBP"]);
 
+const optionalPayment = z.preprocess(
+  (v) => (v === "" || v === undefined || v === null ? undefined : v),
+  z.enum(PAYMENT_METHOD_VALUES, { errorMap: () => ({ message: "Choose a payment method from the list." }) }).optional(),
+);
+
 export const expenseInput = z.object({
   amount: amountSchema,
   description: cleanText(120),
   note: optionalCleanText(500),
   spentOn: dateSchema,
   categoryId: optionalUuid,
+  paymentMethod: optionalPayment,
 });
+
+/** Tick or untick an expense as matched with a statement. */
+export const reconcileInput = z.object({ id: uuid, reconciled: z.enum(["0", "1"]) });
 
 export const expenseUpdate = expenseInput.extend({ id: uuid });
 
@@ -192,6 +202,7 @@ export const budgetInput = z.object({
 type SearchParams = Record<string, string | string[] | undefined>;
 const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
+const RECONCILE_FILTERS = ["yes", "no"] as const;
 const SORTS = ["date", "amount", "description", "category"] as const;
 export type SortKey = (typeof SORTS)[number];
 
@@ -209,6 +220,8 @@ export function parseListQuery(sp: SearchParams, defaultMonth: string) {
     q: q || undefined,
     sort,
     dir,
+    paymentMethod: PAYMENT_METHOD_VALUES.find((p) => p === first(sp.pm)),
+    reconciled: RECONCILE_FILTERS.find((r) => r === first(sp.rec)),
   };
 }
 

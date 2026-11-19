@@ -502,3 +502,29 @@ progress.over::-moz-progress-bar { background: var(--danger); }
   .month-nav .current { min-width: 90px; }
   .pager { justify-content: center; }
 }
+
+/* ===== v0.4.0: budgets, payment methods, goal suggestions ===== */
+.budget-grid { align-items: start; }
+.budget-card { display: grid; gap: 10px; border-left: 4px solid var(--line); }
+.budget-card.warn { border-left-color: var(--c3); }
+.budget-card.over { border-left-color: var(--danger); }
+.budget-card.ok { border-left-color: var(--income); }
+.budget-figure { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.budget-figure strong { font-size: 1.4rem; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.tag.status.ok { background: var(--income-soft); color: var(--income); border-color: transparent; }
+.tag.status.warn { background: color-mix(in srgb, var(--c3) 20%, transparent); color: var(--text); border-color: transparent; }
+.tag.status.over { background: var(--danger-soft); color: var(--danger); border-color: transparent; }
+.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; margin: 0; }
+.facts div { display: grid; gap: 2px; min-width: 0; }
+.facts dt { font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.facts dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.budget-actions { display: grid; gap: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.budget-total { display: grid; gap: 8px; }
+.method-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); margin-top: 8px; }
+.method-card { display: grid; gap: 2px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--raised); color: var(--text); text-decoration: none; }
+.method-card:hover { border-color: var(--brand); }
+.method-card .amt { font-weight: 700; font-variant-numeric: tabular-nums; }
+.cell-actions form .btn { padding: 5px 10px; font-size: 0.85rem; border-radius: 8px; }
+.cell-actions form.matched .btn { background: var(--income-soft); color: var(--income); }
+.suggestion { display: grid; gap: 10px; align-content: start; }
+.suggestion h3 { margin: 0; }

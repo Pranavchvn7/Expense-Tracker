@@ -145,6 +145,9 @@ model Expense {
   // the same occurrence twice (two tabs, a retry) is impossible.
   recurringRuleId String?
   recurringRule   RecurringRule? @relation(fields: [recurringRuleId], references: [id], onDelete: SetNull)
+  // How it was paid, and whether it has been ticked off against a bank/card statement.
+  paymentMethod PaymentMethod?
+  reconciled    Boolean   @default(false)
   // Money is stored as integer minor units (paise/cents) to avoid float errors.
   amountMinor Int
   currency    String    @db.VarChar(3) @default("INR")
@@ -157,6 +160,17 @@ model Expense {
   @@unique([recurringRuleId, spentOn])
   @@index([userId, spentOn])
   @@index([userId, categoryId])
+  @@index([userId, paymentMethod, spentOn])
+}
+
+enum PaymentMethod {
+  CASH
+  CREDIT_CARD
+  DEBIT_CARD
+  UPI
+  BANK_TRANSFER
+  WALLET
+  OTHER
 }
 
 // Money coming in (salary, refunds, gifts...). Same integer-minor-units rule as Expense.

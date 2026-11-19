@@ -27,6 +27,8 @@ export const FIELD_LABELS: Record<string, string> = {
   endDate: "End date",
   targetDate: "Target date",
   categoryId: "Category",
+  paymentMethod: "Payment method",
+  reconciled: "Reconciled",
   goalId: "Goal",
   kind: "Type",
   frequency: "Repeat",
