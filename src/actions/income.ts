@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
-import { notFound, safely, type ActionResult } from "@/lib/errors";
+import { notFound, safely, type ActionResult, limitReached } from "@/lib/errors";
 import { getUserCurrency } from "@/lib/preferences";
 import { formToObject, idInput, incomeInput, incomeUpdate } from "@/lib/validation";
 
@@ -22,7 +22,7 @@ export async function createIncome(fd: FormData): Promise<ActionResult> {
     const input = incomeInput.parse(formToObject(fd));
 
     const total = await prisma.income.count({ where: { userId } });
-    if (total >= MAX_INCOME_PER_USER) throw notFound();
+    if (total >= MAX_INCOME_PER_USER) throw limitReached("income entries", MAX_INCOME_PER_USER);
 
     await prisma.income.create({
       data: {

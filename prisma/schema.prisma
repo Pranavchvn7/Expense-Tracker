@@ -20,6 +20,9 @@ model User {
   twoFactorEnabled Boolean? @default(false)
   // Chosen once in Settings; used for every new expense, income and budget.
   currency      String    @default("INR") @db.VarChar(3)
+  // Profile (nothing sensitive): ISO country code and IANA timezone. A null timezone means UTC.
+  country       String?   @db.VarChar(2)
+  timezone      String?   @db.VarChar(64)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -121,6 +124,8 @@ model Category {
   userId    String
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   name      String    @db.VarChar(40)
+  // Palette slot 1..7 shown on tags and charts; 0 = not assigned yet (filled in lazily).
+  color     Int       @default(0)
   createdAt DateTime  @default(now())
   expenses  Expense[]
   budgets   Budget[]

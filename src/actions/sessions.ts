@@ -22,7 +22,7 @@ export async function revokeSession(fd: FormData): Promise<ActionResult> {
     });
     const match = own.find((s) => sessionRef(s.id) === ref);
     if (!match) throw notFound();
-    if (match.id === sessionId) throw new HttpError(400, "Use Sign out for this device");
+    if (match.id === sessionId) throw new HttpError(400, "This is the device you are using right now. Use Sign out to leave it.");
 
     await prisma.session.deleteMany({ where: { id: match.id, userId } });
     revalidatePath("/settings");

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getTheme } from "@/lib/preferences";
 import { AppNav } from "@/components/AppNav";
+import { SessionWatcher } from "@/components/SessionWatcher";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="shell">
+      <SessionWatcher />
       <AppNav name={session.user.name} theme={theme} />
       <main className="content">{children}</main>
     </div>

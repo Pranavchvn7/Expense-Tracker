@@ -55,6 +55,12 @@
 - **CSV import is untrusted input.** Parsed on the server by a small pure parser; cells are cleaned and capped; amounts and dates are strictly validated; the 80 kb request cap bounds file size; row, rate and account caps bound the work; the commit step re-runs the full validation and inserts in one transaction. Nothing from the file is ever evaluated, and display is React-escaped.
 - **Formula injection** is handled on the way out (export prefixes risky cells) and the matching apostrophe is removed on the way in so round trips are lossless.
 
+## v0.3.4 additions
+- Profile action: session first, id from the session, Zod, country allowlist, IANA timezone validation, rate limit; no sensitive fields
+- /api/session-check: GET only, no body, 204/401/503, no-store; only a definite 401 signs a screen out
+- Error messages describe the cause (field, limit, wait time) but never echo submitted values, SQL, stack traces or schema; unexpected errors show a reference id only
+- Sorting and paging: column whitelist, validated integers, fixed page-size set
+
 ## Accepted dependency advisories
 CI runs `audit-ci` and fails on any high or critical advisory that is not listed in `audit-ci.jsonc`. Several are accepted for now (picomatch, postcss, zod, deepmerge-ts), each with its reason written next to it in that file:
 - **deepmerge-ts (inside the `prisma` CLI, dev only):** never runs in the deployed app or on user input. `prisma` and `@prisma/client` are pinned to the same version (6.19.3) because a mismatched pair is a bigger risk than this advisory. Fix = Prisma 7 (breaking).

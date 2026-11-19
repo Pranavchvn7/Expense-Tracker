@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/session";
 import { AuthForm } from "@/components/AuthForm";
 import { LogoMark } from "@/components/icons";
 import { env, isEmailEnabled } from "@/env";
@@ -8,6 +10,8 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ reset?: string | string[] }>;
 }) {
+  const session = await getSession();
+  if (session?.user?.id) redirect("/dashboard");
   const sp = await searchParams;
   const justReset = sp.reset === "1";
 

@@ -1,10 +1,15 @@
 import Link from "next/link";
 import { materializeRecurring } from "@/lib/recurring";
 import { ActionForm } from "@/components/ActionForm";
+import { Pager } from "@/components/Pager";
+import { SortHeader } from "@/components/SortHeader";
+import { CategoryTag } from "@/components/CategoryTag";
 import { createExpense, deleteExpense } from "@/actions/expenses";
 import { listCategories, listExpenses } from "@/lib/queries";
-import { currentMonth, formatMoney, monthLabel } from "@/lib/money";
+import { formatMoney, monthLabel } from "@/lib/money";
 import { parseListQuery } from "@/lib/validation";
+import { parsePaging, buildHref } from "@/lib/paging";
+import { getUserToday } from "@/lib/preferences";
 import { IconDownload, IconInbox, IconUpload } from "@/components/icons";
 
 export default async function ExpensesPage({
@@ -12,22 +17,30 @@ export default async function ExpensesPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const { month, q, categoryId, page } = parseListQuery(await searchParams, currentMonth());
+  const sp = await searchParams;
+  const today = await getUserToday();
+  const { month, q, categoryId, sort, dir } = parseListQuery(sp, today.month);
+  const { page, perPage } = parsePaging(sp);
+  const openAdd = (Array.isArray(sp.add) ? sp.add[0] : sp.add) === "1";
   // Create anything that fell due since the last visit before reading the data.
   await materializeRecurring();
   const [{ rows, hasNext, totals }, cats] = await Promise.all([
-    listExpenses({ month, q, categoryId, page }),
+    listExpenses({ month, q, categoryId, page, perPage, sort, dir }),
     listCategories(),
   ]);
-  const today = new Date().toISOString().slice(0, 10);
 
-  // Built only from validated values; React escapes the attribute on render.
-  const pageHref = (p: number) => {
-    const u = new URLSearchParams({ month, page: String(p) });
-    if (q) u.set("q", q);
-    if (categoryId) u.set("categoryId", categoryId);
-    return `/expenses?${u.toString()}`;
+  // Only validated values go into links; React escapes attributes on render.
+  const keep = {
+    month,
+    q,
+    categoryId,
+    sort: sort === "date" ? undefined : sort,
+    dir: dir === "desc" ? undefined : dir,
+    pp: perPage === 10 ? undefined : String(perPage),
   };
+  const sortParams = { month, q, categoryId, pp: keep.pp };
+  const hasFilter = Boolean(q || categoryId);
+  const clearSearchHref = buildHref("/expenses", { ...keep, q: undefined });
 
   return (
     <>
@@ -38,13 +51,13 @@ export default async function ExpensesPage({
         </div>
         {/* Plain <a>, not <Link>: prefetching a download would count against the export limit. */}
         <div className="actions">
-          <Link className="btn ghost small" href="/import"><IconUpload />Import CSV</Link>
-          <a className="btn ghost small" href={`/expenses/export?month=${month}`}><IconDownload />This month CSV</a>
-          <a className="btn ghost small" href="/expenses/export?all=1"><IconDownload />All CSV</a>
+          <Link className="btn soft small" href="/import"><IconUpload />Import CSV</Link>
+          <a className="btn soft small" href={`/expenses/export?month=${month}`}><IconDownload />This month CSV</a>
+          <a className="btn soft small" href="/expenses/export?all=1"><IconDownload />All CSV</a>
         </div>
       </div>
 
-      <details className="add">
+      <details className="add" open={openAdd}>
         <summary>Add an expense</summary>
         <div className="body">
           <ActionForm action={createExpense} submitLabel="Add expense" className="stack" resetOnSuccess>
@@ -53,7 +66,7 @@ export default async function ExpensesPage({
                 <input name="amount" inputMode="decimal" pattern="\d{1,9}(\.\d{1,2})?" placeholder="0.00" required />
               </label>
               <label>Date
-                <input name="spentOn" type="date" defaultValue={today} max={today} required />
+                <input name="spentOn" type="date" defaultValue={today.iso} max={today.iso} required />
               </label>
             </div>
             <label>Description
@@ -73,16 +86,29 @@ export default async function ExpensesPage({
       </details>
 
       {/* Filters only: no credentials or sensitive values, so a GET form is appropriate. */}
-      <form className="card row" method="get" aria-label="Filter expenses">
-        <label>Month<input type="month" name="month" defaultValue={month} /></label>
-        <label>Search<input type="search" name="q" maxLength={60} defaultValue={q ?? ""} placeholder="Description or note" /></label>
+      <form className="card row filters" method="get" aria-label="Filter expenses">
+        <label>Month<input type="month" name="month" defaultValue={month} max={today.month} /></label>
+        <label>Search
+          <span className="search">
+            <input type="search" name="q" maxLength={60} defaultValue={q ?? ""} placeholder="Description or note" />
+            {q && (
+              <Link className="clear" href={clearSearchHref} aria-label="Clear search" title="Clear search">×</Link>
+            )}
+          </span>
+        </label>
         <label>Category
           <select name="categoryId" defaultValue={categoryId ?? ""}>
             <option value="">All</option>
             {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </label>
+        {keep.sort && <input type="hidden" name="sort" value={keep.sort} />}
+        {keep.dir && <input type="hidden" name="dir" value={keep.dir} />}
+        {keep.pp && <input type="hidden" name="pp" value={keep.pp} />}
         <button className="btn" type="submit">Apply</button>
+        {hasFilter && (
+          <Link className="btn ghost" href={buildHref("/expenses", { month })}>Reset</Link>
+        )}
       </form>
 
       <div className="card section">
@@ -96,8 +122,11 @@ export default async function ExpensesPage({
           <table className="responsive">
             <thead>
               <tr>
-                <th>Date</th><th>Description</th><th>Category</th>
-                <th className="num">Amount</th><th />
+                <SortHeader label="Date" column="date" sort={sort} dir={dir} basePath="/expenses" params={sortParams} />
+                <SortHeader label="Description" column="description" sort={sort} dir={dir} basePath="/expenses" params={sortParams} />
+                <SortHeader label="Category" column="category" sort={sort} dir={dir} basePath="/expenses" params={sortParams} />
+                <SortHeader label="Amount" column="amount" sort={sort} dir={dir} basePath="/expenses" params={sortParams} className="num" />
+                <th><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
             <tbody>
@@ -110,7 +139,7 @@ export default async function ExpensesPage({
                       {e.note && <div className="muted">{e.note}</div>}
                     </span>
                   </td>
-                  <td data-label="Category">{e.category ? <span className="tag">{e.category.name}</span> : <span className="muted">—</span>}</td>
+                  <td data-label="Category"><CategoryTag name={e.category?.name} color={e.category?.color} /></td>
                   <td className="num" data-label="Amount">{formatMoney(e.amountMinor, e.currency)}</td>
                   <td className="nolabel">
                     <div className="cell-actions">
@@ -130,15 +159,15 @@ export default async function ExpensesPage({
             </tbody>
           </table>
         )}
+        <Pager
+          basePath="/expenses"
+          params={{ month, q, categoryId, sort: keep.sort, dir: keep.dir }}
+          page={page}
+          perPage={perPage}
+          hasNext={hasNext}
+          rowCount={rows.length}
+        />
       </div>
-
-      {(page > 1 || hasNext) && (
-        <nav className="pager" aria-label="Pagination">
-          {page > 1 ? <Link href={pageHref(page - 1)}>← Newer</Link> : <span />}
-          <span className="muted">Page {page}</span>
-          {hasNext ? <Link href={pageHref(page + 1)}>Older →</Link> : <span />}
-        </nav>
-      )}
     </>
   );
 }

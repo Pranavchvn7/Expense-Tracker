@@ -18,7 +18,7 @@ export async function getDashboardData(month: string) {
 
   // Entries recorded in some other currency are not mixed into the totals; they are counted so
   // the page can say so instead of silently hiding money. All queries run in parallel.
-  const [spentAgg, incomeAgg, byCategory, expTrend, incTrend, recent, otherExp, otherInc] = await Promise.all([
+  const [spentAgg, incomeAgg, byCategory, expTrend, incTrend, otherExp, otherInc, cats] = await Promise.all([
     prisma.expense.aggregate({
       where: { userId, currency, spentOn: { gte: start, lt: end } },
       _sum: { amountMinor: true },
@@ -43,45 +43,38 @@ export async function getDashboardData(month: string) {
       where: { userId, currency, receivedOn: { gte: trendStart, lt: end } },
       _sum: { amountMinor: true },
     }),
-    prisma.expense.findMany({
-      where: { userId, currency, spentOn: { gte: start, lt: end } },
-      orderBy: [{ spentOn: "desc" }, { createdAt: "desc" }],
-      take: 5,
-      select: {
-        id: true,
-        amountMinor: true,
-        description: true,
-        spentOn: true,
-        category: { select: { name: true } },
-      },
-    }),
     prisma.expense.count({ where: { userId, currency: { not: currency } } }),
     prisma.income.count({ where: { userId, currency: { not: currency } } }),
+    prisma.category.findMany({ where: { userId }, take: 50, select: { id: true, name: true, color: true } }),
   ]);
+  const byId = new Map(cats.map((c) => [c.id, c]));
 
-  const cats = await prisma.category.findMany({
-    where: {
-      userId,
-      id: { in: byCategory.map((r) => r.categoryId).filter((x): x is string => !!x) },
-    },
-    select: { id: true, name: true },
-  });
-  const names = new Map(cats.map((c) => [c.id, c.name]));
-
-  const spentMinor = spentAgg._sum.amountMinor ?? 0;
-  const incomeMinor = incomeAgg._sum.amountMinor ?? 0;
+  // Day-by-day spending for the selected month, taken from the same rows as the trend.
+  const daysInMonth = Math.round((end.getTime() - start.getTime()) / 86_400_000);
+  const daily = Array.from({ length: daysInMonth }, () => 0);
+  for (const r of expTrend) {
+    if (r.spentOn >= start && r.spentOn < end) {
+      const i = r.spentOn.getUTCDate() - 1;
+      daily[i] = (daily[i] ?? 0) + (r._sum.amountMinor ?? 0);
+    }
+  }
 
   return {
     currency,
     otherCurrencyEntries: otherExp + otherInc,
-    spentMinor,
-    incomeMinor,
+    spentMinor: spentAgg._sum.amountMinor ?? 0,
+    incomeMinor: incomeAgg._sum.amountMinor ?? 0,
     expenseCount: spentAgg._count._all,
-    categories: byCategory.map((r) => ({
-      id: r.categoryId,
-      label: r.categoryId ? (names.get(r.categoryId) ?? "Other") : "Uncategorised",
-      value: r._sum.amountMinor ?? 0,
-    })),
+    categories: byCategory.map((r) => {
+      const c = r.categoryId ? byId.get(r.categoryId) : undefined;
+      return {
+        id: r.categoryId,
+        label: r.categoryId ? (c?.name ?? "Other") : "Uncategorised",
+        color: c?.color ?? 0,
+        value: r._sum.amountMinor ?? 0,
+      };
+    }),
+    daily,
     trend: {
       months: keys,
       spent: bucketByMonth(
@@ -93,11 +86,31 @@ export async function getDashboardData(month: string) {
         keys,
       ),
     },
-    recent,
   };
 }
 
-export async function listIncome(month: string) {
+/** One page of the month's expenses for the dashboard list (same currency as the totals). */
+export async function listRecentExpenses(month: string, page: number, perPage: number) {
+  const { userId } = await requireSession();
+  const currency = await getUserCurrency();
+  const { start, end } = monthRange(month);
+  const rows = await prisma.expense.findMany({
+    where: { userId, currency, spentOn: { gte: start, lt: end } },
+    orderBy: [{ spentOn: "desc" }, { createdAt: "desc" }],
+    skip: (page - 1) * perPage,
+    take: perPage + 1,
+    select: {
+      id: true,
+      amountMinor: true,
+      description: true,
+      spentOn: true,
+      category: { select: { name: true, color: true } },
+    },
+  });
+  return { rows: rows.slice(0, perPage), hasNext: rows.length > perPage, currency };
+}
+
+export async function listIncome(month: string, page: number, perPage: number) {
   const { userId } = await requireSession();
   const { start, end } = monthRange(month);
   const where = { userId, receivedOn: { gte: start, lt: end } };
@@ -105,7 +118,8 @@ export async function listIncome(month: string) {
     prisma.income.findMany({
       where,
       orderBy: [{ receivedOn: "desc" }, { createdAt: "desc" }],
-      take: 200,
+      skip: (page - 1) * perPage,
+      take: perPage + 1,
       select: {
         id: true,
         amountMinor: true,
@@ -118,7 +132,7 @@ export async function listIncome(month: string) {
     }),
     prisma.income.groupBy({ by: ["currency"], where, _sum: { amountMinor: true } }),
   ]);
-  return { rows, totals };
+  return { rows: rows.slice(0, perPage), hasNext: rows.length > perPage, totals };
 }
 
 export async function getIncome(id: string) {

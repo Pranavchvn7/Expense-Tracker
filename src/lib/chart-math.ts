@@ -65,3 +65,53 @@ export function collapseTop<T extends { label: string; value: number }>(
   const rest = sorted.slice(max - 1).reduce((a, b) => a + b.value, 0);
   return [...head, { label: "Other", value: rest, other: true }];
 }
+
+/**
+ * Smooth SVG path through points using monotone cubic interpolation (Fritsch-Carlson): the line
+ * never overshoots between points, so a month with zero spending does not dip below the axis.
+ */
+export function monotonePath(pts: { x: number; y: number }[]): string {
+  const n = pts.length;
+  if (n === 0) return "";
+  const p0 = pts[0] as { x: number; y: number };
+  if (n === 1) return `M ${p0.x} ${p0.y}`;
+  const dx: number[] = [];
+  const m: number[] = [];
+  for (let i = 0; i < n - 1; i++) {
+    const a = pts[i] as { x: number; y: number };
+    const b = pts[i + 1] as { x: number; y: number };
+    dx.push(b.x - a.x);
+    m.push((b.y - a.y) / (b.x - a.x || 1));
+  }
+  const t: number[] = [m[0] as number];
+  for (let i = 1; i < n - 1; i++) {
+    const a = m[i - 1] as number;
+    const b = m[i] as number;
+    t.push(a * b <= 0 ? 0 : (a + b) / 2);
+  }
+  t.push(m[n - 2] as number);
+  for (let i = 0; i < n - 1; i++) {
+    const mi = m[i] as number;
+    if (mi === 0) {
+      t[i] = 0;
+      t[i + 1] = 0;
+      continue;
+    }
+    const a = (t[i] as number) / mi;
+    const b = (t[i + 1] as number) / mi;
+    const s = a * a + b * b;
+    if (s > 9) {
+      const k = 3 / Math.sqrt(s);
+      t[i] = k * a * mi;
+      t[i + 1] = k * b * mi;
+    }
+  }
+  let d = `M ${p0.x} ${p0.y}`;
+  for (let i = 0; i < n - 1; i++) {
+    const a = pts[i] as { x: number; y: number };
+    const b = pts[i + 1] as { x: number; y: number };
+    const h = (dx[i] as number) / 3;
+    d += ` C ${a.x + h} ${a.y + h * (t[i] as number)} ${b.x - h} ${b.y - h * (t[i + 1] as number)} ${b.x} ${b.y}`;
+  }
+  return d;
+}

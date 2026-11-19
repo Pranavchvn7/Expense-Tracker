@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.3.4
+### Added
+- **Profile** module in Settings: display name, country and timezone (nothing sensitive; email and password are not editable there). The timezone decides what "today" and "this month" mean and when recurring items are added. "Use this device" fills it in
+- **Pagination** on expenses, income, recurring, goals and the dashboard expense list: 10 rows per page with a 10 / 20 / 50 selector (goals: 4 / 8 / 12)
+- **Sortable columns** in expenses (date, description, category, amount) with the direction shown in the header
+- **Clear (x) button** inside the expense search box, plus a Reset button when filters are active
+- **Category colours**: each category keeps one colour, used on dashboard charts and on the tag shown on every record
+- **Charts**: smooth cash-flow area chart (income vs spent, 6 months), colour-coded category donut, spending-by-day bars with average line, savings-rate ring
+- **Goal carousel** on the dashboard (one goal at a time, hidden arrows that appear on hover/focus, loops, swipe on phones)
+- Goal cards are collapsible and their contribution list scrolls (up to 100 per goal)
+- All settings modules are collapsible, with Expand all / Collapse all
+- **Mobile**: 4-tab bottom bar with a More sheet, a floating + button that adds an expense or income, safe-area support, larger touch targets
+- Other sessions are signed out automatically: every open screen checks the session every 30 seconds and when it regains focus
+
+### Fixed
+- Removing /dashboard from the address (going to the site root) showed the login page for signed-in users; they now go to the dashboard. Same for /login and /signup
+- Stat cards on the dashboard were uneven in height
+- The duplicated "Import income from a CSV file" links are now an "Import CSV" button
+- "See all" and "Manage" use a modern soft button style
+
+### Changed
+- Error messages now state the cause (what is wrong with which field, which limit was reached, how long to wait after rate limiting) without exposing internals; unexpected failures show only a reference number
+
+### Security
+- Profile update: session first, user id from the session only, Zod validation, timezone checked against the runtime's IANA list, country against an allowlist, rate limited
+- Session check endpoint returns only 204/401/503, never user data, and is not cached
+- Sorting uses a whitelist of columns; page and page size are validated integers from a fixed set
+
+### Operations
+- New migration: `npx prisma migrate dev --name add_profile_and_category_color`. Run it against production with `prisma migrate deploy` BEFORE merging. No new dependencies or environment variables
+
 ## 0.3.3 (includes 0.3.2)
 ### Added
 - **Savings goals:** set a target (and optional date), add money by hand, see progress, the monthly amount needed to hit the date, and a summary on the dashboard. Edit, delete, and undo single contributions

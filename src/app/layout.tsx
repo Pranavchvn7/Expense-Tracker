@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { env } from "@/env";
 import { getTheme } from "@/lib/preferences";
@@ -12,6 +12,16 @@ export const metadata: Metadata = {
   title: "Expense Tracker",
   description: "A private, secure expense tracker.",
   robots: { index: false, follow: false },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f1419" },
+  ],
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

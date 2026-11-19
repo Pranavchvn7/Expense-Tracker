@@ -5,8 +5,9 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
-import { HttpError, notFound, safely, type ActionResult } from "@/lib/errors";
+import { HttpError, notFound, safely, type ActionResult, limitReached } from "@/lib/errors";
 import { categoryInput, formToObject, idInput } from "@/lib/validation";
+import { nextColor } from "@/lib/category-color";
 
 const MAX_CATEGORIES = 50;
 
@@ -17,13 +18,16 @@ export async function createCategory(fd: FormData): Promise<ActionResult> {
     const { name } = categoryInput.parse(formToObject(fd));
 
     const count = await prisma.category.count({ where: { userId } });
-    if (count >= MAX_CATEGORIES) throw new HttpError(400, "Category limit reached");
+    if (count >= MAX_CATEGORIES) throw limitReached("categories", MAX_CATEGORIES);
 
     try {
-      await prisma.category.create({ data: { userId, name }, select: { id: true } });
+      await prisma.category.create({
+        data: { userId, name, color: nextColor(count) },
+        select: { id: true },
+      });
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-        throw new HttpError(400, "Category already exists");
+        throw new HttpError(400, "You already have a category with that name. Choose a different name.");
       }
       throw e;
     }

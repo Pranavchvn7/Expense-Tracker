@@ -3,7 +3,11 @@ import { materializeRecurring } from "@/lib/recurring";
 import { ActionForm } from "@/components/ActionForm";
 import { createIncome, deleteIncome } from "@/actions/income";
 import { listIncome } from "@/lib/finance-queries";
-import { currentMonth, formatMoney, monthLabel } from "@/lib/money";
+import { formatMoney, monthLabel } from "@/lib/money";
+import { getUserToday } from "@/lib/preferences";
+import { Pager } from "@/components/Pager";
+import { parsePaging } from "@/lib/paging";
+import { IconUpload } from "@/components/icons";
 import { addMonthsKey } from "@/lib/chart-math";
 import { monthSchema } from "@/lib/validation";
 import { IconChevronLeft, IconChevronRight, IconWallet } from "@/components/icons";
@@ -14,13 +18,15 @@ export default async function IncomePage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const sp = await searchParams;
-  const now = currentMonth();
+  const today = await getUserToday();
+  const now = today.month;
+  const { page, perPage } = parsePaging(sp);
+  const openAdd = (Array.isArray(sp.add) ? sp.add[0] : sp.add) === "1";
   const parsed = monthSchema.safeParse(Array.isArray(sp.month) ? sp.month[0] : sp.month);
   const month = parsed.success && parsed.data <= now ? parsed.data : now;
   // Create anything that fell due since the last visit before reading the data.
   await materializeRecurring();
-  const { rows, totals } = await listIncome(month);
-  const today = new Date().toISOString().slice(0, 10);
+  const { rows, hasNext, totals } = await listIncome(month, page, perPage);
 
   return (
     <>
@@ -44,13 +50,12 @@ export default async function IncomePage({
             <IconChevronRight />
           </Link>
         </div>
+        <div className="actions">
+          <Link className="btn soft small" href="/import"><IconUpload />Import CSV</Link>
+        </div>
       </div>
 
-      <p><Link href="/import">Import income from a CSV file</Link></p>
-
-      <p><Link href="/import">Import income from a CSV file</Link></p>
-
-      <details className="add">
+      <details className="add" open={openAdd}>
         <summary>Add income</summary>
         <div className="body">
           <ActionForm action={createIncome} submitLabel="Add income" className="stack" resetOnSuccess>
@@ -59,7 +64,7 @@ export default async function IncomePage({
                 <input name="amount" inputMode="decimal" pattern="\d{1,9}(\.\d{1,2})?" placeholder="0.00" required />
               </label>
               <label>Date received
-                <input name="receivedOn" type="date" defaultValue={today} max={today} required />
+                <input name="receivedOn" type="date" defaultValue={today.iso} max={today.iso} required />
               </label>
             </div>
             <label>Source
@@ -72,7 +77,7 @@ export default async function IncomePage({
         </div>
       </details>
 
-      <div className="card">
+      <div className="card section">
         {rows.length === 0 ? (
           <div className="empty">
             <IconWallet />
@@ -82,7 +87,7 @@ export default async function IncomePage({
         ) : (
           <table className="responsive">
             <thead>
-              <tr><th>Date</th><th>Source</th><th className="num">Amount</th><th /></tr>
+              <tr><th>Date</th><th>Source</th><th className="num">Amount</th><th><span className="sr-only">Actions</span></th></tr>
             </thead>
             <tbody>
               {rows.map((r) => (
@@ -113,6 +118,14 @@ export default async function IncomePage({
             </tbody>
           </table>
         )}
+        <Pager
+          basePath="/income"
+          params={{ month }}
+          page={page}
+          perPage={perPage}
+          hasNext={hasNext}
+          rowCount={rows.length}
+        />
       </div>
     </>
   );

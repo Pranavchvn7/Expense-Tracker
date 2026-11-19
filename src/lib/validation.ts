@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { isCountryCode } from "@/lib/countries";
+import { isValidTimeZone } from "@/lib/tz";
 
 // Strip control characters and normalise whitespace. Output encoding is handled
 // by React (no dangerouslySetInnerHTML anywhere); this keeps stored data clean.
@@ -26,22 +28,22 @@ export const optionalUuid = z.preprocess((v) => (v === "" ? undefined : v), uuid
 export const amountSchema = z
   .string()
   .trim()
-  .regex(/^\d{1,9}(\.\d{1,2})?$/, "Invalid amount")
+  .regex(/^\d{1,9}(\.\d{1,2})?$/, "must be a positive number with at most 2 decimals, such as 249.50")
   .transform((s) => Math.round(Number(s) * 100))
-  .pipe(z.number().int().min(1).max(999_999_999));
+  .pipe(z.number().int().min(1, "must be greater than zero").max(999_999_999, "is too large"));
 
 export const dateSchema = z
   .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/)
-  .refine((s) => !Number.isNaN(Date.parse(`${s}T00:00:00Z`)), "Invalid date")
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "must be a date written like 2026-03-31")
+  .refine((s) => !Number.isNaN(Date.parse(`${s}T00:00:00Z`)), "is not a real calendar date")
   .refine((s) => {
     const d = new Date(`${s}T00:00:00Z`).getTime();
     const now = Date.now();
     return d <= now + 86_400_000 && d >= Date.UTC(2000, 0, 1);
-  }, "Date out of range")
+  }, "cannot be in the future or before the year 2000")
   .transform((s) => new Date(`${s}T00:00:00Z`));
 
-export const monthSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
+export const monthSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "must be a month written like 2026-03");
 
 export const currencySchema = z.enum(["INR", "USD", "EUR", "GBP"]);
 
@@ -80,12 +82,12 @@ export const incomeUpdate = incomeInput.extend({ id: uuid });
 const ruleDateSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/)
-  .refine((s) => !Number.isNaN(Date.parse(`${s}T00:00:00Z`)), "Invalid date")
+  .refine((s) => !Number.isNaN(Date.parse(`${s}T00:00:00Z`)), "is not a real calendar date")
   .refine((s) => {
     const d = new Date(`${s}T00:00:00Z`).getTime();
     const now = Date.now();
     return Math.abs(d - now) <= 366 * 86_400_000;
-  }, "Date out of range")
+  }, "is outside the allowed range (up to a year back or ahead)")
   .transform((s) => new Date(`${s}T00:00:00Z`));
 
 const optionalRuleDate = z
@@ -126,11 +128,11 @@ export const recurringUpdate = z
 const goalDateSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/)
-  .refine((s) => !Number.isNaN(Date.parse(`${s}T00:00:00Z`)), "Invalid date")
+  .refine((s) => !Number.isNaN(Date.parse(`${s}T00:00:00Z`)), "is not a real calendar date")
   .refine((s) => {
     const d = new Date(`${s}T00:00:00Z`).getTime();
     return d >= Date.UTC(2000, 0, 1) && d <= Date.now() + 50 * 366 * 86_400_000;
-  }, "Date out of range")
+  }, "is outside the allowed range")
   .transform((s) => new Date(`${s}T00:00:00Z`));
 
 const optionalGoalDate = z
@@ -161,6 +163,23 @@ export const importInput = z.object({
   csv: z.string().min(1).max(80_000),
 });
 
+/** Profile: name plus optional country and timezone ("" means not set). */
+export const profileInput = z.object({
+  name: cleanText(60),
+  country: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || isCountryCode(v), "is not a valid country")
+    .optional()
+    .transform((v) => (v ? v : undefined)),
+  timezone: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || isValidTimeZone(v), "is not a valid timezone")
+    .optional()
+    .transform((v) => (v ? v : undefined)),
+});
+
 export const budgetInput = z.object({
   categoryId: uuid,
   amount: amountSchema,
@@ -173,18 +192,23 @@ export const budgetInput = z.object({
 type SearchParams = Record<string, string | string[] | undefined>;
 const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
+const SORTS = ["date", "amount", "description", "category"] as const;
+export type SortKey = (typeof SORTS)[number];
+
 export function parseListQuery(sp: SearchParams, defaultMonth: string) {
   const month = monthSchema.safeParse(first(sp.month));
   const categoryId = uuid.safeParse(first(sp.categoryId));
-  const page = z.coerce.number().int().min(1).max(400).safeParse(first(sp.page));
   const rawQ = first(sp.q);
-  const q =
-    typeof rawQ === "string" ? rawQ.replace(CONTROL, "").trim().slice(0, 60) : "";
+  const q = typeof rawQ === "string" ? rawQ.replace(CONTROL, "").trim().slice(0, 60) : "";
+  const rawSort = first(sp.sort);
+  const sort: SortKey = SORTS.find((s) => s === rawSort) ?? "date";
+  const dir: "asc" | "desc" = first(sp.dir) === "asc" ? "asc" : "desc";
   return {
     month: month.success ? month.data : defaultMonth,
     categoryId: categoryId.success ? categoryId.data : undefined,
-    page: page.success ? page.data : 1,
     q: q || undefined,
+    sort,
+    dir,
   };
 }
 

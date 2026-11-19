@@ -2,10 +2,9 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
+import { nextColor } from "@/lib/category-color";
 
 // Explicit select blocks everywhere: nothing but what the UI needs leaves the server.
-
-export const PAGE_SIZE = 25;
 
 export function monthRange(month: string) {
   const start = new Date(`${month}-01T00:00:00Z`);
@@ -13,11 +12,32 @@ export function monthRange(month: string) {
   return { start, end };
 }
 
+/** Whitelisted sort orders: the column name never comes straight from the URL. */
+function expenseOrder(
+  sort: "date" | "amount" | "description" | "category",
+  dir: "asc" | "desc",
+): Prisma.ExpenseOrderByWithRelationInput[] {
+  const byDate: Prisma.ExpenseOrderByWithRelationInput = { spentOn: "desc" };
+  switch (sort) {
+    case "amount":
+      return [{ amountMinor: dir }, byDate];
+    case "description":
+      return [{ description: dir }, byDate];
+    case "category":
+      return [{ category: { name: dir } }, byDate];
+    default:
+      return [{ spentOn: dir }, { createdAt: dir }];
+  }
+}
+
 export async function listExpenses(opts: {
   month: string;
   q?: string;
   categoryId?: string;
   page: number;
+  perPage: number;
+  sort: "date" | "amount" | "description" | "category";
+  dir: "asc" | "desc";
 }) {
   const { userId } = await requireSession();
   const { start, end } = monthRange(opts.month);
@@ -40,9 +60,9 @@ export async function listExpenses(opts: {
   const [rows, totals] = await Promise.all([
     prisma.expense.findMany({
       where,
-      orderBy: [{ spentOn: "desc" }, { createdAt: "desc" }],
-      skip: (opts.page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE + 1, // one extra row tells us whether a next page exists
+      orderBy: expenseOrder(opts.sort, opts.dir),
+      skip: (opts.page - 1) * opts.perPage,
+      take: opts.perPage + 1, // one extra row tells us whether a next page exists
       select: {
         id: true,
         amountMinor: true,
@@ -51,7 +71,7 @@ export async function listExpenses(opts: {
         note: true,
         spentOn: true,
         recurringRuleId: true,
-        category: { select: { id: true, name: true } },
+        category: { select: { id: true, name: true, color: true } },
       },
     }),
     prisma.expense.groupBy({
@@ -61,7 +81,7 @@ export async function listExpenses(opts: {
     }),
   ]);
 
-  return { rows: rows.slice(0, PAGE_SIZE), hasNext: rows.length > PAGE_SIZE, totals };
+  return { rows: rows.slice(0, opts.perPage), hasNext: rows.length > opts.perPage, totals };
 }
 
 export async function getExpense(id: string) {
@@ -82,12 +102,24 @@ export async function getExpense(id: string) {
 
 export async function listCategories() {
   const { userId } = await requireSession();
-  return prisma.category.findMany({
+  const cats = await prisma.category.findMany({
     where: { userId },
     orderBy: { name: "asc" },
     take: 50,
-    select: { id: true, name: true },
+    select: { id: true, name: true, color: true, createdAt: true },
   });
+  // Categories made before colours existed get a permanent slot the first time they are read.
+  if (cats.some((c) => c.color === 0)) {
+    const assigned = cats.filter((c) => c.color !== 0).length;
+    const missing = cats.filter((c) => c.color === 0).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+    await prisma.$transaction(
+      missing.map((c, i) =>
+        prisma.category.updateMany({ where: { id: c.id, userId, color: 0 }, data: { color: nextColor(assigned + i) } }),
+      ),
+    );
+    missing.forEach((c, i) => (c.color = nextColor(assigned + i)));
+  }
+  return cats.map(({ id, name, color }) => ({ id, name, color }));
 }
 
 export async function monthTotalsByCategory(month: string) {
@@ -110,7 +142,7 @@ export async function listBudgets() {
       id: true,
       amountMinor: true,
       currency: true,
-      category: { select: { id: true, name: true } },
+      category: { select: { id: true, name: true, color: true } },
     },
   });
 }

@@ -2,43 +2,59 @@ import "server-only";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 
-/**
- * Goals with the amount saved so far (sum of contributions). `recent` adds each goal's last
- * three contributions. Every query is scoped to the session user.
- */
-export async function listGoals(opts: { limit?: number; recent?: boolean } = {}) {
-  const { userId } = await requireSession();
-  const goals = await prisma.savingsGoal.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-    take: opts.limit ?? 50,
-    select: { id: true, name: true, targetMinor: true, currency: true, targetDate: true },
-  });
+const GOAL_SELECT = { id: true, name: true, targetMinor: true, currency: true, targetDate: true } as const;
+const MAX_CONTRIBUTIONS_PER_GOAL = 100;
+
+async function withSaved<T extends { id: string }>(userId: string, goals: T[], includeContributions: boolean) {
   if (goals.length === 0) return [];
   const ids = goals.map((g) => g.id);
-
-  const [sums, recent] = await Promise.all([
+  const [sums, contributions] = await Promise.all([
     prisma.goalContribution.groupBy({
       by: ["goalId"],
       where: { userId, goalId: { in: ids } },
       _sum: { amountMinor: true },
     }),
-    opts.recent
+    includeContributions
       ? prisma.goalContribution.findMany({
           where: { userId, goalId: { in: ids } },
           orderBy: [{ contributedOn: "desc" }, { createdAt: "desc" }],
-          take: 150,
+          take: ids.length * MAX_CONTRIBUTIONS_PER_GOAL,
           select: { id: true, goalId: true, amountMinor: true, contributedOn: true },
         })
       : Promise.resolve([]),
   ]);
-
   const saved = new Map(sums.map((s) => [s.goalId, s._sum.amountMinor ?? 0]));
   return goals.map((g) => ({
     ...g,
     savedMinor: saved.get(g.id) ?? 0,
-    recent: recent.filter((r) => r.goalId === g.id).slice(0, 3),
+    contributions: contributions.filter((c) => c.goalId === g.id).slice(0, MAX_CONTRIBUTIONS_PER_GOAL),
   }));
+}
+
+/** A page of goals with every contribution (newest first, scrollable in the UI). */
+export async function listGoalsPage(page: number, perPage: number) {
+  const { userId } = await requireSession();
+  const rows = await prisma.savingsGoal.findMany({
+    where: { userId },
+    orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+    skip: (page - 1) * perPage,
+    take: perPage + 1,
+    select: GOAL_SELECT,
+  });
+  const goals = await withSaved(userId, rows.slice(0, perPage), true);
+  return { goals, hasNext: rows.length > perPage };
+}
+
+/** Compact list for the dashboard carousel (no contributions). */
+export async function listGoals(limit = 12) {
+  const { userId } = await requireSession();
+  const rows = await prisma.savingsGoal.findMany({
+    where: { userId },
+    orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+    take: limit,
+    select: GOAL_SELECT,
+  });
+  return withSaved(userId, rows, false);
 }
 
 export async function getGoal(id: string) {

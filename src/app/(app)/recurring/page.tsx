@@ -5,12 +5,25 @@ import { listRules } from "@/lib/recurring-queries";
 import { listCategories } from "@/lib/queries";
 import { formatMoney } from "@/lib/money";
 import { IconRepeat } from "@/components/icons";
+import { getUserToday } from "@/lib/preferences";
+import { parsePaging } from "@/lib/paging";
+import { Pager } from "@/components/Pager";
+import { CategoryTag } from "@/components/CategoryTag";
 
 const FREQ = { WEEKLY: "Every week", MONTHLY: "Every month", YEARLY: "Every year" } as const;
 
-export default async function RecurringPage() {
-  const [rules, cats] = await Promise.all([listRules(), listCategories()]);
-  const today = new Date().toISOString().slice(0, 10);
+export default async function RecurringPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const sp = await searchParams;
+  const { page, perPage } = parsePaging(sp);
+  const [{ rows: rules, hasNext }, cats, { iso: today }] = await Promise.all([
+    listRules(page, perPage),
+    listCategories(),
+    getUserToday(),
+  ]);
 
   return (
     <>
@@ -72,7 +85,7 @@ export default async function RecurringPage() {
         </div>
       </details>
 
-      <div className="card">
+      <div className="card section">
         {rules.length === 0 ? (
           <div className="empty">
             <IconRepeat />
@@ -82,7 +95,7 @@ export default async function RecurringPage() {
         ) : (
           <table className="responsive">
             <thead>
-              <tr><th>Name</th><th>Repeats</th><th>Next</th><th className="num">Amount</th><th /></tr>
+              <tr><th>Name</th><th>Repeats</th><th>Next</th><th className="num">Amount</th><th><span className="sr-only">Actions</span></th></tr>
             </thead>
             <tbody>
               {rules.map((r) => (
@@ -92,7 +105,7 @@ export default async function RecurringPage() {
                       {r.label}{" "}
                       <span className="tag">{r.kind === "INCOME" ? "Income" : "Expense"}</span>
                       {!r.active && <> <span className="tag">{r.endDate && r.nextDue > r.endDate ? "Ended" : "Paused"}</span></>}
-                      {r.category && <div className="muted">{r.category.name}</div>}
+                      {r.category && <div><CategoryTag name={r.category.name} color={r.category.color} /></div>}
                     </span>
                   </td>
                   <td data-label="Repeats">{FREQ[r.frequency]}</td>
@@ -123,6 +136,7 @@ export default async function RecurringPage() {
             </tbody>
           </table>
         )}
+        <Pager basePath="/recurring" params={{}} page={page} perPage={perPage} hasNext={hasNext} rowCount={rules.length} />
       </div>
     </>
   );
