@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ActionForm } from "@/components/ActionForm";
 import { CategoryTag } from "@/components/CategoryTag";
+import { CardHead } from "@/components/cards/CardHead";
 import { setBudget, deleteBudget } from "@/actions/budgets";
 import { getBudgetCards } from "@/lib/budget-queries";
 import { budgetStats } from "@/lib/budget-math";
@@ -83,10 +84,9 @@ export default async function BudgetsPage({
 
       {cards.length > 0 && (
         <div className="card section budget-total">
-          <div className="row between">
-            <h2>All budgets</h2>
+          <CardHead title="All budgets">
             <span className={`tag status ${totalStats.status}`}>{STATUS_TEXT[totalStats.status]}</span>
-          </div>
+          </CardHead>
           <progress
             className={totalStats.over ? "over" : undefined}
             max={Math.max(totalLimit, 1)}

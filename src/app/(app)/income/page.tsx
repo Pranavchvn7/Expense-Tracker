@@ -94,9 +94,12 @@ export default async function IncomePage({
                 <tr key={r.id}>
                   <td data-label="Date">{r.receivedOn.toISOString().slice(0, 10)}</td>
                   <td data-label="Source">
-                    <span>
-                      {r.source}{r.recurringRuleId && <> <span className="tag">Recurring</span></>}
-                      {r.note && <div className="muted">{r.note}</div>}
+                    <span className="name-block">
+                      <span className="name-cell">
+                        <span className="nm">{r.source}</span>
+                        {r.recurringRuleId && <span className="tag">Recurring</span>}
+                      </span>
+                      {r.note && <span className="muted note">{r.note}</span>}
                     </span>
                   </td>
                   <td className="num income" data-label="Amount">+{formatMoney(r.amountMinor, r.currency)}</td>

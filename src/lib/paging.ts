@@ -19,10 +19,11 @@ export function parsePaging(
 }
 
 /** Build "/path?a=1&b=2" from defined values only. URLSearchParams does the escaping. */
-export function buildHref(path: string, params: Record<string, string | number | undefined>): string {
+export function buildHref(path: string, params: Record<string, string | number | string[] | undefined>): string {
   const u = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) {
-    if (v !== undefined && v !== "") u.set(k, String(v));
+    if (Array.isArray(v)) v.forEach((x) => x !== "" && u.append(k, x));
+    else if (v !== undefined && v !== "") u.set(k, String(v));
   }
   const qs = u.toString();
   return qs ? `${path}?${qs}` : path;

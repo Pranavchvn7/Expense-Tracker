@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { SoftForm } from "@/components/SoftForm";
 
 type Cat = { id: string; name: string };
 
@@ -34,7 +35,7 @@ export function ReportFilters({
   const [p, setP] = useState(period);
   const count = selected.length + (includeNone ? 1 : 0);
   return (
-    <form className="card stack" method="get" action="/reports" aria-label="Report filters">
+    <SoftForm className="card stack" action="/reports" busyId="report-body" label="Report filters">
       <div className="row">
         <label>Period
           <select name="period" value={p} onChange={(e) => setP(e.target.value as typeof p)}>
@@ -75,6 +76,6 @@ export function ReportFilters({
       <div className="actions">
         <button className="btn" type="submit">Show report</button>
       </div>
-    </form>
+    </SoftForm>
   );
 }

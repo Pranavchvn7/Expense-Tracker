@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.4.3
+### Fixed
+- The side menu scrolls (with no visible scrollbar) and keeps the profile, theme and **Sign out** at the bottom, so Sign out is never hidden behind the taskbar. On phones the More menu sits above the tab bar and scrolls too
+- "Amount owed on the start date" is now **Total loan amount**
+- Expenses page order: add an expense, Paid with, filters, then the records grid
+- Searching or filtering expenses and reports no longer reloads the page: only the records (or report) area dims and updates, the rest stays still. The same filter form works without JavaScript
+- Badges (Income, Expense, Paused, Recurring, category) now always sit on the same row as the name, in recurring, income and expenses. Long names are shortened with an ellipsis instead of pushing badges down
+- After any action (add, delete, match, undo...) the page refreshes in place without blanking or jumping
+
+### Changed
+- **Uniform cards**: one card header (same height and spacing), one row height for every list and table, content centred, equal-height cards in each row
+- **Reports**: By category and Category detail are the same size and show five rows, then scroll with an invisible scrollbar. Largest expenses and Paid with show five rows, then scroll. A new "All expenses in this report" grid lists every expense for the chosen month, year, range and categories, 10 per page with the same 10 / 20 / 50 pagination
+- **Dashboard** now uses the same cards as Reports: By category, Category detail, Largest expenses and Paid with (all five rows then scroll), plus Savings goals and Budgets side by side
+
+### Operations
+- No migration, no new dependency, no new environment variable
+
 ## 0.4.2
 ### Added
 - **Debts** page (in the navigation) for loans and credit cards. Add the amount owed on a start date, the yearly interest rate and the usual monthly payment, then log each payment

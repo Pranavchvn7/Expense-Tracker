@@ -27,7 +27,7 @@ export default async function EditDebtPage({ params }: { params: Promise<{ id: s
           </label>
         </div>
         <div className="row">
-          <label>Amount owed on the start date
+          <label>Total loan amount
             <input name="original" inputMode="decimal" pattern="\d{1,9}(\.\d{1,2})?" defaultValue={(debt.originalMinor / 100).toFixed(2)} required />
           </label>
           <label>Interest rate % a year

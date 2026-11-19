@@ -31,7 +31,7 @@ export const FIELD_LABELS: Record<string, string> = {
   reconciled: "Reconciled",
   goalId: "Goal",
   debtId: "Debt",
-  original: "Amount owed",
+  original: "Total loan amount",
   apr: "Interest rate",
   minPayment: "Monthly payment",
   paidOn: "Payment date",

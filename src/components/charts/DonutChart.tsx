@@ -46,13 +46,12 @@ export function DonutChart({ items, currency }: { items: Item[]; currency: strin
         <text className="centre-num" x="50" y="50">{data.length}</text>
         <text className="centre-sub" x="50" y="62">{data.length === 1 ? "category" : "categories"}</text>
       </svg>
-      <ul className="legend">
+      <ul className="rows cols-legend limit5 hide-scroll">
         {data.map((d) => (
           <li key={d.label}>
-            <span className={`dot ${d.cls}`} />
-            <span className="name">{d.label}</span>
-            <span className="amt">{formatMoney(d.value, currency)}</span>
-            <span className="pct">{Math.round((d.value / total) * 100)}%</span>
+            <span className="main"><i className={`dot ${d.cls}`} /><span className="nm">{d.label}</span></span>
+            <span className="r amt">{formatMoney(d.value, currency)}</span>
+            <span className="r muted">{Math.round((d.value / total) * 100)}%</span>
           </li>
         ))}
       </ul>

@@ -32,6 +32,7 @@ export async function getDashboardData(month: string) {
       by: ["categoryId"],
       where: { userId, currency, spentOn: { gte: start, lt: end } },
       _sum: { amountMinor: true },
+      _count: { _all: true },
     }),
     prisma.expense.groupBy({
       by: ["spentOn"],
@@ -72,6 +73,7 @@ export async function getDashboardData(month: string) {
         label: r.categoryId ? (c?.name ?? "Other") : "Uncategorised",
         color: c?.color ?? 0,
         value: r._sum.amountMinor ?? 0,
+        count: r._count._all,
       };
     }),
     daily,
@@ -148,4 +150,31 @@ export async function getIncome(id: string) {
       receivedOn: true,
     },
   });
+}
+
+/** Largest expenses and spending per payment method for the month (dashboard cards). */
+export async function getMonthHighlights(month: string) {
+  const { userId } = await requireSession();
+  const currency = await getUserCurrency();
+  const { start, end } = monthRange(month);
+  const where = { userId, currency, spentOn: { gte: start, lt: end } };
+  const [top, payments] = await Promise.all([
+    prisma.expense.findMany({
+      where,
+      orderBy: [{ amountMinor: "desc" }, { spentOn: "desc" }],
+      take: 10,
+      select: { description: true, amountMinor: true, spentOn: true, category: { select: { name: true } } },
+    }),
+    prisma.expense.groupBy({ by: ["paymentMethod"], where, _sum: { amountMinor: true }, _count: { _all: true } }),
+  ]);
+  return {
+    top: top.map((t) => ({
+      description: t.description,
+      amountMinor: t.amountMinor,
+      sub: `${t.spentOn.toISOString().slice(0, 10)} · ${t.category?.name ?? "Uncategorised"}`,
+    })),
+    payments: payments
+      .map((p) => ({ method: p.paymentMethod, value: p._sum.amountMinor ?? 0, count: p._count._all }))
+      .sort((a, b) => b.value - a.value),
+  };
 }

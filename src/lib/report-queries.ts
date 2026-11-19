@@ -8,17 +8,10 @@ import type { ReportRange } from "@/lib/report-range";
 
 export const NO_CATEGORY = "none";
 
-/**
- * Everything one report needs. Session first, userId in every filter, the user's own currency
- * only, explicit selects, and bounded work (range is capped at ~3 years by resolveRange).
- * `categoryIds` are untrusted: they only ever narrow the user's own rows.
- */
-export async function getReport(range: ReportRange, categoryIds: string[], includeUncategorised: boolean) {
-  const { userId } = await requireSession();
-  const currency = await getUserCurrency();
+/** The one place the report's expense filter is built, so the summary and the grid always agree. */
+function expenseFilter(userId: string, currency: string, range: ReportRange, categoryIds: string[], includeUncategorised: boolean): Prisma.ExpenseWhereInput {
   const filtered = categoryIds.length > 0 || includeUncategorised;
-
-  const expenseWhere: Prisma.ExpenseWhereInput = {
+  return {
     userId,
     currency,
     spentOn: { gte: range.start, lt: range.end },
@@ -31,6 +24,42 @@ export async function getReport(range: ReportRange, categoryIds: string[], inclu
         }
       : {}),
   };
+}
+
+/** One page of the individual expenses behind a report (same filter as the totals). */
+export async function listReportExpenses(range: ReportRange, categoryIds: string[], includeUncategorised: boolean, page: number, perPage: number) {
+  const { userId } = await requireSession();
+  const currency = await getUserCurrency();
+  const rows = await prisma.expense.findMany({
+    where: expenseFilter(userId, currency, range, categoryIds, includeUncategorised),
+    orderBy: [{ spentOn: "desc" }, { createdAt: "desc" }],
+    skip: (page - 1) * perPage,
+    take: perPage + 1,
+    select: {
+      id: true,
+      description: true,
+      note: true,
+      amountMinor: true,
+      currency: true,
+      spentOn: true,
+      paymentMethod: true,
+      category: { select: { name: true, color: true } },
+    },
+  });
+  return { rows: rows.slice(0, perPage), hasNext: rows.length > perPage };
+}
+
+/**
+ * Everything one report needs. Session first, userId in every filter, the user's own currency
+ * only, explicit selects, and bounded work (range is capped at ~3 years by resolveRange).
+ * `categoryIds` are untrusted: they only ever narrow the user's own rows.
+ */
+export async function getReport(range: ReportRange, categoryIds: string[], includeUncategorised: boolean) {
+  const { userId } = await requireSession();
+  const currency = await getUserCurrency();
+  const filtered = categoryIds.length > 0 || includeUncategorised;
+
+  const expenseWhere = expenseFilter(userId, currency, range, categoryIds, includeUncategorised);
   const incomeWhere = { userId, currency, receivedOn: { gte: range.start, lt: range.end } };
 
   const [spent, income, byCategory, byPayment, expDaily, incDaily, top, cats] = await Promise.all([
