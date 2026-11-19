@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.4.1
+### Added
+- **Reports** page (in the navigation): choose a month, a year or a custom date range, and optionally one or more categories (including Uncategorised). Shows spent, income, balance, average per day, a month-by-month chart and table, a category donut with detail, spending by payment method, and the ten largest expenses
+- **PDF download** of any report (monthly, yearly or custom, with or without the category filter). Generated on the server with pdf-lib, multi-page, with page numbers
+
+### Fixed
+- Goal suggestions: the car 20/4/10 and home deposit calculators now work live in the page, so nothing reloads and the suggestions panel stays open
+- After creating a goal (including from a suggestion), the page scrolls to the new goal card and highlights it briefly
+- Contribution rows in goal cards are compact like every other list row
+- Budgets are no longer listed in Settings (the Budgets page replaces it)
+
+### Security
+- /reports and /reports/pdf are protected by the middleware, private no-store headers and a server-side session check; every query is scoped by userId and the user's own currency
+- Report filters are shape-checked (month, year, dates, UUIDs); custom ranges are limited to about three years; category ids can only narrow the user's own rows
+- PDF generation is rate limited (10 a minute per user); text is reduced to the characters the standard PDF fonts support, so user text can never break or inject into the document; the filename comes only from validated values
+- New dependency: `pdf-lib` (pure JavaScript, no native code, no network access)
+
+### Operations
+- **Run `npm install`** to get pdf-lib (package.json and the lock file change). No database migration and no new environment variables
+
 ## 0.4.0
 ### Added
 - **Budgets page** (in the navigation): one card per category with spent, limit, percentage, left or over by, number of expenses, daily average, largest expense, projected month-end spending, a safe amount per remaining day, and a status (on track / close to limit at 80% / over). Month picker, total across all budgets, inline limit change, a link to that category's expenses, and spending in categories that have no budget

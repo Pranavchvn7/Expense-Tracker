@@ -16,7 +16,7 @@ function refresh() {
   revalidatePath("/dashboard");
 }
 
-export async function createGoal(fd: FormData): Promise<ActionResult> {
+export async function createGoal(fd: FormData): Promise<ActionResult<{ id: string }>> {
   return safely(async () => {
     const { userId } = await requireSession();
     await rateLimit(`goal:create:${userId}`, 20, 60);
@@ -24,7 +24,7 @@ export async function createGoal(fd: FormData): Promise<ActionResult> {
     if ((await prisma.savingsGoal.count({ where: { userId } })) >= MAX_GOALS) {
       throw limitReached("savings goals", MAX_GOALS);
     }
-    await prisma.savingsGoal.create({
+    const created = await prisma.savingsGoal.create({
       data: {
         userId,
         name: input.name,
@@ -35,7 +35,8 @@ export async function createGoal(fd: FormData): Promise<ActionResult> {
       select: { id: true },
     });
     refresh();
-    return undefined;
+    // The id is returned only so the page can scroll to the new card; it belongs to the caller.
+    return { id: created.id };
   });
 }
 

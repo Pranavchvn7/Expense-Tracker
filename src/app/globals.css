@@ -528,3 +528,25 @@ progress.over::-moz-progress-bar { background: var(--danger); }
 .cell-actions form.matched .btn { background: var(--income-soft); color: var(--income); }
 .suggestion { display: grid; gap: 10px; align-content: start; }
 .suggestion h3 { margin: 0; }
+
+/* ===== v0.4.1 fixes ===== */
+/* Compact contribution rows inside goal cards */
+.contrib { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.contrib li { padding: 4px 8px; border-bottom: 1px solid var(--line); }
+.contrib li:last-child { border-bottom: 0; }
+.contrib form { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.contrib .btn { min-height: 30px; padding: 2px 10px; font-size: 0.8rem; border-radius: 8px; }
+.contrib .row.between { align-items: center; }
+.scroll.contrib { max-height: 240px; }
+/* New goal highlight after create (class toggled by script, so no inline style needed) */
+@keyframes flash-ring { from { box-shadow: 0 0 0 3px var(--brand); } to { box-shadow: var(--shadow); } }
+.flash { animation: flash-ring 2.2s ease-out; }
+@media (prefers-reduced-motion: reduce) { .flash { animation: none; outline: 2px solid var(--brand); } }
+
+/* ===== v0.4.1: reports ===== */
+.cat-filter { border: 1px solid var(--line); border-radius: 12px; background: var(--raised); }
+.cat-filter > summary { cursor: pointer; padding: 10px 14px; font-weight: 600; }
+.cat-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 6px 14px; padding: 4px 14px 8px; }
+.cat-filter > p { padding: 0 14px 12px; margin: 0; }
+label.check { display: flex; flex-direction: row; align-items: center; gap: 8px; font-weight: 500; color: var(--text); }
+label.check input { width: 18px; height: 18px; min-height: 0; flex: none; }

@@ -35,7 +35,7 @@ export default async function SettingsPage() {
       <div className="page-head">
         <div>
           <h1>Settings</h1>
-          <p>Profile, security, categories, budgets and sharing</p>
+          <p>Profile, security, categories and sharing</p>
         </div>
         <SettingsControls />
         <nav className="chips" aria-label="Jump to section">
@@ -43,7 +43,6 @@ export default async function SettingsPage() {
           <Link className="chip" href="#preferences">Currency</Link>
           <Link className="chip" href="#security">Security</Link>
           <Link className="chip" href="#categories">Categories</Link>
-          <Link className="chip" href="#budgets">Budgets</Link>
           <Link className="chip" href="#sharing">Sharing</Link>
           <Link className="chip" href="#danger">Delete</Link>
         </nav>
@@ -179,14 +178,6 @@ export default async function SettingsPage() {
           )}
         </div>
       </div>
-      </details>
-
-      <details id="budgets" className="module">
-        <summary><h2>Budgets</h2></summary>
-        <div className="module-body">
-          <p className="lead muted">Budgets now have their own page with a card for each category.</p>
-          <Link className="btn soft small" href="/budgets">Open budgets</Link>
-        </div>
       </details>
 
       <details id="sharing" className="module" open>

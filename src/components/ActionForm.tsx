@@ -3,7 +3,25 @@
 import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 
-type ActionResponse = { ok: boolean; message?: string; ref?: string };
+type ActionResponse = { ok: boolean; message?: string; ref?: string; data?: unknown };
+
+/** After a create, wait for the new card to render, scroll to it and flash it briefly. */
+function focusWhenRendered(id: string) {
+  let tries = 0;
+  const timer = window.setInterval(() => {
+    const el = document.getElementById(id);
+    tries += 1;
+    if (el) {
+      window.clearInterval(timer);
+      if (el instanceof HTMLDetailsElement) el.open = true;
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.add("flash");
+      window.setTimeout(() => el.classList.remove("flash"), 2200);
+    } else if (tries > 30) {
+      window.clearInterval(timer);
+    }
+  }, 100);
+}
 
 /**
  * Runs a server action and shows only the safe generic message (plus correlation ref).
@@ -18,6 +36,8 @@ export function ActionForm({
   successHref,
   resetOnSuccess,
   confirmMessage,
+  focusPrefix,
+  focusHref,
 }: {
   action: (fd: FormData) => Promise<ActionResponse>;
   children?: ReactNode;
@@ -29,6 +49,10 @@ export function ActionForm({
   resetOnSuccess?: boolean;
   /** Ask the browser to confirm first (use for destructive actions). */
   confirmMessage?: string;
+  /** If the action returns { id }, scroll to the element with id `${focusPrefix}${id}` once it renders. */
+  focusPrefix?: string;
+  /** Page to show first (e.g. page 1 of the list) so the new item is on screen. */
+  focusHref?: string;
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -45,6 +69,11 @@ export function ActionForm({
       if (r.ok) {
         if (resetOnSuccess) form.reset();
         if (successHref) router.push(successHref);
+        const newId = (r.data as { id?: unknown } | undefined)?.id;
+        if (focusPrefix && typeof newId === "string") {
+          if (focusHref) router.replace(focusHref, { scroll: false });
+          focusWhenRendered(`${focusPrefix}${newId}`);
+        }
         router.refresh();
       } else {
         setError({ message: r.message ?? "Something went wrong", ref: r.ref });

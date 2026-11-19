@@ -32,9 +32,11 @@ export function AreaChart({
   const area = (p: { x: number; y: number }[]) =>
     p.length ? `${monotonePath(p)} L ${p[p.length - 1]!.x} ${base} L ${p[0]!.x} ${base} Z` : "";
   const ticks = [0, 0.25, 0.5, 0.75, 1].map((t) => t * max);
+  const labelStep = Math.ceil(months.length / 12); // long ranges: label every 2nd/3rd month
+  const dotR = months.length > 18 ? 2.5 : 4;
 
   return (
-    <svg className="areachart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Income and spending over the last ${months.length} months`}>
+    <svg className="areachart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Income and spending over ${months.length} month${months.length === 1 ? "" : "s"}`}>
       <defs>
         <linearGradient id="grad-income" x1="0" y1="0" x2="0" y2="1">
           <stop className="stop-income" offset="0%" stopOpacity="0.38" />
@@ -57,11 +59,11 @@ export function AreaChart({
       <path className="line-spend" d={monotonePath(spPts)} fill="none" strokeWidth="2.5" strokeLinecap="round" />
       {months.map((m, i) => (
         <g key={m}>
-          <text className="axis-text" x={x(i)} y={H - 8} textAnchor="middle">{monthLabel(m, true)}</text>
-          <circle className="dot-income" cx={x(i)} cy={y(income[i] ?? 0)} r="4">
+          {i % labelStep === 0 && <text className="axis-text" x={x(i)} y={H - 8} textAnchor="middle">{monthLabel(m, true)}</text>}
+          <circle className="dot-income" cx={x(i)} cy={y(income[i] ?? 0)} r={dotR}>
             <title>{`${monthLabel(m)} income: ${formatMoney(income[i] ?? 0, currency)}`}</title>
           </circle>
-          <circle className="dot-spend" cx={x(i)} cy={y(spent[i] ?? 0)} r="4">
+          <circle className="dot-spend" cx={x(i)} cy={y(spent[i] ?? 0)} r={dotR}>
             <title>{`${monthLabel(m)} spent: ${formatMoney(spent[i] ?? 0, currency)}`}</title>
           </circle>
         </g>
