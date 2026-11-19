@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.4.2
+### Added
+- **Debts** page (in the navigation) for loans and credit cards. Add the amount owed on a start date, the yearly interest rate and the usual monthly payment, then log each payment
+- For every payment the app shows how much **reduced the debt (principal)** and how much was **interest**, plus what is still owed. Interest is worked out daily from the rate, or you can enter the exact interest from your statement on any payment
+- Per debt: progress bar, principal-versus-interest split, total paid, payoff date and interest still to come at your current payment, and a live "what if I pay extra each month?" calculator
+- Summary of everything still owed, principal repaid and interest paid, and an avalanche (highest rate first) versus snowball (smallest balance first) payoff order
+- Back-dated payments, edits and deletions are always correct: the balance is replayed from the payments instead of being stored
+
+### Security
+- New actions (create, update, delete debt; add, delete payment): session first, user id from the session only, Zod validation, the debt id from the form must belong to you, rate limited, caps (30 debts, 2,000 payments per debt)
+- A payment larger than what is still owed, or dated before the debt started, is refused with a clear message
+- /debts is protected by the middleware, private no-store headers and a server-side session check; every query is scoped by userId with explicit selects
+
+### Operations
+- New migration: `npx prisma migrate dev --name add_debts`. Run it on production with `prisma migrate deploy` BEFORE merging. No new dependencies or environment variables
+
 ## 0.4.1
 ### Added
 - **Reports** page (in the navigation): choose a month, a year or a custom date range, and optionally one or more categories (including Uncategorised). Shows spent, income, balance, average per day, a month-by-month chart and table, a category donut with detail, spending by payment method, and the ten largest expenses

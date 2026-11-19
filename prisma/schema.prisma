@@ -36,6 +36,8 @@ model User {
   recurringRules RecurringRule[]
   goals         SavingsGoal[]
   goalContributions GoalContribution[]
+  debts         Debt[]
+  debtPayments  DebtPayment[]
   twoFactor     TwoFactor[]
 
   @@map("user")
@@ -258,6 +260,47 @@ model GoalContribution {
   createdAt     DateTime    @default(now())
 
   @@index([userId, goalId])
+}
+
+enum DebtKind {
+  CREDIT_CARD
+  LOAN
+}
+
+// A loan or credit card balance being paid down. The balance is never stored: it is replayed
+// from the payments, so back-dated entries and deletions cannot leave stale numbers.
+model Debt {
+  id              String        @id @default(uuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String        @db.VarChar(80)
+  kind            DebtKind
+  currency        String        @db.VarChar(3)
+  originalMinor   Int // amount owed on startDate
+  aprBp           Int // yearly interest in basis points (1250 = 12.50%)
+  minPaymentMinor Int // usual monthly payment / EMI
+  startDate       DateTime      @db.Date
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  payments        DebtPayment[]
+
+  @@index([userId])
+}
+
+model DebtPayment {
+  id                   String   @id @default(uuid())
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  debtId               String
+  debt                 Debt     @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  paidOn               DateTime @db.Date
+  amountMinor          Int
+  // Optional: the exact interest from the statement. Empty means it is worked out from the rate.
+  interestOverrideMinor Int?
+  note                 String?  @db.VarChar(200)
+  createdAt            DateTime @default(now())
+
+  @@index([userId, debtId, paidOn])
 }
 
 // Monthly budget for one category in one currency (applies to every month).

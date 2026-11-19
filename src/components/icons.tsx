@@ -172,3 +172,10 @@ export const IconReport = () => (
     <path d="M9 17v-3M12 17v-6M15 17v-4" />
   </Icon>
 );
+
+export const IconCard = () => (
+  <Icon>
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <path d="M3 10h18M7 15h4" />
+  </Icon>
+);
