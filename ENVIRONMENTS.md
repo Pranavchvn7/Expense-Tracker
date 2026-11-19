@@ -138,3 +138,7 @@ If any check fails, stop using staging, tell me what you saw, and rotate anythin
 - **Staging login loops**: `BETTER_AUTH_URL` does not exactly match the address in the browser bar.
 - **Vercel shows no deployment for a branch**: expected for any branch other than `main` and `staging`.
 - **You see real data on staging**: stop. Check the staging `DATABASE_URL` points at the staging Neon project and rotate anything that was exposed.
+
+
+### v0.5.0 variables
+`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `CRON_SECRET` (all optional; VAPID three must be set together). Use different VAPID keys for Staging and Production. Cron only runs on Production deployments.

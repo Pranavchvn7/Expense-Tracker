@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.5.0
+### Added
+- **Installable app (PWA)**: add it to your phone's Home Screen or install it from the browser; it opens like a normal app
+- **Offline mode**: pages you have opened (and the main pages, saved quietly in the background) open without a connection. Expenses and income added offline are kept on the device and sent automatically when you are back online. A banner shows what is waiting; failures can be retried or discarded
+- **Push notifications** (opt in per device in Settings → Notifications & offline): alert when a category reaches 80% of its budget and when it goes over; reminder 2 days before a recurring expense renews (daily job). Notifications never contain amounts. Test button included
+- Duplicate-proof saving: each offline entry carries a random reference, so a retry never creates it twice
+
+### Security
+- Push addresses are accepted only from the real push services (https allowlist, no IPs/ports/credentials), so the server cannot be pointed at internal addresses; keys are format-checked; max 10 devices per user; every query is scoped to the signed-in user
+- The reminder job requires a secret (`CRON_SECRET`, constant-time compare) and answers 401 to everyone else
+- Signing out (or a session revoked elsewhere) removes saved pages, the offline queue and this device's push link; switching users on a device does the same
+
+### Operations
+- **Migration**: `add_push_and_offline` (apply to production with `prisma migrate deploy` before merging)
+- New dependency: `web-push`
+- New env vars (Vercel, Staging and Production, use different keys): `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `CRON_SECRET`. Generate keys once with `npx web-push generate-vapid-keys`
+- Vercel Cron runs `/api/cron/reminders` once a day (Hobby plan limit)
+- iPhone: push works only after Add to Home Screen (iOS 16.4+)
+
 ## 0.4.4
 ### Fixed
 - The page can be scrolled with the pointer over any card or list on Reports and Dashboard (the lists no longer capture the mouse wheel)

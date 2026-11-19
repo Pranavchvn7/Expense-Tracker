@@ -13,6 +13,10 @@ import { updateProfile } from "@/actions/profile";
 import { countryOptions } from "@/lib/countries";
 import { listTimeZones } from "@/lib/tz";
 import { TimezoneField } from "@/components/TimezoneField";
+import { NotificationSettings } from "@/components/NotificationSettings";
+import { env } from "@/env";
+import { prisma } from "@/lib/db";
+import { requireSession } from "@/lib/session";
 import { SettingsControls } from "@/components/SettingsControls";
 import { CategoryTag } from "@/components/CategoryTag";
 import { listCategories, listShares } from "@/lib/queries";
@@ -26,6 +30,8 @@ export default async function SettingsPage() {
     getUserPrefs(),
   ]);
   const { currency } = prefs;
+  const { userId } = await requireSession();
+  const notify = await prisma.user.findFirst({ where: { id: userId }, select: { notifyBudget: true, notifyRenewals: true } });
   const countries = countryOptions();
   const zones = listTimeZones();
   const thisMonth = new Date().toISOString().slice(0, 7);
@@ -178,6 +184,17 @@ export default async function SettingsPage() {
           )}
         </div>
       </div>
+      </details>
+
+      <details id="notifications" className="module">
+        <summary><h2>Notifications &amp; offline</h2></summary>
+        <div className="module-body">
+          <NotificationSettings
+            publicKey={env.VAPID_PRIVATE_KEY && env.VAPID_SUBJECT ? (env.VAPID_PUBLIC_KEY ?? null) : null}
+            notifyBudget={notify?.notifyBudget ?? true}
+            notifyRenewals={notify?.notifyRenewals ?? true}
+          />
+        </div>
       </details>
 
       <details id="sharing" className="module" open>

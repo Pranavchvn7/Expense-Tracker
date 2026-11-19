@@ -138,3 +138,14 @@ git push -u origin feat/my-change   # open a PR; Vercel makes a preview, CI runs
 - **Prisma can't connect**: confirm `sslmode=require` and that you used the pooled string for `DATABASE_URL`.
 - **Login loops on Vercel**: `BETTER_AUTH_URL` doesn't match the deployed origin exactly.
 - **A secret was committed**: rotate it immediately in Neon/Vercel; deleting the commit is not enough.
+
+
+## Push notifications and offline (v0.5.0)
+1. Generate keys once: `npx web-push generate-vapid-keys` (do this separately for Staging and Production).
+2. In Vercel → Settings → Environment Variables add, per environment:
+   - `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`
+   - `VAPID_SUBJECT` = `mailto:you@example.com`
+   - `CRON_SECRET` = a random string of 24+ characters (`openssl rand -hex 32`). Vercel Cron sends it automatically.
+3. Redeploy. In the app: Settings → Notifications & offline → Turn on for this device.
+4. iPhone/iPad: Share → Add to Home Screen first, then open the app from the Home Screen.
+5. Without these variables the app works normally; the notification section says push is not set up.

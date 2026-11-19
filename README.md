@@ -82,3 +82,6 @@ See [SECURITY.md](./SECURITY.md) for the threat model and the mapping to the 5-p
 - v0.5.0: offline mode and push notifications
 - v0.4: receipt uploads (presigned S3/R2 URLs, MIME allowlist, UUID keys)
 - Playwright e2e suite (page objects, API tests, CI)
+
+## Offline and notifications
+The app is installable (PWA). Visited pages open offline, entries added offline sync automatically, and optional push alerts cover budget thresholds and upcoming renewals. See SETUP.md for the VAPID keys and CRON_SECRET.

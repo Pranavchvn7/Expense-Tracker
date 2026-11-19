@@ -38,6 +38,11 @@ model User {
   goalContributions GoalContribution[]
   debts         Debt[]
   debtPayments  DebtPayment[]
+  // Which push notifications this person wants (they still need to enable push on a device).
+  notifyBudget   Boolean @default(true)
+  notifyRenewals Boolean @default(true)
+  pushSubscriptions PushSubscription[]
+  notificationLogs  NotificationLog[]
   twoFactor     TwoFactor[]
 
   @@map("user")
@@ -150,6 +155,9 @@ model Expense {
   // How it was paid, and whether it has been ticked off against a bank/card statement.
   paymentMethod PaymentMethod?
   reconciled    Boolean   @default(false)
+  // Random id made on the device when an entry was added offline, so a retried sync can never
+  // create it twice. Null for entries added normally.
+  clientRef     String?   @db.VarChar(36)
   // Money is stored as integer minor units (paise/cents) to avoid float errors.
   amountMinor Int
   currency    String    @db.VarChar(3) @default("INR")
@@ -163,6 +171,7 @@ model Expense {
   @@index([userId, spentOn])
   @@index([userId, categoryId])
   @@index([userId, paymentMethod, spentOn])
+  @@unique([userId, clientRef])
 }
 
 enum PaymentMethod {
@@ -190,7 +199,10 @@ model Income {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  clientRef   String?  @db.VarChar(36)
+
   @@unique([recurringRuleId, receivedOn])
+  @@unique([userId, clientRef])
   @@index([userId, receivedOn])
 }
 
@@ -301,6 +313,35 @@ model DebtPayment {
   createdAt            DateTime @default(now())
 
   @@index([userId, debtId, paidOn])
+}
+
+// One browser or phone that agreed to receive push notifications for a user. The endpoint is
+// the push service's address for that device; p256dh and auth are the keys the payload is
+// encrypted with. They are secrets of the subscription and never leave the server.
+model PushSubscription {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint   String   @unique @db.VarChar(1000)
+  p256dh     String   @db.VarChar(100)
+  auth       String   @db.VarChar(30)
+  userAgent  String?  @db.VarChar(200)
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+}
+
+// Remembers which alerts were already sent so each one goes out once
+// (budget80:<budgetId>:<month>, renewal:<ruleId>:<date>, ...).
+model NotificationLog {
+  id      String   @id @default(uuid())
+  userId  String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key     String   @db.VarChar(120)
+  sentAt  DateTime @default(now())
+
+  @@unique([userId, key])
+  @@index([sentAt])
 }
 
 // Monthly budget for one category in one currency (applies to every month).

@@ -3,6 +3,7 @@ import { getSession } from "@/lib/session";
 import { getTheme } from "@/lib/preferences";
 import { AppNav } from "@/components/AppNav";
 import { SessionWatcher } from "@/components/SessionWatcher";
+import { OfflineManager } from "@/components/OfflineManager";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="shell">
       <SessionWatcher />
+      <OfflineManager userId={session.user.id} />
       <AppNav name={session.user.name} theme={theme} />
       <main className="content">{children}</main>
     </div>

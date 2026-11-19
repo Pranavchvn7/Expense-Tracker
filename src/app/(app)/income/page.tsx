@@ -58,7 +58,7 @@ export default async function IncomePage({
       <details className="add" open={openAdd}>
         <summary>Add income</summary>
         <div className="body">
-          <ActionForm action={createIncome} submitLabel="Add income" className="stack" resetOnSuccess>
+          <ActionForm action={createIncome} offlineKind="income" submitLabel="Add income" className="stack" resetOnSuccess>
             <div className="row">
               <label>Amount
                 <input name="amount" inputMode="decimal" pattern="\d{1,9}(\.\d{1,2})?" placeholder="0.00" required />

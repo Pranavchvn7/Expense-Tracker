@@ -628,3 +628,8 @@ td > .name-cell, td > .name-block { max-width: 100%; }
 
 .budget-list { max-height: 340px; width: 100%; display: grid; gap: 14px; align-content: start; }
 .budget-list .budget { display: grid; gap: 6px; }
+
+/* Offline status banner */
+.offline-banner { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 40; width: min(92vw, 520px); display: flex; flex-direction: column; gap: 6px; padding: 10px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18); font-size: 0.9rem; }
+.offline-failed { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; color: var(--danger, #b42318); }
+@media (min-width: 900px) { .offline-banner { bottom: 20px; } }
