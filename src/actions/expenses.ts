@@ -1,5 +1,6 @@
 "use server";
 
+import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
@@ -7,7 +8,8 @@ import { rateLimit } from "@/lib/rate-limit";
 import { notFound, safely, type ActionResult, limitReached } from "@/lib/errors";
 import { getUserCurrency } from "@/lib/preferences";
 import { assertOwnCategory } from "@/lib/ownership";
-import { expenseInput, expenseUpdate, formToObject, idInput, reconcileInput } from "@/lib/validation";
+import { checkBudgetAlert } from "@/lib/notify";
+import { expenseCreate, expenseUpdate, formToObject, idInput, reconcileInput } from "@/lib/validation";
 
 const MAX_EXPENSES_PER_USER = 50_000;
 
@@ -15,15 +17,17 @@ export async function createExpense(fd: FormData): Promise<ActionResult> {
   return safely(async () => {
     const { userId } = await requireSession();
     await rateLimit(`expense:create:${userId}`, 60, 60);
-    const input = expenseInput.parse(formToObject(fd));
+    const input = expenseCreate.parse(formToObject(fd));
     await assertOwnCategory(userId, input.categoryId);
 
     const total = await prisma.expense.count({ where: { userId } });
     if (total >= MAX_EXPENSES_PER_USER) throw limitReached("expenses", MAX_EXPENSES_PER_USER);
 
+    try {
     await prisma.expense.create({
       data: {
         userId,
+        clientRef: input.clientRef ?? null,
         categoryId: input.categoryId ?? null,
         amountMinor: input.amount,
         currency: await getUserCurrency(),
@@ -34,6 +38,13 @@ export async function createExpense(fd: FormData): Promise<ActionResult> {
       },
       select: { id: true },
     });
+    } catch (err) {
+      // Same offline entry sent again (retry after a dropped connection): already stored.
+      if ((err as { code?: string }).code === "P2002" && input.clientRef) return undefined;
+      throw err;
+    }
+    // After the response: a failed alert must never fail or slow the save.
+    after(() => checkBudgetAlert(userId, input.categoryId, input.spentOn).catch(() => console.error("[budget-alert-error]")));
     revalidatePath("/expenses");
     revalidatePath("/dashboard");
     return undefined;

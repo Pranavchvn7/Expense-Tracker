@@ -81,6 +81,9 @@ export const expenseInput = z.object({
 /** Tick or untick an expense as matched with a statement. */
 export const reconcileInput = z.object({ id: uuid, reconciled: z.enum(["0", "1"]) });
 
+/** Creating also accepts a client reference, so an offline entry that is sent twice is stored once. */
+export const expenseCreate = expenseInput.extend({ clientRef: optionalUuid });
+
 export const expenseUpdate = expenseInput.extend({ id: uuid });
 
 export const categoryInput = z.object({ name: cleanText(40) });
@@ -101,6 +104,8 @@ export const incomeInput = z.object({
   note: optionalCleanText(500),
   receivedOn: dateSchema,
 });
+
+export const incomeCreate = incomeInput.extend({ clientRef: optionalUuid });
 
 export const incomeUpdate = incomeInput.extend({ id: uuid });
 

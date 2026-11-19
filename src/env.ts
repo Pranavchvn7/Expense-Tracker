@@ -40,6 +40,13 @@ const schema = z.object({
     (v) => (typeof v === "string" ? blankToUndefined(v.trim().toLowerCase()) : v),
     z.enum(["production", "staging"]).default("production"),
   ),
+  // OPTIONAL push notifications. Generate the pair once with: npx web-push generate-vapid-keys
+  // Set all three VAPID values, or none. The subject is a mailto: or https: contact for push services.
+  VAPID_PUBLIC_KEY: z.preprocess(blankToUndefined, z.string().min(60).max(120).optional()),
+  VAPID_PRIVATE_KEY: z.preprocess(blankToUndefined, z.string().min(30).max(80).optional()),
+  VAPID_SUBJECT: z.preprocess(blankToUndefined, z.string().max(200).regex(/^(mailto:|https:\/\/)/, "must start with mailto: or https://").optional()),
+  // Protects the daily reminder job. Vercel Cron sends it automatically as a Bearer token.
+  CRON_SECRET: z.preprocess(blankToUndefined, z.string().min(24).optional()),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 
@@ -66,6 +73,13 @@ if (Boolean(env.RESEND_API_KEY) !== Boolean(env.EMAIL_FROM)) {
     }, EMAIL_FROM is ${env.EMAIL_FROM ? "set" : "missing"})`,
   );
 }
+
+const vapidCount = [env.VAPID_PUBLIC_KEY, env.VAPID_PRIVATE_KEY, env.VAPID_SUBJECT].filter(Boolean).length;
+if (vapidCount !== 0 && vapidCount !== 3) {
+  throw new Error("Set all of VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY and VAPID_SUBJECT, or none of them");
+}
+/** True only when push notifications are fully configured. */
+export const isPushEnabled = vapidCount === 3;
 
 /** True only when a mail provider is fully configured. Gates every email-based feature. */
 export const isEmailEnabled = Boolean(env.RESEND_API_KEY && env.EMAIL_FROM);

@@ -6,7 +6,7 @@ import { requireSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
 import { notFound, safely, type ActionResult, limitReached } from "@/lib/errors";
 import { getUserCurrency } from "@/lib/preferences";
-import { formToObject, idInput, incomeInput, incomeUpdate } from "@/lib/validation";
+import { formToObject, idInput, incomeCreate, incomeUpdate } from "@/lib/validation";
 
 const MAX_INCOME_PER_USER = 20_000;
 
@@ -19,14 +19,16 @@ export async function createIncome(fd: FormData): Promise<ActionResult> {
   return safely(async () => {
     const { userId } = await requireSession();
     await rateLimit(`income:create:${userId}`, 60, 60);
-    const input = incomeInput.parse(formToObject(fd));
+    const input = incomeCreate.parse(formToObject(fd));
 
     const total = await prisma.income.count({ where: { userId } });
     if (total >= MAX_INCOME_PER_USER) throw limitReached("income entries", MAX_INCOME_PER_USER);
 
+    try {
     await prisma.income.create({
       data: {
         userId,
+        clientRef: input.clientRef ?? null,
         amountMinor: input.amount,
         currency: await getUserCurrency(),
         source: input.source,
@@ -35,6 +37,10 @@ export async function createIncome(fd: FormData): Promise<ActionResult> {
       },
       select: { id: true },
     });
+    } catch (err) {
+      if ((err as { code?: string }).code === "P2002" && input.clientRef) return undefined;
+      throw err;
+    }
     refresh();
     return undefined;
   });
