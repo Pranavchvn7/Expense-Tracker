@@ -2,6 +2,7 @@ import Link from "next/link";
 import { materializeRecurring } from "@/lib/recurring";
 import { ActionForm } from "@/components/ActionForm";
 import { Pager } from "@/components/Pager";
+import { SoftForm } from "@/components/SoftForm";
 import { SortHeader } from "@/components/SortHeader";
 import { CategoryTag } from "@/components/CategoryTag";
 import { createExpense, deleteExpense, setReconciled } from "@/actions/expenses";
@@ -109,8 +110,34 @@ export default async function ExpensesPage({
         </div>
       </details>
 
-      {/* Filters only: no credentials or sensitive values, so a GET form is appropriate. */}
-      <form className="card row filters" method="get" aria-label="Filter expenses">
+      {byMethod.size > 0 && (
+        <div className="card section">
+          <h2>Paid with</h2>
+          <p className="muted">Tick expenses as matched when you have found them on your bank or card statement; what is left is not matched yet.</p>
+          <div className="method-grid">
+            {[...byMethod.entries()].map(([key, v]) => (
+              <Link
+                key={key}
+                className="method-card"
+                href={buildHref("/expenses", { month, pm: key === "NONE" ? undefined : key })}
+              >
+                <strong>{key === "NONE" ? "Not set" : paymentLabel(key)}</strong>
+                <span className="amt">{formatMoney(v.total, currency)}</span>
+                <span className="muted">{v.count} expense{v.count === 1 ? "" : "s"}{v.open > 0 ? ` · ${formatMoney(v.open, currency)} not matched` : " · all matched"}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Filters only (no credentials). SoftForm updates just the records grid, not the whole page. */}
+      <SoftForm
+        key={[month, q, categoryId, paymentMethod, reconciled].join("|")}
+        className="card row filters"
+        action="/expenses"
+        busyId="records"
+        label="Filter expenses"
+      >
         <label>Month<input type="month" name="month" defaultValue={month} max={today.month} /></label>
         <label>Search
           <span className="search">
@@ -146,29 +173,9 @@ export default async function ExpensesPage({
         {hasFilter && (
           <Link className="btn ghost" href={buildHref("/expenses", { month })}>Reset</Link>
         )}
-      </form>
+      </SoftForm>
 
-      {byMethod.size > 0 && (
-        <div className="card section">
-          <h2>Paid with</h2>
-          <p className="muted">Tick expenses as matched when you have found them on your bank or card statement; what is left is not matched yet.</p>
-          <div className="method-grid">
-            {[...byMethod.entries()].map(([key, v]) => (
-              <Link
-                key={key}
-                className="method-card"
-                href={buildHref("/expenses", { month, pm: key === "NONE" ? undefined : key })}
-              >
-                <strong>{key === "NONE" ? "Not set" : paymentLabel(key)}</strong>
-                <span className="amt">{formatMoney(v.total, currency)}</span>
-                <span className="muted">{v.count} expense{v.count === 1 ? "" : "s"}{v.open > 0 ? ` · ${formatMoney(v.open, currency)} not matched` : " · all matched"}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="card section">
+      <div className="card section region" id="records">
         {rows.length === 0 ? (
           <div className="empty">
             <IconInbox />
@@ -192,9 +199,12 @@ export default async function ExpensesPage({
                 <tr key={e.id}>
                   <td data-label="Date">{e.spentOn.toISOString().slice(0, 10)}</td>
                   <td data-label="Description">
-                    <span>
-                      {e.description}{e.recurringRuleId && <> <span className="tag">Recurring</span></>}
-                      {e.note && <div className="muted">{e.note}</div>}
+                    <span className="name-block">
+                      <span className="name-cell">
+                        <span className="nm">{e.description}</span>
+                        {e.recurringRuleId && <span className="tag">Recurring</span>}
+                      </span>
+                      {e.note && <span className="muted note">{e.note}</span>}
                     </span>
                   </td>
                   <td data-label="Category"><CategoryTag name={e.category?.name} color={e.category?.color} /></td>

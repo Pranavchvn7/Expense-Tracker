@@ -14,7 +14,7 @@ export function PerPageSelect({
   anchor,
 }: {
   basePath: string;
-  params: Record<string, string | undefined>;
+  params: Record<string, string | string[] | undefined>;
   perPage: number;
   pageKey: string;
   sizeKey: string;

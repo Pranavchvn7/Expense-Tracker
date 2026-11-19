@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 
 type ActionResponse = { ok: boolean; message?: string; ref?: string; data?: unknown };
@@ -56,6 +56,9 @@ export function ActionForm({
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
+  // The refresh after an action runs as a transition: the page you are looking at stays in place
+  // and only the parts whose data changed are swapped in (no blank screen, no scroll jump).
+  const [refreshing, startRefresh] = useTransition();
   const [error, setError] = useState<{ message: string; ref?: string } | null>(null);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -74,7 +77,7 @@ export function ActionForm({
           if (focusHref) router.replace(focusHref, { scroll: false });
           focusWhenRendered(`${focusPrefix}${newId}`);
         }
-        router.refresh();
+        startRefresh(() => router.refresh());
       } else {
         setError({ message: r.message ?? "Something went wrong", ref: r.ref });
       }
@@ -89,8 +92,8 @@ export function ActionForm({
     // method="post": never fall back to a GET submit if scripts fail to load.
     <form method="post" onSubmit={onSubmit} className={className}>
       {children}
-      <button type="submit" disabled={pending} className={danger ? "btn danger" : "btn"}>
-        {pending ? "Working…" : submitLabel}
+      <button type="submit" disabled={pending || refreshing} className={danger ? "btn danger" : "btn"}>
+        {pending || refreshing ? "Working…" : submitLabel}
       </button>
       {error && (
         <p role="alert" className="error">

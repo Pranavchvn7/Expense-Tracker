@@ -2,7 +2,10 @@
 
 A secure, multi-user expense tracker. Next.js (App Router) · TypeScript · Better Auth · Prisma · Neon Postgres · Zod · Vercel.
 
-## Features (v0.4.2)
+## Features (v0.4.3)
+- Uniform card layout, filters that update only the records, scrollable side menu
+
+### v0.4.2
 - Debt payoff tracker: principal versus interest per payment, payoff estimates, what-if extra payments
 
 ### v0.4.1

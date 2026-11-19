@@ -62,7 +62,7 @@ export default async function DebtsPage({
               </label>
             </div>
             <div className="row">
-              <label>Amount owed on the start date
+              <label>Total loan amount
                 <input name="original" inputMode="decimal" pattern="\d{1,9}(\.\d{1,2})?" placeholder="0.00" required />
               </label>
               <label>Interest rate % a year
@@ -78,7 +78,7 @@ export default async function DebtsPage({
               </label>
             </div>
             <p className="muted">
-              Use the amount you owed on the start date, then add every payment you make. Interest is worked out daily from the rate;
+              Enter the total amount you owe as of the start date, then add every payment you make. Interest is worked out daily from the rate;
               you can enter the exact interest from your statement on any payment.
             </p>
           </ActionForm>

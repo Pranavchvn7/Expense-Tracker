@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { materializeRecurring } from "@/lib/recurring";
 import { listBudgets, monthTotalsByCategory } from "@/lib/queries";
-import { getDashboardData, listRecentExpenses } from "@/lib/finance-queries";
+import { getDashboardData, getMonthHighlights, listRecentExpenses } from "@/lib/finance-queries";
+import { paymentLabel } from "@/lib/payment-method";
+import { CardHead } from "@/components/cards/CardHead";
+import { CategoryDetailCard, PaymentMethodsCard, TopExpensesCard } from "@/components/cards/ListCards";
 import { listGoals } from "@/lib/goal-queries";
 import { monthlyNeeded, percent } from "@/lib/goal-math";
 import { formatMoney, monthLabel } from "@/lib/money";
@@ -42,12 +45,13 @@ export default async function DashboardPage({
   const month = rawMonth.success && rawMonth.data <= today.month ? rawMonth.data : today.month;
   const { page, perPage } = parsePaging(sp, { pageKey: "ep", sizeKey: "epp" });
 
-  const [data, budgets, totals, goals, recent] = await Promise.all([
+  const [data, budgets, totals, goals, recent, highlights] = await Promise.all([
     getDashboardData(month),
     listBudgets(),
     monthTotalsByCategory(month),
     listGoals(12),
     listRecentExpenses(month, page, perPage),
+    getMonthHighlights(month),
   ]);
 
   const { currency } = data;
@@ -154,36 +158,53 @@ export default async function DashboardPage({
       {!empty && (
         <>
           <div className="grid two section equal">
-            <div className="card">
-              <div className="row between">
-                <h2>Cash flow</h2>
+            <div className="card panel">
+              <CardHead title="Cash flow">
                 <div className="key">
                   <span><i className="dot income" />Income</span>
                   <span><i className="dot spend" />Spent</span>
                 </div>
-              </div>
-              <AreaChart months={data.trend.months} income={data.trend.income} spent={data.trend.spent} currency={currency} />
+              </CardHead>
+              <div className="card-body"><AreaChart months={data.trend.months} income={data.trend.income} spent={data.trend.spent} currency={currency} /></div>
             </div>
-            <div className="card">
-              <h2>Where it went</h2>
-              {data.categories.length === 0 ? (
-                <p className="muted">No expenses this month.</p>
-              ) : (
-                <DonutChart items={data.categories} currency={currency} />
-              )}
+            <div className="card panel">
+              <CardHead title="By category" />
+              <div className="card-body">
+                {data.categories.length === 0 ? (
+                  <p className="muted">No expenses this month.</p>
+                ) : (
+                  <DonutChart items={data.categories} currency={currency} />
+                )}
+              </div>
             </div>
           </div>
 
           <div className="grid two section equal">
-            <div className="card">
-              <h2>Spending by day</h2>
-              <DailyBars daily={data.daily} month={month} currency={currency} />
+            {data.categories.length > 0 ? (
+              <CategoryDetailCard
+                categories={data.categories.map((c) => ({ label: c.label, color: c.color, value: c.value, count: c.count })).sort((x, y) => y.value - x.value)}
+                spentMinor={data.spentMinor}
+                currency={currency}
+              />
+            ) : (
+              <div className="card panel"><CardHead title="Category detail" /><p className="muted">No expenses this month.</p></div>
+            )}
+            <div className="card panel">
+              <CardHead title="Spending by day" />
+              <div className="card-body"><DailyBars daily={data.daily} month={month} currency={currency} /></div>
             </div>
-            <div className="card">
-              <div className="row between">
-                <h2>Savings goals</h2>
+          </div>
+
+          <div className="grid two section equal">
+            <TopExpensesCard rows={highlights.top} currency={currency} />
+            <PaymentMethodsCard rows={highlights.payments.map((p) => ({ label: paymentLabel(p.method), count: p.count, value: p.value }))} currency={currency} />
+          </div>
+
+          <div className="grid two section equal">
+            <div className="card panel">
+              <CardHead title="Savings goals">
                 <Link className="btn soft small" href="/goals">Manage <IconArrowRight /></Link>
-              </div>
+              </CardHead>
               {carousel.length > 0 ? (
                 <GoalCarousel goals={carousel} />
               ) : (
@@ -194,48 +215,52 @@ export default async function DashboardPage({
                 </div>
               )}
             </div>
+            <div className="card panel">
+              <CardHead title="Budgets">
+                <Link className="btn soft small" href="/budgets">Manage <IconArrowRight /></Link>
+              </CardHead>
+              {shownBudgets.length === 0 ? (
+                <div className="empty compact">
+                  <strong>No budgets yet</strong>
+                  <span>Set a monthly limit for a category.</span>
+                  <Link className="btn small" href="/budgets?add=1">Set a budget</Link>
+                </div>
+              ) : (
+                <div className="budget-list hide-scroll">
+                  {shownBudgets.map((b) => {
+                    const used = spent.get(`${b.category.id}|${b.currency}`) ?? 0;
+                    const over = used > b.amountMinor;
+                    const pct = Math.round((used * 100) / b.amountMinor);
+                    return (
+                      <div key={b.id} className="budget">
+                        <div className="row between">
+                          <CategoryTag name={b.category.name} color={b.category.color} />
+                          <span className={over ? "error" : "muted"}>
+                            {formatMoney(used, b.currency)} of {formatMoney(b.amountMinor, b.currency)} ({pct}%)
+                          </span>
+                        </div>
+                        {/* <progress> instead of a styled div: the CSP forbids inline style attributes. */}
+                        <progress
+                          className={`${over ? "over " : ""}${colorClass(b.category.color)}`}
+                          max={b.amountMinor}
+                          value={Math.min(used, b.amountMinor)}
+                          aria-label={`${b.category.name} budget used`}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </>
       )}
 
-      {shownBudgets.length > 0 && (
-        <div className="card section">
-          <div className="row between">
-            <h2>Budgets</h2>
-            <Link className="btn soft small" href="/budgets">Manage <IconArrowRight /></Link>
-          </div>
-          {shownBudgets.map((b) => {
-            const used = spent.get(`${b.category.id}|${b.currency}`) ?? 0;
-            const over = used > b.amountMinor;
-            const pct = Math.round((used * 100) / b.amountMinor);
-            return (
-              <div key={b.id} className="budget">
-                <div className="row between">
-                  <CategoryTag name={b.category.name} color={b.category.color} />
-                  <span className={over ? "error" : "muted"}>
-                    {formatMoney(used, b.currency)} of {formatMoney(b.amountMinor, b.currency)} ({pct}%)
-                    {over ? ` · over by ${formatMoney(used - b.amountMinor, b.currency)}` : ""}
-                  </span>
-                </div>
-                {/* <progress> instead of a styled div: the CSP forbids inline style attributes. */}
-                <progress
-                  className={`${over ? "over " : ""}${colorClass(b.category.color)}`}
-                  max={b.amountMinor}
-                  value={Math.min(used, b.amountMinor)}
-                  aria-label={`${b.category.name} budget used`}
-                />
-              </div>
-            );
-          })}
-        </div>
-      )}
-
       {recent.rows.length > 0 && (
         <div className="card section" id="latest">
-          <div className="row between">
-            <h2>Expenses this month</h2>
+          <CardHead title="Expenses this month">
             <Link className="btn soft small" href={`/expenses?month=${month}`}>See all <IconArrowRight /></Link>
-          </div>
+          </CardHead>
           <table className="responsive">
             <tbody>
               {recent.rows.map((e) => (

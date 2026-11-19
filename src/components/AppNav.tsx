@@ -64,12 +64,14 @@ export function AppNav({ name, theme }: { name: string; theme: "light" | "dark" 
         <Link href="/dashboard" className="brand">
           <LogoMark /> Expense Tracker
         </Link>
-        {items.map((i) => (
-          <Link key={i.href} href={i.href} className="nav-link" aria-current={active(i.href) ? "page" : undefined}>
-            {i.icon}
-            {i.label}
-          </Link>
-        ))}
+        <div className="side-nav hide-scroll">
+          {items.map((i) => (
+            <Link key={i.href} href={i.href} className="nav-link" aria-current={active(i.href) ? "page" : undefined}>
+              {i.icon}
+              {i.label}
+            </Link>
+          ))}
+        </div>
         <div className="side-foot">
           <div className="who">
             <span className="avatar" aria-hidden="true">{initial}</span>
@@ -95,7 +97,7 @@ export function AppNav({ name, theme }: { name: string; theme: "light" | "dark" 
 
       {more && <button type="button" className="sheet-backdrop" aria-label="Close menu" onClick={() => setMore(false)} />}
       {more && (
-        <div className="sheet" role="dialog" aria-label="More">
+        <div className="sheet hide-scroll" role="dialog" aria-label="More">
           <div className="who">
             <span className="avatar" aria-hidden="true">{initial}</span>
             <span className="who-name">{name}</span>
