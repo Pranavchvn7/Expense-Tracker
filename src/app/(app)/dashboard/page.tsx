@@ -168,6 +168,13 @@ export default async function DashboardPage({
               <div className="card-body"><AreaChart months={data.trend.months} income={data.trend.income} spent={data.trend.spent} currency={currency} /></div>
             </div>
             <div className="card panel">
+              <CardHead title="Spending by day" />
+              <div className="card-body"><DailyBars daily={data.daily} month={month} currency={currency} /></div>
+            </div>
+          </div>
+
+          <div className="grid two section equal">
+            <div className="card panel">
               <CardHead title="By category" />
               <div className="card-body">
                 {data.categories.length === 0 ? (
@@ -177,9 +184,6 @@ export default async function DashboardPage({
                 )}
               </div>
             </div>
-          </div>
-
-          <div className="grid two section equal">
             {data.categories.length > 0 ? (
               <CategoryDetailCard
                 categories={data.categories.map((c) => ({ label: c.label, color: c.color, value: c.value, count: c.count })).sort((x, y) => y.value - x.value)}
@@ -189,10 +193,6 @@ export default async function DashboardPage({
             ) : (
               <div className="card panel"><CardHead title="Category detail" /><p className="muted">No expenses this month.</p></div>
             )}
-            <div className="card panel">
-              <CardHead title="Spending by day" />
-              <div className="card-body"><DailyBars daily={data.daily} month={month} currency={currency} /></div>
-            </div>
           </div>
 
           <div className="grid two section equal">

@@ -437,7 +437,7 @@ details.goal > summary::-webkit-details-marker { display: none; }
 .goal-meta { display: inline-flex; align-items: center; gap: 10px; }
 .goal-body { padding: 0 18px 18px; }
 .goals-grid { align-items: start; }
-.scroll { max-height: 260px; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; }
+.scroll { max-height: 260px; overflow-y: auto; padding-right: 4px; }
 
 /* Goal carousel on the dashboard */
 .carousel { position: relative; flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 4px 28px 22px; }
@@ -491,7 +491,7 @@ progress.over::-moz-progress-bar { background: var(--danger); }
   position: fixed; left: 0; right: 0; bottom: calc(64px + env(safe-area-inset-bottom)); z-index: 33; background: var(--surface);
   border-radius: 18px 18px 0 0; border: 1px solid var(--line); border-bottom: 0;
   padding: 14px 14px 12px; display: grid; gap: 4px; box-shadow: 0 -8px 30px rgb(0 0 0 / 0.2);
-  max-height: calc(100dvh - 64px - env(safe-area-inset-bottom) - 72px); overflow-y: auto;
+  max-height: calc(100dvh - 64px - env(safe-area-inset-bottom) - 72px); overflow-y: auto; overscroll-behavior: contain;
 }
 .sheet-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding-top: 12px; margin-top: 8px; border-top: 1px solid var(--line); }
 @media (min-width: 900px) { .fab, .sheet, .sheet-backdrop { display: none; } }
@@ -566,7 +566,8 @@ label.check input { width: 18px; height: 18px; min-height: 0; flex: none; }
 .region { transition: opacity 0.15s; }
 
 /* Invisible scrollers: scrollable, but no visible bar */
-.hide-scroll { scrollbar-width: none; -ms-overflow-style: none; overflow-y: auto; overscroll-behavior: contain; }
+/* No overscroll-behavior here: it would stop the page from scrolling while the pointer is over a list */
+.hide-scroll { scrollbar-width: none; -ms-overflow-style: none; overflow-y: auto; }
 .hide-scroll::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
 /* Sidebar: brand and footer stay put, only the links scroll (so Sign out is always reachable) */

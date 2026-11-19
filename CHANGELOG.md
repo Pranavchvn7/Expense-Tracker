@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.4
+### Fixed
+- The page can be scrolled with the pointer over any card or list on Reports and Dashboard (the lists no longer capture the mouse wheel)
+- Dashboard: Cash flow and Spending by day now sit together and have the same chart size, so there is no empty space inside the cards. By category and Category detail share the next row
+
+### Operations
+- No migration, no new dependency, no new environment variable
+
 ## 0.4.3
 ### Fixed
 - The side menu scrolls (with no visible scrollbar) and keeps the profile, theme and **Sign out** at the bottom, so Sign out is never hidden behind the taskbar. On phones the More menu sits above the tab bar and scrolls too
