@@ -11,6 +11,7 @@ export function SignOutButton() {
   return (
     <button
       className="btn ghost"
+      data-testid="sign-out"
       onClick={async () => {
         try {
           const waiting = (await listOutbox()).length;

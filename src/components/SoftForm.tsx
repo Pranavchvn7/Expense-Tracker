@@ -40,6 +40,7 @@ export function SoftForm({
       method="get"
       action={action}
       aria-label={label}
+      data-testid={`filter-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
       onSubmit={(e) => {
         e.preventDefault();
         const u = new URLSearchParams();

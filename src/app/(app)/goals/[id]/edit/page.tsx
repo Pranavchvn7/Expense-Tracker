@@ -14,7 +14,7 @@ export default async function EditGoalPage({ params }: { params: Promise<{ id: s
   return (
     <>
       <div className="page-head"><h1>Edit goal</h1></div>
-      <ActionForm action={updateGoal} submitLabel="Save changes" className="card stack" successHref="/goals">
+      <ActionForm action={updateGoal} testId="update-goal" submitLabel="Save changes" className="card stack" successHref="/goals">
         <input type="hidden" name="id" value={goal.id} />
         <label>Name
           <input name="name" maxLength={80} defaultValue={goal.name} required />

@@ -633,3 +633,9 @@ td > .name-cell, td > .name-block { max-width: 100%; }
 .offline-banner { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 40; width: min(92vw, 520px); display: flex; flex-direction: column; gap: 6px; padding: 10px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18); font-size: 0.9rem; }
 .offline-failed { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; color: var(--danger, #b42318); }
 @media (min-width: 900px) { .offline-banner { bottom: 20px; } }
+
+/* Getting started card */
+.starter-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.starter-list li { display: flex; gap: 10px; align-items: center; }
+.starter-list li.done { color: var(--muted); text-decoration: line-through; }
+.starter-list .check { width: 1.2em; text-align: center; color: var(--brand); font-weight: 700; }

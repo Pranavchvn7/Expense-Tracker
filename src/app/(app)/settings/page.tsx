@@ -62,7 +62,7 @@ export default async function SettingsPage() {
             entries and when recurring items are added. Email and password are not editable here.
           </p>
           <div className="card">
-            <ActionForm action={updateProfile} submitLabel="Save profile" className="stack">
+            <ActionForm action={updateProfile} testId="update-profile" submitLabel="Save profile" className="stack">
               <label>Display name
                 <input name="name" maxLength={60} defaultValue={prefs.name} required autoComplete="name" />
               </label>
@@ -88,7 +88,7 @@ export default async function SettingsPage() {
           they were saved with and are not converted; the dashboard only totals your current currency.
         </p>
         <div className="card">
-          <ActionForm action={setCurrency} submitLabel="Save currency" className="row">
+          <ActionForm action={setCurrency} testId="set-currency" submitLabel="Save currency" className="row">
             <label>Currency
               <select name="currency" defaultValue={currency}>
                 <option value="INR">INR – Indian rupee</option>
@@ -126,7 +126,7 @@ export default async function SettingsPage() {
                   <strong>This device</strong>
                 ) : (
                   <ActionForm
-                    action={revokeSession}
+                    action={revokeSession} testId="revoke-session"
                     submitLabel="Sign out"
                     danger
                     className="row"
@@ -145,7 +145,7 @@ export default async function SettingsPage() {
           </ul>
           {sessions.length > 1 && (
             <ActionForm
-              action={revokeOtherSessions}
+              action={revokeOtherSessions} testId="revoke-other-sessions"
               submitLabel="Sign out all other devices"
               danger
               confirmMessage="Sign out every device except this one?"
@@ -159,7 +159,7 @@ export default async function SettingsPage() {
         <summary><h2>Categories</h2></summary>
         <div className="module-body">
         <div className="card stack">
-          <ActionForm action={createCategory} submitLabel="Add category" className="row" resetOnSuccess>
+          <ActionForm action={createCategory} testId="create-category" submitLabel="Add category" className="row" resetOnSuccess>
             <label>Name<input name="name" maxLength={40} required /></label>
           </ActionForm>
           {cats.length === 0 ? (
@@ -169,7 +169,7 @@ export default async function SettingsPage() {
               {cats.map((c) => (
                 <li key={c.id}>
                   <ActionForm
-                    action={deleteCategory}
+                    action={deleteCategory} testId="delete-category"
                     submitLabel="Remove"
                     danger
                     className="row between"
@@ -204,7 +204,7 @@ export default async function SettingsPage() {
           Creates a read-only link with category totals only (no descriptions or notes). It expires automatically.
         </p>
         <div className="card stack">
-          <ActionForm action={createShare} submitLabel="Create link" className="row">
+          <ActionForm action={createShare} testId="create-share" submitLabel="Create link" className="row">
             <label>Month<input type="month" name="month" defaultValue={thisMonth} required /></label>
             <label>Valid for (days)<input type="number" name="days" min={1} max={30} defaultValue={7} required /></label>
           </ActionForm>
@@ -213,7 +213,7 @@ export default async function SettingsPage() {
               {shares.map((s) => (
                 <li key={s.id}>
                   <ActionForm
-                    action={revokeShare}
+                    action={revokeShare} testId="revoke-share"
                     submitLabel="Revoke"
                     danger
                     className="row between"
@@ -239,7 +239,7 @@ export default async function SettingsPage() {
         <p className="lead muted">Permanently removes your account and all expenses and income. This cannot be undone.</p>
         <div className="card">
           <ActionForm
-            action={deleteAccount}
+            action={deleteAccount} testId="delete-account"
             submitLabel="Delete my account"
             danger
             className="row"

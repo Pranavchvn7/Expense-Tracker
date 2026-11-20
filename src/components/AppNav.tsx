@@ -66,7 +66,7 @@ export function AppNav({ name, theme }: { name: string; theme: "light" | "dark" 
         </Link>
         <div className="side-nav hide-scroll">
           {items.map((i) => (
-            <Link key={i.href} href={i.href} className="nav-link" aria-current={active(i.href) ? "page" : undefined}>
+            <Link key={i.href} href={i.href} className="nav-link" data-testid={`side-nav-${i.href.slice(1)}`} aria-current={active(i.href) ? "page" : undefined}>
               {i.icon}
               {i.label}
             </Link>
@@ -90,7 +90,7 @@ export function AppNav({ name, theme }: { name: string; theme: "light" | "dark" 
       </header>
 
       {fab && (
-        <Link href={fab.href} className="fab" aria-label={fab.label}>
+        <Link href={fab.href} className="fab" data-testid="fab-add" aria-label={fab.label} title={`${fab.label} (N)`}>
           <IconPlus />
         </Link>
       )}
@@ -103,7 +103,7 @@ export function AppNav({ name, theme }: { name: string; theme: "light" | "dark" 
             <span className="who-name">{name}</span>
           </div>
           {secondary.map((i) => (
-            <Link key={i.href} href={i.href} className="nav-link" aria-current={active(i.href) ? "page" : undefined}>
+            <Link key={i.href} href={i.href} className="nav-link" data-testid={`sheet-nav-${i.href.slice(1)}`} aria-current={active(i.href) ? "page" : undefined}>
               {i.icon}
               {i.label}
             </Link>
@@ -117,7 +117,7 @@ export function AppNav({ name, theme }: { name: string; theme: "light" | "dark" 
 
       <nav className="bottom-bar" aria-label="Main">
         {primary.map((i) => (
-          <Link key={i.href} href={i.href} className="tab" aria-current={active(i.href) ? "page" : undefined}>
+          <Link key={i.href} href={i.href} className="tab" data-testid={`tab-${i.href.slice(1)}`} aria-current={active(i.href) ? "page" : undefined}>
             {i.icon}
             {i.label}
           </Link>
@@ -125,6 +125,7 @@ export function AppNav({ name, theme }: { name: string; theme: "light" | "dark" 
         <button
           type="button"
           className="tab"
+          data-testid="tab-more"
           aria-expanded={more}
           aria-current={moreActive ? "page" : undefined}
           onClick={() => setMore((v) => !v)}

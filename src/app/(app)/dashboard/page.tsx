@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { materializeRecurring } from "@/lib/recurring";
 import { listBudgets, monthTotalsByCategory } from "@/lib/queries";
-import { getDashboardData, getMonthHighlights, listRecentExpenses } from "@/lib/finance-queries";
+import { getDashboardData, getLifetimeCounts, getMonthHighlights, listRecentExpenses } from "@/lib/finance-queries";
 import { paymentLabel } from "@/lib/payment-method";
 import { CardHead } from "@/components/cards/CardHead";
 import { CategoryDetailCard, PaymentMethodsCard, TopExpensesCard } from "@/components/cards/ListCards";
@@ -12,6 +12,7 @@ import { addMonthsKey } from "@/lib/chart-math";
 import { getUserToday, getUserPrefs } from "@/lib/preferences";
 import { monthSchema } from "@/lib/validation";
 import { parsePaging } from "@/lib/paging";
+import { compareSpending, momText } from "@/lib/mom-math";
 import { DonutChart } from "@/components/charts/DonutChart";
 import { AreaChart } from "@/components/charts/AreaChart";
 import { DailyBars } from "@/components/charts/DailyBars";
@@ -45,13 +46,14 @@ export default async function DashboardPage({
   const month = rawMonth.success && rawMonth.data <= today.month ? rawMonth.data : today.month;
   const { page, perPage } = parsePaging(sp, { pageKey: "ep", sizeKey: "epp" });
 
-  const [data, budgets, totals, goals, recent, highlights] = await Promise.all([
+  const [data, budgets, totals, goals, recent, highlights, lifetime] = await Promise.all([
     getDashboardData(month),
     listBudgets(),
     monthTotalsByCategory(month),
     listGoals(12),
     listRecentExpenses(month, page, perPage),
     getMonthHighlights(month),
+    getLifetimeCounts(),
   ]);
 
   const { currency } = data;
@@ -64,6 +66,14 @@ export default async function DashboardPage({
     if (t.categoryId) spent.set(`${t.categoryId}|${t.currency}`, t._sum.amountMinor ?? 0);
   }
   const shownBudgets = budgets.filter((b) => b.currency === currency);
+  const prevSpent = data.trend.spent.length >= 2 ? (data.trend.spent[data.trend.spent.length - 2] ?? 0) : 0;
+  const momLine = momText(compareSpending(data.spentMinor, prevSpent), monthLabel(addMonthsKey(month, -1)));
+  const steps = [
+    { done: lifetime.expenses > 0, label: "Add your first expense", href: "/expenses?add=1" },
+    { done: budgets.length > 0, label: "Set a monthly budget for a category", href: "/budgets?add=1" },
+    { done: goals.length > 0, label: "Create a savings goal", href: "/goals" },
+  ];
+  const showStarter = steps.some((s) => !s.done);
   const empty = data.expenseCount === 0 && data.incomeMinor === 0;
 
   const carousel = goals.map((g) => {
@@ -115,6 +125,24 @@ export default async function DashboardPage({
         </p>
       )}
 
+      {showStarter && (
+        <div className="card section starter" data-testid="starter-card">
+          <h2>Getting started</h2>
+          <ul className="starter-list">
+            {steps.map((s) => (
+              <li key={s.label} className={s.done ? "done" : undefined}>
+                <span className="check" aria-hidden="true">{s.done ? "✓" : "○"}</span>
+                {s.done ? <span>{s.label}</span> : <Link href={s.href}>{s.label}</Link>}
+              </li>
+            ))}
+            <li>
+              <span className="check" aria-hidden="true">○</span>
+              <Link href="/settings#notifications">Turn on alerts and install the app (optional)</Link>
+            </li>
+          </ul>
+        </div>
+      )}
+
       <div className="grid stats section">
         <div className="card stat income">
           <span className="label"><span className="pill-icon income"><IconArrowDown /></span>Income</span>
@@ -124,7 +152,10 @@ export default async function DashboardPage({
         <div className="card stat spend">
           <span className="label"><span className="pill-icon spend"><IconArrowUp /></span>Spent</span>
           <span className="value">{formatMoney(data.spentMinor, currency)}</span>
-          <span className="hint">{data.expenseCount} expense{data.expenseCount === 1 ? "" : "s"}</span>
+          <span className="hint" data-testid="spent-hint">
+            {data.expenseCount} expense{data.expenseCount === 1 ? "" : "s"}
+            {momLine ? <><br /><span data-testid="mom-line">{momLine}</span></> : null}
+          </span>
         </div>
         <div className={`card stat ${net >= 0 ? "pos" : "neg"}`}>
           <span className="label"><span className="pill-icon net"><IconScale /></span>Balance</span>

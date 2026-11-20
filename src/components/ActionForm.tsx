@@ -40,6 +40,7 @@ export function ActionForm({
   focusPrefix,
   focusHref,
   offlineKind,
+  testId,
 }: {
   action: (fd: FormData) => Promise<ActionResponse>;
   children?: ReactNode;
@@ -57,6 +58,8 @@ export function ActionForm({
   focusHref?: string;
   /** Adds that may be saved on this device and sent later when there is no connection. */
   offlineKind?: OutboxKind;
+  /** Stable hook for automated tests (data-testid). */
+  testId?: string;
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -118,14 +121,14 @@ export function ActionForm({
 
   return (
     // method="post": never fall back to a GET submit if scripts fail to load.
-    <form method="post" onSubmit={onSubmit} className={className}>
+    <form method="post" onSubmit={onSubmit} className={className} data-testid={testId}>
       {children}
-      <button type="submit" disabled={pending || refreshing} className={danger ? "btn danger" : "btn"}>
+      <button type="submit" disabled={pending || refreshing} className={danger ? "btn danger" : "btn"} data-testid={testId ? `${testId}-submit` : undefined}>
         {pending || refreshing ? "Working…" : submitLabel}
       </button>
-      {notice && <p role="status" className="notice">{notice}</p>}
+      {notice && <p role="status" className="notice" data-testid={testId ? `${testId}-notice` : undefined}>{notice}</p>}
       {error && (
-        <p role="alert" className="error">
+        <p role="alert" className="error" data-testid={testId ? `${testId}-error` : undefined}>
           {error.message}
           {error.ref ? ` (ref ${error.ref.slice(0, 8)})` : ""}
         </p>

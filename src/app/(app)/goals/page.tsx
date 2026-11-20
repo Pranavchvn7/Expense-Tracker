@@ -137,7 +137,7 @@ export default async function GoalsPage({
                       </p>
                     )}
 
-                    <ActionForm action={addContribution} submitLabel="Add money" className="row" resetOnSuccess>
+                    <ActionForm action={addContribution} testId="add-contribution" submitLabel="Add money" className="row" resetOnSuccess>
                       <input type="hidden" name="goalId" value={g.id} />
                       <label>Amount
                         <input name="amount" inputMode="decimal" pattern="\d{1,9}(\.\d{1,2})?" placeholder="0.00" required />
@@ -155,7 +155,7 @@ export default async function GoalsPage({
                           {g.contributions.map((c) => (
                             <li key={c.id}>
                               <ActionForm
-                                action={deleteContribution}
+                                action={deleteContribution} testId="delete-contribution"
                                 submitLabel="Undo"
                                 danger
                                 className="row between"
@@ -176,7 +176,7 @@ export default async function GoalsPage({
                     <div className="cell-actions">
                       <Link className="btn ghost small" href={`/goals/${g.id}/edit`}>Edit</Link>
                       <ActionForm
-                        action={deleteGoal}
+                        action={deleteGoal} testId="delete-goal"
                         submitLabel="Delete goal"
                         danger
                         confirmMessage="Delete this goal and its contributions?"

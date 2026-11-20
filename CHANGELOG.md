@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.1
+### Added
+- **Home Screen shortcuts**: long-press the installed app icon for "Add expense" and "Add income"
+- **Copy** button on each expense: opens the add form pre-filled (date = today) so repeat purchases take seconds
+- **Month-over-month**: the Spent card on the dashboard says how spending compares with the previous month
+- **Offline label**: when you are offline the banner says when the data you are looking at was saved
+- **Getting started** card on the dashboard for new accounts (first expense, budget, goal); it disappears once done
+- Press **N** anywhere (not while typing) to add an expense
+- `data-testid` attributes on navigation, forms (`<action-name>` / `-submit` / `-error`), rows, filters, pager, banner and notification settings, for the Playwright framework
+
+### Operations
+- No migration, no new dependency, no new environment variable
+
 ## 0.5.0
 ### Added
 - **Installable app (PWA)**: add it to your phone's Home Screen or install it from the browser; it opens like a normal app

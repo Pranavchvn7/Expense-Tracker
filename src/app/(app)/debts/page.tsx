@@ -49,7 +49,7 @@ export default async function DebtsPage({
       <details className="add" open={openAdd || (debts.length === 0 && page === 1)}>
         <summary>Add a debt</summary>
         <div className="body">
-          <ActionForm action={createDebt} submitLabel="Add debt" className="stack" resetOnSuccess focusPrefix="debt-" focusHref="/debts">
+          <ActionForm action={createDebt} testId="create-debt" submitLabel="Add debt" className="stack" resetOnSuccess focusPrefix="debt-" focusHref="/debts">
             <div className="row">
               <label>Name
                 <input name="name" maxLength={80} placeholder="Car loan, HDFC card…" required />
@@ -171,7 +171,7 @@ export default async function DebtsPage({
                     )}
 
                     {!clear && (
-                      <ActionForm action={addDebtPayment} submitLabel="Add payment" className="row" resetOnSuccess>
+                      <ActionForm action={addDebtPayment} testId="add-debt-payment" submitLabel="Add payment" className="row" resetOnSuccess>
                         <input type="hidden" name="debtId" value={d.id} />
                         <label>Amount
                           <input name="amount" inputMode="decimal" pattern="\d{1,9}(\.\d{1,2})?" placeholder="0.00" required />
@@ -191,7 +191,7 @@ export default async function DebtsPage({
                         <ul className="contrib scroll">
                           {[...l.rows].reverse().slice(0, 100).map((r) => (
                             <li key={r.id}>
-                              <ActionForm action={deleteDebtPayment} submitLabel="Undo" danger className="row between" confirmMessage="Remove this payment?">
+                              <ActionForm action={deleteDebtPayment} testId="delete-debt-payment" submitLabel="Undo" danger className="row between" confirmMessage="Remove this payment?">
                                 <input type="hidden" name="id" value={r.id} />
                                 <span>
                                   <strong>{formatMoney(r.amountMinor, d.currency)}</strong>{" "}
@@ -207,7 +207,7 @@ export default async function DebtsPage({
 
                     <div className="cell-actions">
                       <Link className="btn ghost small" href={`/debts/${d.id}/edit`}>Edit</Link>
-                      <ActionForm action={deleteDebt} submitLabel="Delete debt" danger confirmMessage="Delete this debt and all its payments?">
+                      <ActionForm action={deleteDebt} testId="delete-debt" submitLabel="Delete debt" danger confirmMessage="Delete this debt and all its payments?">
                         <input type="hidden" name="id" value={d.id} />
                       </ActionForm>
                     </div>
