@@ -30,6 +30,12 @@
     // only): glob matching over this repo's own file paths at lint/build time. It never runs in
     // the deployed app or on user input. Added 2026-11-18 after a lockfile update did not clear
     // it; remove when the tooling ships a patched picomatch (check with `npm ls picomatch`).
-    "GHSA-fc5q-39xc-vjpf"
+        "GHSA-fc5q-39xc-vjpf",
+
+    // effect (inside @prisma/config, which belongs to the `prisma` CLI, a devDependency): ReDoS
+    // in Schema.TemplateLiteral decoding of untrusted input. Prisma uses it only to load this
+    // repo's own prisma config on developer machines and in the build, never in the deployed app
+    // and never on user input. Added 2026-11-20; the real fix arrives with a Prisma update.
+    "GHSA-7589-6fvf-x4pw"
   ]
 }
