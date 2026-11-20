@@ -36,6 +36,13 @@ model User {
   recurringRules RecurringRule[]
   goals         SavingsGoal[]
   goalContributions GoalContribution[]
+  debts         Debt[]
+  debtPayments  DebtPayment[]
+  // Which push notifications this person wants (they still need to enable push on a device).
+  notifyBudget   Boolean @default(true)
+  notifyRenewals Boolean @default(true)
+  pushSubscriptions PushSubscription[]
+  notificationLogs  NotificationLog[]
   twoFactor     TwoFactor[]
 
   @@map("user")
@@ -145,6 +152,12 @@ model Expense {
   // the same occurrence twice (two tabs, a retry) is impossible.
   recurringRuleId String?
   recurringRule   RecurringRule? @relation(fields: [recurringRuleId], references: [id], onDelete: SetNull)
+  // How it was paid, and whether it has been ticked off against a bank/card statement.
+  paymentMethod PaymentMethod?
+  reconciled    Boolean   @default(false)
+  // Random id made on the device when an entry was added offline, so a retried sync can never
+  // create it twice. Null for entries added normally.
+  clientRef     String?   @db.VarChar(36)
   // Money is stored as integer minor units (paise/cents) to avoid float errors.
   amountMinor Int
   currency    String    @db.VarChar(3) @default("INR")
@@ -157,6 +170,18 @@ model Expense {
   @@unique([recurringRuleId, spentOn])
   @@index([userId, spentOn])
   @@index([userId, categoryId])
+  @@index([userId, paymentMethod, spentOn])
+  @@unique([userId, clientRef])
+}
+
+enum PaymentMethod {
+  CASH
+  CREDIT_CARD
+  DEBIT_CARD
+  UPI
+  BANK_TRANSFER
+  WALLET
+  OTHER
 }
 
 // Money coming in (salary, refunds, gifts...). Same integer-minor-units rule as Expense.
@@ -174,7 +199,10 @@ model Income {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  clientRef   String?  @db.VarChar(36)
+
   @@unique([recurringRuleId, receivedOn])
+  @@unique([userId, clientRef])
   @@index([userId, receivedOn])
 }
 
@@ -244,6 +272,76 @@ model GoalContribution {
   createdAt     DateTime    @default(now())
 
   @@index([userId, goalId])
+}
+
+enum DebtKind {
+  CREDIT_CARD
+  LOAN
+}
+
+// A loan or credit card balance being paid down. The balance is never stored: it is replayed
+// from the payments, so back-dated entries and deletions cannot leave stale numbers.
+model Debt {
+  id              String        @id @default(uuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String        @db.VarChar(80)
+  kind            DebtKind
+  currency        String        @db.VarChar(3)
+  originalMinor   Int // amount owed on startDate
+  aprBp           Int // yearly interest in basis points (1250 = 12.50%)
+  minPaymentMinor Int // usual monthly payment / EMI
+  startDate       DateTime      @db.Date
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  payments        DebtPayment[]
+
+  @@index([userId])
+}
+
+model DebtPayment {
+  id                   String   @id @default(uuid())
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  debtId               String
+  debt                 Debt     @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  paidOn               DateTime @db.Date
+  amountMinor          Int
+  // Optional: the exact interest from the statement. Empty means it is worked out from the rate.
+  interestOverrideMinor Int?
+  note                 String?  @db.VarChar(200)
+  createdAt            DateTime @default(now())
+
+  @@index([userId, debtId, paidOn])
+}
+
+// One browser or phone that agreed to receive push notifications for a user. The endpoint is
+// the push service's address for that device; p256dh and auth are the keys the payload is
+// encrypted with. They are secrets of the subscription and never leave the server.
+model PushSubscription {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint   String   @unique @db.VarChar(1000)
+  p256dh     String   @db.VarChar(100)
+  auth       String   @db.VarChar(30)
+  userAgent  String?  @db.VarChar(200)
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+}
+
+// Remembers which alerts were already sent so each one goes out once
+// (budget80:<budgetId>:<month>, renewal:<ruleId>:<date>, ...).
+model NotificationLog {
+  id      String   @id @default(uuid())
+  userId  String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key     String   @db.VarChar(120)
+  sentAt  DateTime @default(now())
+
+  @@unique([userId, key])
+  @@index([sentAt])
 }
 
 // Monthly budget for one category in one currency (applies to every month).

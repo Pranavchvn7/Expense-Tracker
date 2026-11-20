@@ -2,8 +2,8 @@ import { niceMax } from "@/lib/chart-math";
 import { formatCompact, formatMoney, monthLabel } from "@/lib/money";
 
 const W = 560;
-const H = 170;
-const PAD = { top: 12, right: 10, bottom: 24, left: 46 };
+const H = 240;
+const PAD = { top: 16, right: 14, bottom: 28, left: 52 };
 
 /** Spending per day of the selected month. The biggest day is highlighted. */
 export function DailyBars({ daily, month, currency }: { daily: number[]; month: string; currency: string }) {

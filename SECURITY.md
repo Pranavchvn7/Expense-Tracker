@@ -61,6 +61,29 @@
 - Error messages describe the cause (field, limit, wait time) but never echo submitted values, SQL, stack traces or schema; unexpected errors show a reference id only
 - Sorting and paging: column whitelist, validated integers, fixed page-size set
 
+## v0.4.0 additions
+- Reconcile toggle and payment method are validated server-side (enum, boolean flag) and always scoped by userId
+- Budget page queries use the session user and the user's own currency only; per-category totals never include other users' rows
+- Goal suggestion inputs (price, rate) come from the query string: regex-validated, length-capped, only used for display and for a prefilled form that is re-validated by Zod on submit
+
+## v0.4.1 additions
+- Reports: all filters validated server-side, userId and currency on every query, bounded date range, bounded category list
+- PDF route: session first, rate limited, Latin-1 sanitising of every string, validated filename, no-store, nosniff
+- pdf-lib: pure JS, runs in the function, makes no network calls
+
+## v0.4.2 additions
+- Debt and payment actions: session first, ownership of the debt id checked (BOLA), Zod, rate limits, per-user caps
+- Balances are derived (replayed from payments) rather than stored, so a tampered or stale value cannot exist
+- Rates are parsed with a strict regex into integer basis points; money stays in integer minor units
+
+## v0.5.0 additions
+- **SSRF defence**: a push subscription address comes from the browser, so it is only stored if it is https on an allowlisted push-service host (FCM, Mozilla, Apple, Windows); IPs, ports and credentials are rejected (`push-validate.ts`).
+- **Cron endpoint**: `/api/cron/reminders` needs `Authorization: Bearer CRON_SECRET` (timing-safe); same 401 for missing/wrong/unconfigured.
+- **Notifications carry no amounts**; push errors log only a status code (the endpoint address is a capability and is never logged).
+- **Data on the device**: the service worker keeps copies of signed-in pages (HTML with that page's nonce and CSP) and a queue of unsent entries. Only app pages are cached (never API, sign-in, CSV/PDF). Everything is deleted on sign-out, on forced session end, on user change, and via Settings → Clear offline data. Anyone with access to an unlocked device profile can read cached pages, the same as an open browser tab.
+- **CSP**: added `worker-src 'self'` and `manifest-src 'self'` (needed because `strict-dynamic` ignores `'self'` for workers).
+- **Idempotent sync**: unique (userId, clientRef) so a replayed offline entry is stored once; the server re-validates every queued entry.
+
 ## Accepted dependency advisories
 CI runs `audit-ci` and fails on any high or critical advisory that is not listed in `audit-ci.jsonc`. Several are accepted for now (picomatch, postcss, zod, deepmerge-ts), each with its reason written next to it in that file:
 - **deepmerge-ts (inside the `prisma` CLI, dev only):** never runs in the deployed app or on user input. `prisma` and `@prisma/client` are pinned to the same version (6.19.3) because a mismatched pair is a bigger risk than this advisory. Fix = Prisma 7 (breaking).

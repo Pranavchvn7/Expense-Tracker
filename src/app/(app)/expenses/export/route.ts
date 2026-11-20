@@ -5,6 +5,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { HttpError } from "@/lib/errors";
 import { monthRange } from "@/lib/queries";
 import { currentMonth } from "@/lib/money";
+import { paymentLabel } from "@/lib/payment-method";
 import { monthSchema } from "@/lib/validation";
 import { toCsv } from "@/lib/csv";
 
@@ -40,12 +41,14 @@ export async function GET(req: Request) {
         amountMinor: true,
         currency: true,
         note: true,
+        paymentMethod: true,
+        reconciled: true,
         category: { select: { name: true } },
       },
     });
 
     const csv = toCsv([
-      ["Date", "Description", "Category", "Amount", "Currency", "Note"],
+      ["Date", "Description", "Category", "Amount", "Currency", "Note", "Payment method", "Matched with statement"],
       ...rows.map((r) => [
         r.spentOn.toISOString().slice(0, 10),
         r.description,
@@ -53,6 +56,8 @@ export async function GET(req: Request) {
         (r.amountMinor / 100).toFixed(2),
         r.currency,
         r.note ?? "",
+        paymentLabel(r.paymentMethod),
+        r.reconciled ? "yes" : "no",
       ]),
     ]);
 

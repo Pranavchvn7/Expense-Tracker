@@ -2,10 +2,12 @@ import Link from "next/link";
 import { ActionForm } from "@/components/ActionForm";
 import { Pager } from "@/components/Pager";
 import { addContribution, createGoal, deleteContribution, deleteGoal } from "@/actions/goals";
-import { listGoalsPage } from "@/lib/goal-queries";
+import { averageMonthlySpend, listGoalsPage } from "@/lib/goal-queries";
+import { emergencyFund, STATIC_TEMPLATES } from "@/lib/goal-templates";
+import { CarRuleCard, HomeDepositCard } from "@/components/GoalCalculators";
 import { monthlyNeeded, percent } from "@/lib/goal-math";
 import { formatMoney } from "@/lib/money";
-import { getUserToday } from "@/lib/preferences";
+import { getUserPrefs, getUserToday } from "@/lib/preferences";
 import { parsePaging } from "@/lib/paging";
 import { IconTarget } from "@/components/icons";
 
@@ -18,7 +20,12 @@ export default async function GoalsPage({
 }) {
   const sp = await searchParams;
   const { page, perPage } = parsePaging(sp, { options: GOAL_PAGE_SIZES, defaultSize: 4 });
-  const [{ goals, hasNext }, today] = await Promise.all([listGoalsPage(page, perPage), getUserToday()]);
+  const today = await getUserToday();
+  const [{ goals, hasNext }, avgSpend] = await Promise.all([listGoalsPage(page, perPage), averageMonthlySpend(today.month)]);
+  const currency = (await getUserPrefs()).currency;
+
+  const ef = avgSpend !== null ? emergencyFund(avgSpend) : null;
+  const major = (n: number) => (n / 100).toFixed(2);
 
   return (
     <>
@@ -32,7 +39,7 @@ export default async function GoalsPage({
       <details className="add" open={goals.length === 0 && page === 1}>
         <summary>New goal</summary>
         <div className="body">
-          <ActionForm action={createGoal} submitLabel="Create goal" className="stack" resetOnSuccess>
+          <ActionForm focusPrefix="goal-" focusHref="/goals" action={createGoal} submitLabel="Create goal" className="stack" resetOnSuccess>
             <label>Name
               <input name="name" maxLength={80} placeholder="Emergency fund, Trip, Laptop…" required />
             </label>
@@ -48,8 +55,55 @@ export default async function GoalsPage({
         </div>
       </details>
 
+      <details id="suggestions" className="add suggestions">
+        <summary>Goal suggestions</summary>
+        <div className="body stack">
+          <p className="muted">Rules of thumb to get you started, not financial advice. Check the amount, then create the goal.</p>
+
+          <div className="grid two">
+            <div className="card suggestion">
+              <h3>Emergency fund</h3>
+              <p className="muted">Three to six months of spending in an account you can reach quickly.</p>
+              {ef ? (
+                <>
+                  <p>Based on your average spending of <strong>{formatMoney(avgSpend ?? 0, currency)}</strong> a month over the last three full months:</p>
+                  <div className="row">
+                    <ActionForm focusPrefix="goal-" focusHref="/goals" action={createGoal} submitLabel={`Create ${formatMoney(ef.threeMonths, currency)} goal`} className="row" resetOnSuccess>
+                      <input type="hidden" name="name" value="Emergency fund (3 months)" />
+                      <input type="hidden" name="target" value={major(ef.threeMonths)} />
+                    </ActionForm>
+                    <ActionForm focusPrefix="goal-" focusHref="/goals" action={createGoal} submitLabel={`Create ${formatMoney(ef.sixMonths, currency)} goal`} className="row" resetOnSuccess>
+                      <input type="hidden" name="name" value="Emergency fund (6 months)" />
+                      <input type="hidden" name="target" value={major(ef.sixMonths)} />
+                    </ActionForm>
+                  </div>
+                </>
+              ) : (
+                <p className="muted">Add a few months of expenses and the amount is worked out for you. Or create one by hand with the form above.</p>
+              )}
+            </div>
+
+            <CarRuleCard currency={currency} />
+            <HomeDepositCard currency={currency} />
+
+            {STATIC_TEMPLATES.map((t) => (
+              <div key={t.id} className="card suggestion">
+                <h3>{t.name}</h3>
+                <p className="muted">{t.blurb}</p>
+                <ActionForm focusPrefix="goal-" focusHref="/goals" action={createGoal} submitLabel="Create goal" className="row" resetOnSuccess>
+                  <input type="hidden" name="name" value={t.name} />
+                  <label>Target amount
+                    <input name="target" inputMode="decimal" pattern="\d{1,9}(\.\d{1,2})?" placeholder="0.00" required />
+                  </label>
+                </ActionForm>
+              </div>
+            ))}
+          </div>
+        </div>
+      </details>
+
       {goals.length === 0 ? (
-        <div className="card">
+        <div className="card section">
           <div className="empty">
             <IconTarget />
             <strong>No goals yet</strong>
@@ -65,7 +119,7 @@ export default async function GoalsPage({
               const perMonth = monthlyNeeded(remaining, g.targetDate, today.date);
               const overdue = g.targetDate && g.targetDate < today.date && remaining > 0;
               return (
-                <details key={g.id} className="card goal" open>
+                <details key={g.id} id={`goal-${g.id}`} className="card goal" open>
                   <summary>
                     <span className="goal-title">{g.name}</span>
                     <span className="goal-meta">
@@ -97,7 +151,7 @@ export default async function GoalsPage({
                       <>
                         <p className="muted">{g.contributions.length >= 100 ? "Latest 100 contributions" : `${g.contributions.length} contribution${g.contributions.length === 1 ? "" : "s"}`}</p>
                         {/* Scrolls inside the card once the list is long. */}
-                        <ul className="devices scroll">
+                        <ul className="contrib scroll">
                           {g.contributions.map((c) => (
                             <li key={c.id}>
                               <ActionForm

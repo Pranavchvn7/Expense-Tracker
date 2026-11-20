@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { wipeDeviceData } from "@/lib/offline-clear";
 
 /**
  * Signs this screen out soon after the session is revoked elsewhere ("sign out all other
@@ -15,7 +16,10 @@ export function SessionWatcher() {
       if (stopped || document.visibilityState !== "visible") return;
       try {
         const res = await fetch("/api/session-check", { cache: "no-store", credentials: "same-origin" });
-        if (res.status === 401) window.location.assign("/login");
+        if (res.status === 401) {
+          await wipeDeviceData();
+          window.location.assign("/login");
+        }
       } catch {
         /* offline or network error: ignore */
       }

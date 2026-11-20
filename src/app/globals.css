@@ -437,7 +437,7 @@ details.goal > summary::-webkit-details-marker { display: none; }
 .goal-meta { display: inline-flex; align-items: center; gap: 10px; }
 .goal-body { padding: 0 18px 18px; }
 .goals-grid { align-items: start; }
-.scroll { max-height: 260px; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; }
+.scroll { max-height: 260px; overflow-y: auto; padding-right: 4px; }
 
 /* Goal carousel on the dashboard */
 .carousel { position: relative; flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 4px 28px 22px; }
@@ -488,8 +488,10 @@ progress.over::-moz-progress-bar { background: var(--danger); }
 .fab .icon { width: 26px; height: 26px; }
 .sheet-backdrop { position: fixed; inset: 0; z-index: 32; border: 0; background: rgb(0 0 0 / 0.4); }
 .sheet {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 33; background: var(--surface); border-radius: 18px 18px 0 0;
-  padding: 16px 16px calc(84px + env(safe-area-inset-bottom)); display: grid; gap: 4px; box-shadow: 0 -8px 30px rgb(0 0 0 / 0.2);
+  position: fixed; left: 0; right: 0; bottom: calc(64px + env(safe-area-inset-bottom)); z-index: 33; background: var(--surface);
+  border-radius: 18px 18px 0 0; border: 1px solid var(--line); border-bottom: 0;
+  padding: 14px 14px 12px; display: grid; gap: 4px; box-shadow: 0 -8px 30px rgb(0 0 0 / 0.2);
+  max-height: calc(100dvh - 64px - env(safe-area-inset-bottom) - 72px); overflow-y: auto; overscroll-behavior: contain;
 }
 .sheet-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding-top: 12px; margin-top: 8px; border-top: 1px solid var(--line); }
 @media (min-width: 900px) { .fab, .sheet, .sheet-backdrop { display: none; } }
@@ -502,3 +504,132 @@ progress.over::-moz-progress-bar { background: var(--danger); }
   .month-nav .current { min-width: 90px; }
   .pager { justify-content: center; }
 }
+
+/* ===== v0.4.0: budgets, payment methods, goal suggestions ===== */
+.budget-grid { align-items: start; }
+.budget-card { display: grid; gap: 10px; border-left: 4px solid var(--line); }
+.budget-card.warn { border-left-color: var(--c3); }
+.budget-card.over { border-left-color: var(--danger); }
+.budget-card.ok { border-left-color: var(--income); }
+.budget-figure { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.budget-figure strong { font-size: 1.4rem; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.tag.status.ok { background: var(--income-soft); color: var(--income); border-color: transparent; }
+.tag.status.warn { background: color-mix(in srgb, var(--c3) 20%, transparent); color: var(--text); border-color: transparent; }
+.tag.status.over { background: var(--danger-soft); color: var(--danger); border-color: transparent; }
+.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; margin: 0; }
+.facts div { display: grid; gap: 2px; min-width: 0; }
+.facts dt { font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.facts dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.budget-actions { display: grid; gap: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.budget-total { display: grid; gap: 8px; }
+.method-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); margin-top: 8px; }
+.method-card { display: grid; gap: 2px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--raised); color: var(--text); text-decoration: none; }
+.method-card:hover { border-color: var(--brand); }
+.method-card .amt { font-weight: 700; font-variant-numeric: tabular-nums; }
+.cell-actions form .btn { padding: 5px 10px; font-size: 0.85rem; border-radius: 8px; }
+.cell-actions form.matched .btn { background: var(--income-soft); color: var(--income); }
+.suggestion { display: grid; gap: 10px; align-content: start; }
+.suggestion h3 { margin: 0; }
+
+/* ===== v0.4.1 fixes ===== */
+/* Compact contribution rows inside goal cards */
+.contrib { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.contrib li { padding: 4px 8px; border-bottom: 1px solid var(--line); }
+.contrib li:last-child { border-bottom: 0; }
+.contrib form { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.contrib .btn { min-height: 30px; padding: 2px 10px; font-size: 0.8rem; border-radius: 8px; }
+.contrib .row.between { align-items: center; }
+.scroll.contrib { max-height: 240px; }
+/* New goal highlight after create (class toggled by script, so no inline style needed) */
+@keyframes flash-ring { from { box-shadow: 0 0 0 3px var(--brand); } to { box-shadow: var(--shadow); } }
+.flash { animation: flash-ring 2.2s ease-out; }
+@media (prefers-reduced-motion: reduce) { .flash { animation: none; outline: 2px solid var(--brand); } }
+
+/* ===== v0.4.1: reports ===== */
+.cat-filter { border: 1px solid var(--line); border-radius: 12px; background: var(--raised); }
+.cat-filter > summary { cursor: pointer; padding: 10px 14px; font-weight: 600; }
+.cat-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 6px 14px; padding: 4px 14px 8px; }
+.cat-filter > p { padding: 0 14px 12px; margin: 0; }
+label.check { display: flex; flex-direction: row; align-items: center; gap: 8px; font-weight: 500; color: var(--text); }
+label.check input { width: 18px; height: 18px; min-height: 0; flex: none; }
+
+/* ===== v0.4.2: debts ===== */
+.split { width: 100%; height: 10px; display: block; margin-bottom: 6px; }
+.split-interest { fill: var(--spend); opacity: 0.85; }
+.split-principal { fill: var(--income); }
+.whatif { display: grid; gap: 6px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 12px; background: var(--raised); }
+.whatif p { margin: 0; }
+
+/* ===== v0.4.3 ===== */
+/* Region being refreshed by a filter: dims, keeps its size, ignores clicks */
+.region[aria-busy="true"] { opacity: 0.55; pointer-events: none; transition: opacity 0.15s; }
+.region { transition: opacity 0.15s; }
+
+/* Invisible scrollers: scrollable, but no visible bar */
+/* No overscroll-behavior here: it would stop the page from scrolling while the pointer is over a list */
+.hide-scroll { scrollbar-width: none; -ms-overflow-style: none; overflow-y: auto; }
+.hide-scroll::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
+/* Sidebar: brand and footer stay put, only the links scroll (so Sign out is always reachable) */
+.sidebar { overflow: hidden; }
+.side-nav { flex: 1 1 auto; min-height: 0; display: grid; gap: 4px; align-content: start; }
+.side-foot { flex: none; }
+.brand { flex: none; }
+.sheet-foot { position: sticky; bottom: -12px; background: var(--surface); }
+
+/* Name plus badges always share one row; a long name is cut with an ellipsis, badges never wrap below */
+.name-cell { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; min-width: 0; }
+.name-cell .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.name-cell .tag { flex: none; white-space: nowrap; }
+.name-block { display: grid; gap: 2px; min-width: 0; }
+.name-block .note { font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+td > .name-cell, td > .name-block { max-width: 100%; }
+@media (max-width: 899px) {
+  table.responsive td > .name-cell, table.responsive td > .name-block { justify-content: flex-end; }
+}
+
+/* ===== Uniform cards (Dashboard, Reports, everywhere) ===== */
+:root { --row-h: 52px; --head-h: 36px; }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: var(--head-h); margin-bottom: 12px; }
+.card-head h2 { margin: 0; }
+.card.panel { display: flex; flex-direction: column; min-width: 0; }
+.card > h2:first-child { min-height: var(--head-h); display: flex; align-items: center; margin-bottom: 12px; }
+.grid.equal > .card { height: 100%; }
+.card-body { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 0; width: 100%; }
+
+/* Row lists: every row the same height, content centred vertically */
+.rows { list-style: none; margin: 0; padding: 0; width: 100%; }
+.rows li { display: grid; align-items: center; gap: 12px; min-height: var(--row-h); padding: 0 4px; border-bottom: 1px solid var(--line); }
+.rows li:last-child { border-bottom: 0; }
+.rows.limit5 { max-height: calc(var(--row-h) * 5); }
+.rows .main { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.rows .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rows .r { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rows .amt { font-weight: 600; }
+.rows .sub { font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stack-sm { display: grid; gap: 1px; min-width: 0; }
+.cols-2 li { grid-template-columns: minmax(0, 1fr) auto; }
+.cols-legend li { grid-template-columns: minmax(0, 1fr) auto 44px; }
+.cols-cat li, .rows-head.cols-cat, .rows-foot.cols-cat { grid-template-columns: minmax(0, 1fr) 70px 120px 44px; }
+.rows-head, .rows-foot { display: grid; align-items: center; gap: 12px; padding: 0 4px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; min-height: var(--head-h); }
+.rows-head { border-bottom: 1px solid var(--line); }
+.rows-head .r, .rows-foot .r { text-align: right; }
+.rows-foot { border-top: 1px solid var(--line); color: var(--text); font-size: 0.9rem; text-transform: none; letter-spacing: 0; min-height: var(--row-h); margin-top: auto; }
+.donut-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; }
+.donut { width: 160px; height: 160px; }
+
+/* Tables inside cards share the same row height */
+.card table tbody td { height: var(--row-h); padding-top: 0; padding-bottom: 0; }
+.card table thead th { height: var(--head-h); padding-top: 0; padding-bottom: 0; }
+@media (max-width: 899px) {
+  .card table.responsive tbody td { height: auto; padding: 3px 0; }
+  .cols-cat li, .rows-head.cols-cat, .rows-foot.cols-cat { grid-template-columns: minmax(0, 1fr) 54px 96px 40px; }
+}
+
+.budget-list { max-height: 340px; width: 100%; display: grid; gap: 14px; align-content: start; }
+.budget-list .budget { display: grid; gap: 6px; }
+
+/* Offline status banner */
+.offline-banner { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 40; width: min(92vw, 520px); display: flex; flex-direction: column; gap: 6px; padding: 10px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18); font-size: 0.9rem; }
+.offline-failed { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; color: var(--danger, #b42318); }
+@media (min-width: 900px) { .offline-banner { bottom: 20px; } }

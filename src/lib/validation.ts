@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PAYMENT_METHOD_VALUES } from "@/lib/payment-method";
 import { isCountryCode } from "@/lib/countries";
 import { isValidTimeZone } from "@/lib/tz";
 
@@ -43,9 +44,30 @@ export const dateSchema = z
   }, "cannot be in the future or before the year 2000")
   .transform((s) => new Date(`${s}T00:00:00Z`));
 
+/** Yearly interest rate as a percentage with up to 2 decimals ("12.5") -> basis points (1250). */
+export const rateSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{1,2}(\.\d{1,2})?$/, "must be a percentage such as 12 or 8.75 (under 100)")
+  .transform((s) => Math.round(Number(s) * 100));
+
+/** Like amountSchema but zero is allowed (interest charged can be nothing). */
+const moneyOrZero = z
+  .string()
+  .trim()
+  .regex(/^\d{1,9}(\.\d{1,2})?$/, "must be an amount such as 0 or 249.50")
+  .transform((s) => Math.round(Number(s) * 100));
+
+const optionalInterest = z.preprocess((v) => (v === "" || v === undefined ? undefined : v), moneyOrZero.optional());
+
 export const monthSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "must be a month written like 2026-03");
 
 export const currencySchema = z.enum(["INR", "USD", "EUR", "GBP"]);
+
+const optionalPayment = z.preprocess(
+  (v) => (v === "" || v === undefined || v === null ? undefined : v),
+  z.enum(PAYMENT_METHOD_VALUES, { errorMap: () => ({ message: "Choose a payment method from the list." }) }).optional(),
+);
 
 export const expenseInput = z.object({
   amount: amountSchema,
@@ -53,7 +75,14 @@ export const expenseInput = z.object({
   note: optionalCleanText(500),
   spentOn: dateSchema,
   categoryId: optionalUuid,
+  paymentMethod: optionalPayment,
 });
+
+/** Tick or untick an expense as matched with a statement. */
+export const reconcileInput = z.object({ id: uuid, reconciled: z.enum(["0", "1"]) });
+
+/** Creating also accepts a client reference, so an offline entry that is sent twice is stored once. */
+export const expenseCreate = expenseInput.extend({ clientRef: optionalUuid });
 
 export const expenseUpdate = expenseInput.extend({ id: uuid });
 
@@ -75,6 +104,8 @@ export const incomeInput = z.object({
   note: optionalCleanText(500),
   receivedOn: dateSchema,
 });
+
+export const incomeCreate = incomeInput.extend({ clientRef: optionalUuid });
 
 export const incomeUpdate = incomeInput.extend({ id: uuid });
 
@@ -150,6 +181,25 @@ export const goalInput = z.object({
 
 export const goalUpdate = goalInput.extend({ id: uuid });
 
+export const debtInput = z.object({
+  name: cleanText(80),
+  kind: z.enum(["CREDIT_CARD", "LOAN"], { errorMap: () => ({ message: "Choose credit card or loan." }) }),
+  original: amountSchema,
+  apr: rateSchema,
+  minPayment: amountSchema,
+  startDate: dateSchema,
+});
+
+export const debtUpdate = debtInput.extend({ id: uuid });
+
+export const debtPaymentInput = z.object({
+  debtId: uuid,
+  amount: amountSchema,
+  paidOn: dateSchema,
+  interest: optionalInterest,
+  note: optionalCleanText(200),
+});
+
 export const contributionInput = z.object({
   goalId: uuid,
   amount: amountSchema,
@@ -192,6 +242,7 @@ export const budgetInput = z.object({
 type SearchParams = Record<string, string | string[] | undefined>;
 const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
+const RECONCILE_FILTERS = ["yes", "no"] as const;
 const SORTS = ["date", "amount", "description", "category"] as const;
 export type SortKey = (typeof SORTS)[number];
 
@@ -209,6 +260,8 @@ export function parseListQuery(sp: SearchParams, defaultMonth: string) {
     q: q || undefined,
     sort,
     dir,
+    paymentMethod: PAYMENT_METHOD_VALUES.find((p) => p === first(sp.pm)),
+    reconciled: RECONCILE_FILTERS.find((r) => r === first(sp.rec)),
   };
 }
 

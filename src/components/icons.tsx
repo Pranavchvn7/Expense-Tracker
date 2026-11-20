@@ -157,3 +157,25 @@ export function LogoMark() {
     </svg>
   );
 }
+
+export const IconPie = () => (
+  <Icon>
+    <path d="M21 12A9 9 0 1 1 12 3v9z" />
+    <path d="M15 3.5A9 9 0 0 1 20.5 9H15z" />
+  </Icon>
+);
+
+export const IconReport = () => (
+  <Icon>
+    <path d="M6 3h9l4 4v14H6z" />
+    <path d="M14 3v5h5" />
+    <path d="M9 17v-3M12 17v-6M15 17v-4" />
+  </Icon>
+);
+
+export const IconCard = () => (
+  <Icon>
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <path d="M3 10h18M7 15h4" />
+  </Icon>
+);

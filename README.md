@@ -2,7 +2,19 @@
 
 A secure, multi-user expense tracker. Next.js (App Router) · TypeScript · Better Auth · Prisma · Neon Postgres · Zod · Vercel.
 
-## Features (v0.3.4)
+## Features (v0.4.3)
+- Uniform card layout, filters that update only the records, scrollable side menu
+
+### v0.4.2
+- Debt payoff tracker: principal versus interest per payment, payoff estimates, what-if extra payments
+
+### v0.4.1
+- Reports with month / year / custom range and category filters, plus PDF download
+
+### v0.4.0
+- Budgets page with cards, payment methods and statement matching, goal suggestions (emergency fund, 20/4/10 car rule)
+
+### v0.3.4
 - Profile (name, country, timezone), pagination, sortable lists, coloured categories, modern charts, mobile bottom navigation
 
 ### v0.3.3
@@ -64,9 +76,12 @@ See [SECURITY.md](./SECURITY.md) for the threat model and the mapping to the 5-p
 - v0.3.2 (done): recurring expenses and income
 - v0.3.3 (done): savings goals and CSV import
 - v0.3.4 (done): polish, profile, pagination, charts, mobile
-- v0.4.0: Budgets page, payment methods, goal templates
-- v0.4.1: reports with filters and PDF downloads
-- v0.4.2: debt payoff tracker
+- v0.4.0 (done): Budgets page, payment methods, goal suggestions
+- v0.4.1 (done): reports with filters and PDF downloads
+- v0.4.2 (done): debt payoff tracker
 - v0.5.0: offline mode and push notifications
 - v0.4: receipt uploads (presigned S3/R2 URLs, MIME allowlist, UUID keys)
 - Playwright e2e suite (page objects, API tests, CI)
+
+## Offline and notifications
+The app is installable (PWA). Visited pages open offline, entries added offline sync automatically, and optional push alerts cover budget thresholds and upcoming renewals. See SETUP.md for the VAPID keys and CRON_SECRET.

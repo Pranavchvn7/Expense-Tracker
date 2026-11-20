@@ -101,11 +101,11 @@ export default async function RecurringPage({
               {rules.map((r) => (
                 <tr key={r.id}>
                   <td data-label="Name">
-                    <span>
-                      {r.label}{" "}
+                    <span className="name-cell">
+                      <span className="nm">{r.label}</span>
                       <span className="tag">{r.kind === "INCOME" ? "Income" : "Expense"}</span>
-                      {!r.active && <> <span className="tag">{r.endDate && r.nextDue > r.endDate ? "Ended" : "Paused"}</span></>}
-                      {r.category && <div><CategoryTag name={r.category.name} color={r.category.color} /></div>}
+                      {!r.active && <span className="tag">{r.endDate && r.nextDue > r.endDate ? "Ended" : "Paused"}</span>}
+                      {r.category && <CategoryTag name={r.category.name} color={r.category.color} />}
                     </span>
                   </td>
                   <td data-label="Repeats">{FREQ[r.frequency]}</td>

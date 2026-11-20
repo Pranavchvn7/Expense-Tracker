@@ -1,5 +1,102 @@
 # Changelog
 
+## 0.5.0
+### Added
+- **Installable app (PWA)**: add it to your phone's Home Screen or install it from the browser; it opens like a normal app
+- **Offline mode**: pages you have opened (and the main pages, saved quietly in the background) open without a connection. Expenses and income added offline are kept on the device and sent automatically when you are back online. A banner shows what is waiting; failures can be retried or discarded
+- **Push notifications** (opt in per device in Settings → Notifications & offline): alert when a category reaches 80% of its budget and when it goes over; reminder 2 days before a recurring expense renews (daily job). Notifications never contain amounts. Test button included
+- Duplicate-proof saving: each offline entry carries a random reference, so a retry never creates it twice
+
+### Security
+- Push addresses are accepted only from the real push services (https allowlist, no IPs/ports/credentials), so the server cannot be pointed at internal addresses; keys are format-checked; max 10 devices per user; every query is scoped to the signed-in user
+- The reminder job requires a secret (`CRON_SECRET`, constant-time compare) and answers 401 to everyone else
+- Signing out (or a session revoked elsewhere) removes saved pages, the offline queue and this device's push link; switching users on a device does the same
+
+### Operations
+- **Migration**: `add_push_and_offline` (apply to production with `prisma migrate deploy` before merging)
+- New dependency: `web-push`
+- New env vars (Vercel, Staging and Production, use different keys): `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `CRON_SECRET`. Generate keys once with `npx web-push generate-vapid-keys`
+- Vercel Cron runs `/api/cron/reminders` once a day (Hobby plan limit)
+- iPhone: push works only after Add to Home Screen (iOS 16.4+)
+
+## 0.4.4
+### Fixed
+- The page can be scrolled with the pointer over any card or list on Reports and Dashboard (the lists no longer capture the mouse wheel)
+- Dashboard: Cash flow and Spending by day now sit together and have the same chart size, so there is no empty space inside the cards. By category and Category detail share the next row
+
+### Operations
+- No migration, no new dependency, no new environment variable
+
+## 0.4.3
+### Fixed
+- The side menu scrolls (with no visible scrollbar) and keeps the profile, theme and **Sign out** at the bottom, so Sign out is never hidden behind the taskbar. On phones the More menu sits above the tab bar and scrolls too
+- "Amount owed on the start date" is now **Total loan amount**
+- Expenses page order: add an expense, Paid with, filters, then the records grid
+- Searching or filtering expenses and reports no longer reloads the page: only the records (or report) area dims and updates, the rest stays still. The same filter form works without JavaScript
+- Badges (Income, Expense, Paused, Recurring, category) now always sit on the same row as the name, in recurring, income and expenses. Long names are shortened with an ellipsis instead of pushing badges down
+- After any action (add, delete, match, undo...) the page refreshes in place without blanking or jumping
+
+### Changed
+- **Uniform cards**: one card header (same height and spacing), one row height for every list and table, content centred, equal-height cards in each row
+- **Reports**: By category and Category detail are the same size and show five rows, then scroll with an invisible scrollbar. Largest expenses and Paid with show five rows, then scroll. A new "All expenses in this report" grid lists every expense for the chosen month, year, range and categories, 10 per page with the same 10 / 20 / 50 pagination
+- **Dashboard** now uses the same cards as Reports: By category, Category detail, Largest expenses and Paid with (all five rows then scroll), plus Savings goals and Budgets side by side
+
+### Operations
+- No migration, no new dependency, no new environment variable
+
+## 0.4.2
+### Added
+- **Debts** page (in the navigation) for loans and credit cards. Add the amount owed on a start date, the yearly interest rate and the usual monthly payment, then log each payment
+- For every payment the app shows how much **reduced the debt (principal)** and how much was **interest**, plus what is still owed. Interest is worked out daily from the rate, or you can enter the exact interest from your statement on any payment
+- Per debt: progress bar, principal-versus-interest split, total paid, payoff date and interest still to come at your current payment, and a live "what if I pay extra each month?" calculator
+- Summary of everything still owed, principal repaid and interest paid, and an avalanche (highest rate first) versus snowball (smallest balance first) payoff order
+- Back-dated payments, edits and deletions are always correct: the balance is replayed from the payments instead of being stored
+
+### Security
+- New actions (create, update, delete debt; add, delete payment): session first, user id from the session only, Zod validation, the debt id from the form must belong to you, rate limited, caps (30 debts, 2,000 payments per debt)
+- A payment larger than what is still owed, or dated before the debt started, is refused with a clear message
+- /debts is protected by the middleware, private no-store headers and a server-side session check; every query is scoped by userId with explicit selects
+
+### Operations
+- New migration: `npx prisma migrate dev --name add_debts`. Run it on production with `prisma migrate deploy` BEFORE merging. No new dependencies or environment variables
+
+## 0.4.1
+### Added
+- **Reports** page (in the navigation): choose a month, a year or a custom date range, and optionally one or more categories (including Uncategorised). Shows spent, income, balance, average per day, a month-by-month chart and table, a category donut with detail, spending by payment method, and the ten largest expenses
+- **PDF download** of any report (monthly, yearly or custom, with or without the category filter). Generated on the server with pdf-lib, multi-page, with page numbers
+
+### Fixed
+- Goal suggestions: the car 20/4/10 and home deposit calculators now work live in the page, so nothing reloads and the suggestions panel stays open
+- After creating a goal (including from a suggestion), the page scrolls to the new goal card and highlights it briefly
+- Contribution rows in goal cards are compact like every other list row
+- Budgets are no longer listed in Settings (the Budgets page replaces it)
+
+### Security
+- /reports and /reports/pdf are protected by the middleware, private no-store headers and a server-side session check; every query is scoped by userId and the user's own currency
+- Report filters are shape-checked (month, year, dates, UUIDs); custom ranges are limited to about three years; category ids can only narrow the user's own rows
+- PDF generation is rate limited (10 a minute per user); text is reduced to the characters the standard PDF fonts support, so user text can never break or inject into the document; the filename comes only from validated values
+- New dependency: `pdf-lib` (pure JavaScript, no native code, no network access)
+
+### Operations
+- **Run `npm install`** to get pdf-lib (package.json and the lock file change). No database migration and no new environment variables
+
+## 0.4.0
+### Added
+- **Budgets page** (in the navigation): one card per category with spent, limit, percentage, left or over by, number of expenses, daily average, largest expense, projected month-end spending, a safe amount per remaining day, and a status (on track / close to limit at 80% / over). Month picker, total across all budgets, inline limit change, a link to that category's expenses, and spending in categories that have no budget
+- **Payment methods**: tag each expense as cash, credit card, debit card, UPI, bank transfer, wallet or other. Filter by method, see totals per method for the month, and tick expenses as "matched" against your bank or card statement (filter by matched / not matched yet). Both fields are included in the CSV export
+- **Goal suggestions**: emergency fund (3 and 6 months, from your own average spending), the 20/4/10 car rule (down payment, loan, monthly payment, income needed), home deposit (20%), and vacation, education, gadget, wedding and debt-free templates. Each creates a normal goal you can edit
+
+### Changed
+- Budgets moved out of Settings (Settings links to the new page)
+
+### Security
+- New action `setReconciled`: session first, id and flag validated with Zod, update scoped by userId, rate limited
+- Payment method is validated against a fixed enum on the server; suggestion inputs from the URL are parsed with strict regexes and capped
+- /budgets is protected by the same middleware and cache headers as the other private pages
+
+### Operations
+- New migration: `npx prisma migrate dev --name add_payment_method_and_reconciled`. Run it on production with `prisma migrate deploy` BEFORE merging. No new dependencies or environment variables
+
 ## 0.3.4
 ### Added
 - **Profile** module in Settings: display name, country and timezone (nothing sensitive; email and password are not editable there). The timezone decides what "today" and "this month" mean and when recurring items are added. "Use this device" fills it in

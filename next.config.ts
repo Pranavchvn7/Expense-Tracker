@@ -34,10 +34,19 @@ const config: NextConfig = {
         ],
       },
       // Private, per-user pages must never be cached by shared caches.
-      ...["dashboard", "expenses", "income", "recurring", "goals", "import", "settings"].map((p) => ({
+      ...["dashboard", "expenses", "income", "recurring", "goals", "budgets", "reports", "debts", "import", "settings"].map((p) => ({
         source: `/${p}/:path*`,
         headers: [{ key: "Cache-Control", value: "private, no-store" }],
       })),
+      {
+        // The service worker must always be fetched fresh so updates reach people quickly.
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Service-Worker-Allowed", value: "/" },
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+        ],
+      },
       {
         // Public, aggregate-only share pages: edge cache with stale-while-revalidate.
         source: "/share/:id",
