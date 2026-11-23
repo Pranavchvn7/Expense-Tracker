@@ -8,7 +8,7 @@ const PAGES = "pages-v2";
 const STATIC = "static-v2";
 const OFFLINE_URL = "/offline";
 const MAX_PAGES = 60;
-const APP_PATHS = ["/dashboard", "/expenses", "/income", "/recurring", "/goals", "/budgets", "/clients", "/reports", "/debts", "/import", "/settings"];
+const APP_PATHS = ["/dashboard", "/expenses", "/income", "/recurring", "/goals", "/budgets", "/clients", "/jobs", "/reports", "/debts", "/import", "/settings"];
 const NEVER = ["/reports/pdf", "/expenses/export", "/api/"];
 
 const isAppPath = (p) => APP_PATHS.some((a) => p === a || p.startsWith(a + "/")) && !NEVER.some((n) => p.startsWith(n));

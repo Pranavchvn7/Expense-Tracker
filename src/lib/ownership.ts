@@ -11,3 +11,9 @@ export async function assertOwnCategory(userId: string, categoryId?: string) {
   });
   if (!cat) throw notFound();
 }
+
+/** BOLA guard: a client-supplied client id must belong to the authenticated user. */
+export async function assertOwnClient(userId: string, clientId: string) {
+  const c = await prisma.client.findFirst({ where: { id: clientId, userId }, select: { id: true } });
+  if (!c) throw notFound();
+}

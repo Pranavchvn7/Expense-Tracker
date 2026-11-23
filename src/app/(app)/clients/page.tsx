@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ActionForm } from "@/components/ActionForm";
 import { ClientFields } from "@/components/ClientFields";
+import { FreelanceOff } from "@/components/FreelanceOff";
 import { Pager } from "@/components/Pager";
 import { SoftForm } from "@/components/SoftForm";
 import { SortHeader } from "@/components/SortHeader";
@@ -20,21 +21,7 @@ export default async function ClientsPage({
 }) {
   const sp = await searchParams;
   const prefs = await getUserPrefs();
-  if (prefs.workMode === "SALARIED") {
-    return (
-      <>
-        <div className="page-head"><div><h1>Clients</h1></div></div>
-        <div className="card section" data-testid="freelance-off">
-          <div className="empty">
-            <IconInbox />
-            <strong>Freelance mode is off</strong>
-            <span>Turn it on to manage clients, jobs and client payments next to your regular income and expenses.</span>
-            <Link className="btn" href="/settings#work-type">Open settings</Link>
-          </div>
-        </div>
-      </>
-    );
-  }
+  if (prefs.workMode === "SALARIED") return <FreelanceOff title="Clients" />;
 
   // Query strings are untrusted: validate everything, fall back to safe defaults.
   const { page, perPage } = parsePaging(sp);
