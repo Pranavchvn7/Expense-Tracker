@@ -40,6 +40,8 @@ export async function listExpenses(opts: {
   dir: "asc" | "desc";
   paymentMethod?: PaymentMethod;
   reconciled?: "yes" | "no";
+  jobId?: string;
+  clientId?: string;
 }) {
   const { userId } = await requireSession();
   const { start, end } = monthRange(opts.month);
@@ -47,7 +49,10 @@ export async function listExpenses(opts: {
   // userId is always part of the filter, so a tampered categoryId cannot cross tenants.
   const where: Prisma.ExpenseWhereInput = {
     userId,
-    spentOn: { gte: start, lt: end },
+    // Filtering by a job or client shows every month, so the whole job is visible at once.
+    ...(opts.jobId || opts.clientId ? {} : { spentOn: { gte: start, lt: end } }),
+    ...(opts.jobId ? { jobId: opts.jobId } : {}),
+    ...(opts.clientId ? { job: { clientId: opts.clientId, userId } } : {}),
     ...(opts.categoryId ? { categoryId: opts.categoryId } : {}),
     ...(opts.paymentMethod ? { paymentMethod: opts.paymentMethod } : {}),
     ...(opts.reconciled ? { reconciled: opts.reconciled === "yes" } : {}),
@@ -77,6 +82,9 @@ export async function listExpenses(opts: {
         recurringRuleId: true,
         paymentMethod: true,
         reconciled: true,
+        costKind: true,
+        payee: true,
+        job: { select: { id: true, title: true, client: { select: { name: true } } } },
         category: { select: { id: true, name: true, color: true } },
       },
     }),

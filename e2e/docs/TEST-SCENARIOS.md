@@ -249,6 +249,26 @@ Your to-do list. Write the tests one by one; tick them off as you go.
 | PAY-14 | R | Second user opens the first user's job id, or posts a payment for it | Not found; nothing created |
 | PAY-15 | R | Delete the account (disposable user) | Succeeds; jobs, clients and payments gone |
 
+## COST: job costs and profit (project: `app`, work type Freelance)
+
+| ID | Type | Test case | Expected |
+|---|---|---|---|
+| COST-01 | S | Job agreed 10000 with 4000 received: add Travel 500 | Costs 500, Profit so far 3,500, Profit when paid in full 9,500 |
+| COST-02 | R | Add an Assistant cost with "Paid to" | Row shows the type tag and "Paid to <name>" |
+| COST-03 | R | Leave "What for" empty | Description becomes "Travel" or "Assistant / helper – name" |
+| COST-04 | R | Amount empty, 0, negative, 3 decimals; future date | Rejected with a clear message |
+| COST-05 | R | Open Expenses for that month | Cost shows type tag, job link and client; month total includes it |
+| COST-06 | R | Dashboard spent total | Includes the cost |
+| COST-07 | R | Delete a cost on the job page | Costs and profit recalculate; Expenses row gone |
+| COST-08 | R | Job with no agreed amount | "Profit when paid in full" shows a dash |
+| COST-09 | R | Costs above received money | Profit so far is negative and shown with a minus sign |
+| COST-10 | R | "See them in Expenses" on the job page | Only that job's costs, "All months" in the heading, notice with a clear link |
+| COST-11 | R | Client page "Costs in Expenses" and "Payments in Income" | Only that client's jobs' entries appear |
+| COST-12 | R | Paging while a job filter is on | The filter is kept on page 2 |
+| COST-13 | R | Try to delete a job that has only costs | Refused with "Cancel the job instead" |
+| COST-14 | R | Client page totals with two jobs | Costs and Profit are the sums |
+| COST-15 | R | Second user opens `/expenses?job=<other user's job id>` or posts a cost for it | Empty list / not found; nothing created |
+
 ## DEBT: debt tracker (project: `app`)
 
 | ID | Type | Test case | Expected |

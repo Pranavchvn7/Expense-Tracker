@@ -14,6 +14,7 @@ import { formatMoney, monthLabel } from "@/lib/money";
 import { parseListQuery } from "@/lib/validation";
 import { parsePaging, buildHref } from "@/lib/paging";
 import { getUserToday } from "@/lib/preferences";
+import { COST_LABEL } from "@/lib/pay-math";
 import { IconDownload, IconInbox, IconUpload } from "@/components/icons";
 
 export default async function ExpensesPage({
@@ -29,12 +30,18 @@ export default async function ExpensesPage({
   // "Copy" pre-fills the add form from one of your own expenses (looked up by id AND owner).
   const rawFrom = Array.isArray(sp.from) ? sp.from[0] : sp.from;
   const fromId = uuid.safeParse(rawFrom);
+  const rawJob = Array.isArray(sp.job) ? sp.job[0] : sp.job;
+  const jobParsed = uuid.safeParse(rawJob);
+  const jobId = jobParsed.success ? jobParsed.data : undefined;
+  const rawClient = Array.isArray(sp.client) ? sp.client[0] : sp.client;
+  const clientParsed = uuid.safeParse(rawClient);
+  const clientFilter = clientParsed.success && !jobId ? clientParsed.data : undefined;
   const copy = fromId.success ? await getExpense(fromId.data) : null;
   // Create anything that fell due since the last visit before reading the data.
   await materializeRecurring();
   const currency = await getUserCurrency();
   const [{ rows, hasNext, totals }, cats, methods] = await Promise.all([
-    listExpenses({ month, q, categoryId, page, perPage, sort, dir, paymentMethod, reconciled }),
+    listExpenses({ month, q, categoryId, page, perPage, sort, dir, paymentMethod, reconciled, jobId, clientId: clientFilter }),
     listCategories(),
     paymentBreakdown(month, currency),
   ]);
@@ -59,8 +66,10 @@ export default async function ExpensesPage({
     sort: sort === "date" ? undefined : sort,
     dir: dir === "desc" ? undefined : dir,
     pp: perPage === 10 ? undefined : String(perPage),
+    job: jobId,
+    client: clientFilter,
   };
-  const sortParams = { month, q, categoryId, pm: paymentMethod, rec: reconciled, pp: keep.pp };
+  const sortParams = { month, q, categoryId, pm: paymentMethod, rec: reconciled, pp: keep.pp, job: jobId, client: clientFilter };
   const hasFilter = Boolean(q || categoryId || paymentMethod || reconciled);
   const clearSearchHref = buildHref("/expenses", { ...keep, q: undefined });
 
@@ -69,7 +78,7 @@ export default async function ExpensesPage({
       <div className="page-head">
         <div>
           <h1>Expenses</h1>
-          <p>{monthLabel(month)}{totals.length > 0 ? ` · ${totals.map((t) => formatMoney(t._sum.amountMinor ?? 0, t.currency)).join(" · ")}` : ""}</p>
+          <p>{jobId || clientFilter ? "All months" : monthLabel(month)}{totals.length > 0 ? ` · ${totals.map((t) => formatMoney(t._sum.amountMinor ?? 0, t.currency)).join(" · ")}` : ""}</p>
         </div>
         {/* Plain <a>, not <Link>: prefetching a download would count against the export limit. */}
         <div className="actions">
@@ -78,6 +87,13 @@ export default async function ExpensesPage({
           <a className="btn soft small" href="/expenses/export?all=1"><IconDownload />All CSV</a>
         </div>
       </div>
+
+      {(jobId || clientFilter) && (
+        <p className="notice" role="note" data-testid="expense-job-filter">
+          Showing only costs linked to {jobId ? "one job" : "one client's jobs"}, all months.{" "}
+          <Link href="/expenses" data-testid="expense-job-filter-clear">Show all expenses</Link>
+        </p>
+      )}
 
       {/* key: a different copied expense remounts this, so it opens again even if it was collapsed by hand. */}
       <details key={copy?.id ?? "new"} id="add-expense" className="add" open={openAdd || Boolean(copy)}>
@@ -215,7 +231,9 @@ export default async function ExpensesPage({
                       <span className="name-cell">
                         <span className="nm">{e.description}</span>
                         {e.recurringRuleId && <span className="tag">Recurring</span>}
+                        {e.job && e.costKind && <span className="tag" data-testid="cost-kind">{COST_LABEL[e.costKind]}</span>}
                       </span>
+                      {e.job && <span className="muted note" data-testid="cost-job">Job: <Link href={`/jobs/${e.job.id}`}>{e.job.title}</Link> · {e.job.client.name}</span>}
                       {e.note && <span className="muted note">{e.note}</span>}
                     </span>
                   </td>
@@ -249,7 +267,7 @@ export default async function ExpensesPage({
         )}
         <Pager
           basePath="/expenses"
-          params={{ month, q, categoryId, pm: paymentMethod, rec: reconciled, sort: keep.sort, dir: keep.dir }}
+          params={{ month, q, categoryId, pm: paymentMethod, rec: reconciled, sort: keep.sort, dir: keep.dir, job: jobId, client: clientFilter }}
           page={page}
           perPage={perPage}
           hasNext={hasNext}

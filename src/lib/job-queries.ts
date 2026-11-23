@@ -159,3 +159,26 @@ export async function clientPaidTotal(clientId: string) {
   });
   return agg._sum.amountMinor ?? 0;
 }
+
+/** Costs per job, for a page of jobs (one grouped query). */
+export async function costsByJob(jobIds: string[]): Promise<Record<string, number>> {
+  const { userId } = await requireSession();
+  if (jobIds.length === 0) return {};
+  const rows = await prisma.expense.groupBy({
+    by: ["jobId"],
+    where: { userId, jobId: { in: jobIds.slice(0, 500) } },
+    _sum: { amountMinor: true },
+  });
+  return sumByJob(rows.map((r) => ({ jobId: r.jobId, minor: r._sum.amountMinor ?? 0 })));
+}
+
+/** The costs recorded for one job, oldest first. */
+export async function jobCosts(jobId: string) {
+  const { userId } = await requireSession();
+  return prisma.expense.findMany({
+    where: { userId, jobId },
+    orderBy: [{ spentOn: "asc" }, { createdAt: "asc" }],
+    take: 200,
+    select: { id: true, amountMinor: true, currency: true, spentOn: true, costKind: true, payee: true, description: true },
+  });
+}

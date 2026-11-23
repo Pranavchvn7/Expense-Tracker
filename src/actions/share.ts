@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
-import { HttpError, notFound, safely, type ActionResult, limitReached } from "@/lib/errors";
+import { notFound, safely, type ActionResult, limitReached } from "@/lib/errors";
 import { formToObject, idInput, shareInput } from "@/lib/validation";
 
 const MAX_ACTIVE_SHARES = 10;

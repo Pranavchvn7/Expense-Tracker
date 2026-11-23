@@ -67,6 +67,10 @@ Several forms with the same id can exist on one page (one per row). Narrow with 
 
 `add-job-payment` (+ `-submit`, `-error`), `pay-status`, `pay-summary`, `pay-agreed`, `pay-received`, `pay-balance`, `payment-row`, `payment-edit`, `job-balance` (Jobs list), `client-money`, `client-paid`, `client-due`, and on the Income page `payment-kind`, `payment-job`. Deleting a payment uses `delete-income`.
 
+## Job costs and profit (v0.6.3)
+
+`add-job-cost` (+ `-submit`, `-error`), `job-costs`, `cost-summary`, `cost-total`, `profit-now`, `profit-expected`, `cost-row`, `cost-edit`, `job-income-link`, `job-expenses-link`, `client-costs`, `client-profit`, `client-income-link`, `client-expenses-link`; on Expenses `cost-kind`, `cost-job`, `expense-job-filter`, `expense-job-filter-clear`; on Income `income-job-filter`, `income-job-filter-clear`. Deleting a cost uses `delete-expense`.
+
 ## Import
 
 `import-kind`, `import-format`, `import-file`, `import-preview`, `import-confirm`, `import-error`, `import-notice`.
