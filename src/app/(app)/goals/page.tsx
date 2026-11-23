@@ -39,7 +39,7 @@ export default async function GoalsPage({
       <details className="add" open={goals.length === 0 && page === 1}>
         <summary>New goal</summary>
         <div className="body">
-          <ActionForm focusPrefix="goal-" focusHref="/goals" action={createGoal} submitLabel="Create goal" className="stack" resetOnSuccess>
+          <ActionForm focusPrefix="goal-" focusHref="/goals" action={createGoal} testId="create-goal" submitLabel="Create goal" className="stack" resetOnSuccess>
             <label>Name
               <input name="name" maxLength={80} placeholder="Emergency fund, Trip, Laptop…" required />
             </label>
@@ -68,11 +68,11 @@ export default async function GoalsPage({
                 <>
                   <p>Based on your average spending of <strong>{formatMoney(avgSpend ?? 0, currency)}</strong> a month over the last three full months:</p>
                   <div className="row">
-                    <ActionForm focusPrefix="goal-" focusHref="/goals" action={createGoal} submitLabel={`Create ${formatMoney(ef.threeMonths, currency)} goal`} className="row" resetOnSuccess>
+                    <ActionForm focusPrefix="goal-" focusHref="/goals" action={createGoal} testId="create-goal" submitLabel={`Create ${formatMoney(ef.threeMonths, currency)} goal`} className="row" resetOnSuccess>
                       <input type="hidden" name="name" value="Emergency fund (3 months)" />
                       <input type="hidden" name="target" value={major(ef.threeMonths)} />
                     </ActionForm>
-                    <ActionForm focusPrefix="goal-" focusHref="/goals" action={createGoal} submitLabel={`Create ${formatMoney(ef.sixMonths, currency)} goal`} className="row" resetOnSuccess>
+                    <ActionForm focusPrefix="goal-" focusHref="/goals" action={createGoal} testId="create-goal" submitLabel={`Create ${formatMoney(ef.sixMonths, currency)} goal`} className="row" resetOnSuccess>
                       <input type="hidden" name="name" value="Emergency fund (6 months)" />
                       <input type="hidden" name="target" value={major(ef.sixMonths)} />
                     </ActionForm>
@@ -90,7 +90,7 @@ export default async function GoalsPage({
               <div key={t.id} className="card suggestion">
                 <h3>{t.name}</h3>
                 <p className="muted">{t.blurb}</p>
-                <ActionForm focusPrefix="goal-" focusHref="/goals" action={createGoal} submitLabel="Create goal" className="row" resetOnSuccess>
+                <ActionForm focusPrefix="goal-" focusHref="/goals" action={createGoal} testId="create-goal" submitLabel="Create goal" className="row" resetOnSuccess>
                   <input type="hidden" name="name" value={t.name} />
                   <label>Target amount
                     <input name="target" inputMode="decimal" pattern="\d{1,9}(\.\d{1,2})?" placeholder="0.00" required />
@@ -137,7 +137,7 @@ export default async function GoalsPage({
                       </p>
                     )}
 
-                    <ActionForm action={addContribution} submitLabel="Add money" className="row" resetOnSuccess>
+                    <ActionForm action={addContribution} testId="add-contribution" submitLabel="Add money" className="row" resetOnSuccess>
                       <input type="hidden" name="goalId" value={g.id} />
                       <label>Amount
                         <input name="amount" inputMode="decimal" pattern="\d{1,9}(\.\d{1,2})?" placeholder="0.00" required />
@@ -155,7 +155,7 @@ export default async function GoalsPage({
                           {g.contributions.map((c) => (
                             <li key={c.id}>
                               <ActionForm
-                                action={deleteContribution}
+                                action={deleteContribution} testId="delete-contribution"
                                 submitLabel="Undo"
                                 danger
                                 className="row between"
@@ -176,7 +176,7 @@ export default async function GoalsPage({
                     <div className="cell-actions">
                       <Link className="btn ghost small" href={`/goals/${g.id}/edit`}>Edit</Link>
                       <ActionForm
-                        action={deleteGoal}
+                        action={deleteGoal} testId="delete-goal"
                         submitLabel="Delete goal"
                         danger
                         confirmMessage="Delete this goal and its contributions?"

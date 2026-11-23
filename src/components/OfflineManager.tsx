@@ -19,6 +19,7 @@ export function OfflineManager({ userId }: { userId: string }) {
   const [online, setOnline] = useState(true);
   const [items, setItems] = useState<OutboxItem[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
+  const [savedAt, setSavedAt] = useState<string | null>(null);
   const syncing = useRef(false);
 
   const reload = useCallback(async () => {
@@ -78,6 +79,12 @@ export function OfflineManager({ userId }: { userId: string }) {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => undefined);
     }
+    const stamp = () => {
+      const at = document.getElementById("page-rendered")?.getAttribute("data-at");
+      const d = at ? new Date(at) : null;
+      setSavedAt(d && !Number.isNaN(d.getTime()) ? d.toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : null);
+    };
+    stamp();
     setOnline(navigator.onLine);
     void reload();
     void sync();
@@ -139,10 +146,15 @@ export function OfflineManager({ userId }: { userId: string }) {
   if (online && waiting.length === 0 && failed.length === 0 && !msg) return null;
 
   return (
-    <div className="offline-banner" role="status" aria-live="polite">
-      {!online && <span>You are offline. Saved pages still open, and new entries are kept on this device.</span>}
+    <div className="offline-banner" role="status" aria-live="polite" data-testid="offline-banner">
+      {!online && (
+        <span data-testid="offline-status">
+          You are offline. Saved pages still open, and new entries are kept on this device.
+          {savedAt ? " Showing data from " + savedAt + "." : ""}
+        </span>
+      )}
       {waiting.length > 0 && (
-        <span>{waiting.length} entr{waiting.length === 1 ? "y" : "ies"} waiting to sync{online ? "…" : "."}</span>
+        <span data-testid="outbox-waiting">{waiting.length} entr{waiting.length === 1 ? "y" : "ies"} waiting to sync{online ? "…" : "."}</span>
       )}
       {msg && <span>{msg}</span>}
       {failed.map((f) => (

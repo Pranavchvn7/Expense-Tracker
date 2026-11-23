@@ -58,7 +58,7 @@ export default async function IncomePage({
       <details className="add" open={openAdd}>
         <summary>Add income</summary>
         <div className="body">
-          <ActionForm action={createIncome} offlineKind="income" submitLabel="Add income" className="stack" resetOnSuccess>
+          <ActionForm action={createIncome} testId="create-income" offlineKind="income" submitLabel="Add income" className="stack" resetOnSuccess>
             <div className="row">
               <label>Amount
                 <input name="amount" inputMode="decimal" pattern="\d{1,9}(\.\d{1,2})?" placeholder="0.00" required />
@@ -91,7 +91,7 @@ export default async function IncomePage({
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id}>
+                <tr key={r.id} data-testid="income-row">
                   <td data-label="Date">{r.receivedOn.toISOString().slice(0, 10)}</td>
                   <td data-label="Source">
                     <span className="name-block">
@@ -107,7 +107,7 @@ export default async function IncomePage({
                     <div className="cell-actions">
                       <Link className="btn ghost small" href={`/income/${r.id}/edit`}>Edit</Link>
                       <ActionForm
-                        action={deleteIncome}
+                        action={deleteIncome} testId="delete-income"
                         submitLabel="Delete"
                         danger
                         confirmMessage="Delete this income entry?"

@@ -38,7 +38,7 @@ export function ReportFilters({
     <SoftForm className="card stack" action="/reports" busyId="report-body" label="Report filters">
       <div className="row">
         <label>Period
-          <select name="period" value={p} onChange={(e) => setP(e.target.value as typeof p)}>
+          <select data-testid="report-period" name="period" value={p} onChange={(e) => setP(e.target.value as typeof p)}>
             <option value="month">Month</option>
             <option value="year">Year</option>
             <option value="custom">Custom range</option>
@@ -74,7 +74,7 @@ export function ReportFilters({
         <p className="muted">Leave all unticked to include every category. Income is not shown while categories are filtered.</p>
       </details>
       <div className="actions">
-        <button className="btn" type="submit">Show report</button>
+        <button className="btn" type="submit" data-testid="report-submit">Show report</button>
       </div>
     </SoftForm>
   );

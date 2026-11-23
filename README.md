@@ -85,3 +85,6 @@ See [SECURITY.md](./SECURITY.md) for the threat model and the mapping to the 5-p
 
 ## Offline and notifications
 The app is installable (PWA). Visited pages open offline, entries added offline sync automatically, and optional push alerts cover budget thresholds and upcoming renewals. See SETUP.md for the VAPID keys and CRON_SECRET.
+
+## End-to-end tests
+Playwright tests live in `e2e/` and run against Staging only. See `e2e/PLAYWRIGHT-FRAMEWORK-GUIDE.md`.

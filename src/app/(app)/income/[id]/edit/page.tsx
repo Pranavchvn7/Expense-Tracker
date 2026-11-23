@@ -16,7 +16,7 @@ export default async function EditIncomePage({ params }: { params: Promise<{ id:
   return (
     <>
       <div className="page-head"><h1>Edit income</h1></div>
-      <ActionForm action={updateIncome} submitLabel="Save changes" className="card stack" successHref="/income">
+      <ActionForm action={updateIncome} testId="update-income" submitLabel="Save changes" className="card stack" successHref="/income">
         <input type="hidden" name="id" value={income.id} />
         <div className="row">
           <label>Amount

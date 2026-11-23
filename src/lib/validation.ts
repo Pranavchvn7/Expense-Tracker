@@ -2,6 +2,7 @@ import { z } from "zod";
 import { PAYMENT_METHOD_VALUES } from "@/lib/payment-method";
 import { isCountryCode } from "@/lib/countries";
 import { isValidTimeZone } from "@/lib/tz";
+import { normalizePhone } from "@/lib/phone";
 
 // Strip control characters and normalise whitespace. Output encoding is handled
 // by React (no dangerouslySetInnerHTML anywhere); this keeps stored data clean.
@@ -264,6 +265,44 @@ export function parseListQuery(sp: SearchParams, defaultMonth: string) {
     reconciled: RECONCILE_FILTERS.find((r) => r === first(sp.rec)),
   };
 }
+
+/** How the person works: decides which menu items and dashboard sections are shown. */
+export const WORK_MODES = ["SALARIED", "FREELANCE", "BOTH"] as const;
+export const workModeInput = z.object({ mode: z.enum(WORK_MODES, { errorMap: () => ({ message: "Choose one of the options." }) }) });
+
+const emptyToUndefined = (v: unknown) => (v === "" || v === null ? undefined : v);
+
+/** Optional phone: stored as digits with an optional leading "+". */
+const optionalPhone = z.preprocess(
+  emptyToUndefined,
+  z
+    .string()
+    .trim()
+    .transform((s, ctx) => {
+      const p = normalizePhone(s);
+      if (p === null) ctx.addIssue({ code: "custom", message: "must be a phone number with 7 to 15 digits, such as +91 98765 43210" });
+      return p ?? "";
+    })
+    .optional(),
+);
+
+const optionalEmail = z.preprocess(
+  emptyToUndefined,
+  z.string().trim().toLowerCase().max(254).email("must be a valid email address").optional(),
+);
+
+/** A client: only the name is required. */
+export const clientInput = z.object({
+  name: cleanText(80),
+  phone: optionalPhone,
+  email: optionalEmail,
+  city: optionalCleanText(80),
+  address: optionalCleanText(200),
+  source: optionalCleanText(60),
+  notes: optionalCleanText(1000),
+});
+export const clientUpdate = clientInput.extend({ id: uuid });
+export const clientArchiveInput = z.object({ id: uuid, archived: z.enum(["0", "1"]) });
 
 export const sessionRefInput = z.object({ ref: z.string().regex(/^[a-f0-9]{24}$/) });
 

@@ -30,7 +30,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
   }
 
   return (
-    <form method="post" onSubmit={onSubmit} className="stack">
+    <form method="post" onSubmit={onSubmit} className="stack" data-testid="reset-password">
       <label>
         New password
         <input
@@ -54,11 +54,11 @@ export function ResetPasswordForm({ token }: { token: string }) {
         />
       </label>
       <small>At least 12 characters.</small>
-      <button className="btn" disabled={pending} type="submit">
+      <button className="btn" disabled={pending} type="submit" data-testid="reset-password-submit">
         {pending ? "Please wait…" : "Set new password"}
       </button>
       {error && (
-        <p role="alert" className="error">
+        <p role="alert" className="error" data-testid="reset-password-error">
           {error}
         </p>
       )}

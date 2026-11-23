@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
 import { notFound, safely, type ActionResult } from "@/lib/errors";
-import { formToObject, profileInput } from "@/lib/validation";
+import { formToObject, profileInput, workModeInput } from "@/lib/validation";
 
 /**
  * Non-sensitive profile settings: display name, country and timezone. Email and password
@@ -20,6 +20,19 @@ export async function updateProfile(fd: FormData): Promise<ActionResult> {
       where: { id: userId },
       data: { name: input.name, country: input.country ?? null, timezone: input.timezone ?? null },
     });
+    if (res.count !== 1) throw notFound();
+    revalidatePath("/", "layout");
+    return undefined;
+  });
+}
+
+/** Choose Salaried, Freelance or Both. Only changes what is shown; no data is touched. */
+export async function setWorkMode(fd: FormData): Promise<ActionResult> {
+  return safely(async () => {
+    const { userId } = await requireSession();
+    await rateLimit(`profile:workmode:${userId}`, 20, 60);
+    const input = workModeInput.parse(formToObject(fd));
+    const res = await prisma.user.updateMany({ where: { id: userId }, data: { workMode: input.mode } });
     if (res.count !== 1) throw notFound();
     revalidatePath("/", "layout");
     return undefined;

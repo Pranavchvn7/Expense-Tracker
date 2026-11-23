@@ -178,3 +178,13 @@ export async function getMonthHighlights(month: string) {
       .sort((a, b) => b.value - a.value),
   };
 }
+
+/** Has this person recorded anything yet? Drives the getting-started card. */
+export async function getLifetimeCounts() {
+  const { userId } = await requireSession();
+  const [expenses, income] = await Promise.all([
+    prisma.expense.count({ where: { userId }, take: 1 }),
+    prisma.income.count({ where: { userId }, take: 1 }),
+  ]);
+  return { expenses, income };
+}
