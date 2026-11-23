@@ -10,7 +10,7 @@ import { parsePaging } from "@/lib/paging";
 import { KIND_LABEL } from "@/lib/pay-math";
 import { IconUpload } from "@/components/icons";
 import { addMonthsKey } from "@/lib/chart-math";
-import { monthSchema } from "@/lib/validation";
+import { monthSchema, uuid } from "@/lib/validation";
 import { IconChevronLeft, IconChevronRight, IconWallet } from "@/components/icons";
 
 export default async function IncomePage({
@@ -27,7 +27,12 @@ export default async function IncomePage({
   const month = parsed.success && parsed.data <= now ? parsed.data : now;
   // Create anything that fell due since the last visit before reading the data.
   await materializeRecurring();
-  const { rows, hasNext, totals } = await listIncome(month, page, perPage);
+  const jobParsed = uuid.safeParse(Array.isArray(sp.job) ? sp.job[0] : sp.job);
+  const jobId = jobParsed.success ? jobParsed.data : undefined;
+  const clientParsed = uuid.safeParse(Array.isArray(sp.client) ? sp.client[0] : sp.client);
+  const clientFilter = clientParsed.success && !jobId ? clientParsed.data : undefined;
+  const filtered = Boolean(jobId || clientFilter);
+  const { rows, hasNext, totals } = await listIncome(month, page, perPage, { jobId, clientId: clientFilter });
 
   return (
     <>
@@ -35,7 +40,7 @@ export default async function IncomePage({
         <div>
           <h1>Income</h1>
           <p>
-            {monthLabel(month)}
+            {filtered ? "All months" : monthLabel(month)}
             {totals.length > 0 ? ` · ${totals.map((t) => formatMoney(t._sum.amountMinor ?? 0, t.currency)).join(" · ")}` : ""}
           </p>
         </div>
@@ -55,6 +60,13 @@ export default async function IncomePage({
           <Link className="btn soft small" href="/import"><IconUpload />Import CSV</Link>
         </div>
       </div>
+
+      {filtered && (
+        <p className="notice" role="note" data-testid="income-job-filter">
+          Showing only payments linked to {jobId ? "one job" : "one client's jobs"}, all months.{" "}
+          <Link href="/income" data-testid="income-job-filter-clear">Show all income</Link>
+        </p>
+      )}
 
       <details className="add" open={openAdd}>
         <summary>Add income</summary>
@@ -126,7 +138,7 @@ export default async function IncomePage({
         )}
         <Pager
           basePath="/income"
-          params={{ month }}
+          params={{ month, job: jobId, client: clientFilter }}
           page={page}
           perPage={perPage}
           hasNext={hasNext}

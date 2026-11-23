@@ -2,10 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/ActionForm";
 import { deleteJob, setJobStatus } from "@/actions/jobs";
-import { addJobPayment } from "@/actions/job-payments";
+import { addJobCost, addJobPayment } from "@/actions/job-payments";
+import { deleteExpense } from "@/actions/expenses";
 import { deleteIncome } from "@/actions/income";
-import { getJob, jobPayments } from "@/lib/job-queries";
-import { KIND_LABEL, PAYMENT_KINDS, paySummary, suggestAmountMinor, suggestKind, toDecimalString } from "@/lib/pay-math";
+import { getJob, jobCosts, jobPayments } from "@/lib/job-queries";
+import { COST_KINDS, COST_LABEL, KIND_LABEL, PAYMENT_KINDS, paySummary, profitSummary, suggestAmountMinor, suggestKind, toDecimalString } from "@/lib/pay-math";
 import { formatDay, jobBucket, STATUS_LABEL, timeRangeLabel } from "@/lib/job-math";
 import { formatMoney } from "@/lib/money";
 import { getUserPrefs, getUserToday } from "@/lib/preferences";
@@ -16,10 +17,12 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
   if (!uuid.safeParse(id).success) notFound();
   const prefs = await getUserPrefs();
   if (prefs.workMode === "SALARIED") notFound();
-  const [job, today, payments] = await Promise.all([getJob(id), getUserToday(), jobPayments(id)]);
+  const [job, today, payments, costs] = await Promise.all([getJob(id), getUserToday(), jobPayments(id), jobCosts(id)]);
   if (!job) notFound();
   const paid = payments.reduce((n, x) => n + x.amountMinor, 0);
   const pay = paySummary(job.agreedAmountMinor, paid);
+  const costTotal = costs.reduce((n, x) => n + x.amountMinor, 0);
+  const profit = profitSummary(job.agreedAmountMinor, paid, costTotal);
   const prefill = suggestAmountMinor(job.agreedAmountMinor, paid);
   const defaultKind = suggestKind(paid);
   const iso = job.eventDate.toISOString().slice(0, 10);
@@ -115,7 +118,82 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
             </ActionForm>
           </div>
         </details>
-        <p className="muted">Payments also appear in Income, labelled with this client and job. Job costs (travel, assistants) arrive in the next update.</p>
+        <p className="muted">Payments also appear in Income, labelled with this client and job.{" "}
+          {payments.length > 0 && <Link href={`/income?job=${job.id}`} data-testid="job-income-link">See them in Income</Link>}
+        </p>
+      </div>
+
+      <div className="card section" data-testid="job-costs">
+        <div className="card-head">
+          <h2>Costs and profit</h2>
+        </div>
+        <dl className="money-summary" data-testid="cost-summary">
+          <div><dt>Costs</dt><dd data-testid="cost-total">{formatMoney(costTotal, job.currency)}</dd></div>
+          <div><dt>Profit so far</dt><dd data-testid="profit-now">{formatMoney(profit.profitMinor, job.currency)}</dd></div>
+          <div><dt>Profit when paid in full</dt><dd data-testid="profit-expected">{profit.expectedMinor === null ? "—" : formatMoney(profit.expectedMinor, job.currency)}</dd></div>
+        </dl>
+        {costs.length === 0 ? (
+          <p className="muted">No costs yet. Add travel, an assistant&apos;s payment or products used for this job.</p>
+        ) : (
+          <table className="responsive">
+            <thead><tr><th>Date</th><th>Cost</th><th className="num">Amount</th><th><span className="sr-only">Actions</span></th></tr></thead>
+            <tbody>
+              {costs.map((x) => (
+                <tr key={x.id} data-testid="cost-row">
+                  <td data-label="Date">{x.spentOn.toISOString().slice(0, 10)}</td>
+                  <td data-label="Cost">
+                    <span className="name-block">
+                      <span className="name-cell"><span className="nm">{x.description}</span>{x.costKind && <span className="tag">{COST_LABEL[x.costKind]}</span>}</span>
+                      {x.payee && <span className="muted note">Paid to {x.payee}</span>}
+                    </span>
+                  </td>
+                  <td className="num" data-label="Amount">{formatMoney(x.amountMinor, x.currency)}</td>
+                  <td className="nolabel">
+                    <div className="cell-actions">
+                      <Link className="btn ghost small" href={`/expenses/${x.id}/edit`} data-testid="cost-edit">Edit</Link>
+                      <ActionForm action={deleteExpense} testId="delete-expense" submitLabel="Delete" danger confirmMessage="Delete this cost?">
+                        <input type="hidden" name="id" value={x.id} />
+                      </ActionForm>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        <details className="add" open={costs.length === 0 && payments.length > 0}>
+          <summary>Add a cost</summary>
+          <div className="body">
+            <ActionForm action={addJobCost} testId="add-job-cost" submitLabel="Add cost" className="stack" resetOnSuccess>
+              <input type="hidden" name="jobId" value={job.id} />
+              <div className="row">
+                <label>Amount
+                  <input name="amount" inputMode="decimal" pattern="\d{1,9}(\.\d{1,2})?" placeholder="0.00" required />
+                </label>
+                <label>Date
+                  <input name="spentOn" type="date" defaultValue={today.iso} max={today.iso} required />
+                </label>
+              </div>
+              <div className="row">
+                <label>Type
+                  <select name="kind" defaultValue="TRAVEL">
+                    {COST_KINDS.map((k) => <option key={k} value={k}>{COST_LABEL[k]}</option>)}
+                  </select>
+                </label>
+                <label>Paid to (optional)
+                  <input name="payee" maxLength={80} placeholder="Assistant or shop name" />
+                </label>
+              </div>
+              <label>What for (optional)
+                <input name="description" maxLength={120} placeholder="Cab to venue, hair pins…" />
+              </label>
+            </ActionForm>
+          </div>
+        </details>
+        <p className="muted">
+          Costs also appear in Expenses, labelled with this client and job.{" "}
+          {costs.length > 0 && <Link href={`/expenses?job=${job.id}`} data-testid="job-expenses-link">See them in Expenses</Link>}
+        </p>
       </div>
 
       <div className="card section">

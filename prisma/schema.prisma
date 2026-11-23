@@ -159,6 +159,11 @@ model Expense {
   // How it was paid, and whether it has been ticked off against a bank/card statement.
   paymentMethod PaymentMethod?
   reconciled    Boolean   @default(false)
+  // Freelance: a cost of doing a job (travel, assistant, products). NoAction: a job with costs cannot be deleted.
+  jobId         String?
+  job           Job?      @relation(fields: [jobId], references: [id], onDelete: NoAction)
+  costKind      JobCostKind?
+  payee         String?   @db.VarChar(80)
   // Random id made on the device when an entry was added offline, so a retried sync can never
   // create it twice. Null for entries added normally.
   clientRef     String?   @db.VarChar(36)
@@ -175,7 +180,15 @@ model Expense {
   @@index([userId, spentOn])
   @@index([userId, categoryId])
   @@index([userId, paymentMethod, spentOn])
+  @@index([userId, jobId])
   @@unique([userId, clientRef])
+}
+
+enum JobCostKind {
+  TRAVEL
+  ASSISTANT
+  PRODUCTS
+  OTHER
 }
 
 enum PaymentMethod {
@@ -453,6 +466,7 @@ model Job {
   currency          String    @db.VarChar(3)
   notes             String?   @db.VarChar(1000)
   payments          Income[]
+  costs             Expense[]
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 

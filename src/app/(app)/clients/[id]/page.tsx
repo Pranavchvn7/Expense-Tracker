@@ -3,9 +3,9 @@ import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/ActionForm";
 import { deleteClient, setClientArchived } from "@/actions/clients";
 import { getClient } from "@/lib/client-queries";
-import { jobsForClient, paidByJob } from "@/lib/job-queries";
+import { costsByJob, jobsForClient, paidByJob } from "@/lib/job-queries";
 import { formatDay, jobBucket, STATUS_LABEL } from "@/lib/job-math";
-import { paySummary } from "@/lib/pay-math";
+import { paySummary, profitSummary } from "@/lib/pay-math";
 import { formatMoney } from "@/lib/money";
 import { getUserPrefs, getUserToday } from "@/lib/preferences";
 import { uuid } from "@/lib/validation";
@@ -17,9 +17,12 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   if (prefs.workMode === "SALARIED") notFound();
   const [client, jobs, today] = await Promise.all([getClient(id), jobsForClient(id), getUserToday()]);
   if (!client) notFound();
-  const paid = await paidByJob(jobs.map((j) => j.id));
+  const ids = jobs.map((j) => j.id);
+  const [paid, costs] = await Promise.all([paidByJob(ids), costsByJob(ids)]);
+  const totalCosts = jobs.reduce((n, j) => n + (costs[j.id] ?? 0), 0);
   const totalPaid = jobs.reduce((n, j) => n + (paid[j.id] ?? 0), 0);
   const totalDue = jobs.reduce((n, j) => n + (j.status === "CANCELLED" ? 0 : paySummary(j.agreedAmountMinor, paid[j.id] ?? 0).balanceMinor), 0);
+  const kept = profitSummary(0, totalPaid, totalCosts).profitMinor;
   const money = jobs[0]?.currency ?? "INR";
   const completed = jobs.filter((j) => j.status === "COMPLETED").length;
 
@@ -60,7 +63,13 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
               <div><dt>Jobs</dt><dd>{jobs.length} ({completed} completed)</dd></div>
               <div><dt>Total received</dt><dd data-testid="client-paid">{formatMoney(totalPaid, money)}</dd></div>
               <div><dt>Balance due</dt><dd data-testid="client-due">{formatMoney(totalDue, money)}</dd></div>
+              <div><dt>Costs</dt><dd data-testid="client-costs">{formatMoney(totalCosts, money)}</dd></div>
+              <div><dt>Profit</dt><dd data-testid="client-profit">{formatMoney(kept, money)}</dd></div>
             </dl>
+            <p className="muted">
+              <Link href={`/income?client=${client.id}`} data-testid="client-income-link">Payments in Income</Link>{" · "}
+              <Link href={`/expenses?client=${client.id}`} data-testid="client-expenses-link">Costs in Expenses</Link>
+            </p>
             <table className="responsive">
               <thead>
                 <tr><th>Date</th><th>Job</th><th className="num">Agreed</th><th className="num">Balance</th><th>Status</th></tr>
