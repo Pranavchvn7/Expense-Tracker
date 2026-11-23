@@ -4,11 +4,11 @@
  * - Never cached: API calls, sign-in pages, downloads (CSV/PDF), anything that is not a GET.
  * - Push: shows a notification built only from the short title/body the server sends.
  */
-const PAGES = "pages-v1";
-const STATIC = "static-v1";
+const PAGES = "pages-v2";
+const STATIC = "static-v2";
 const OFFLINE_URL = "/offline";
 const MAX_PAGES = 60;
-const APP_PATHS = ["/dashboard", "/expenses", "/income", "/recurring", "/goals", "/budgets", "/reports", "/debts", "/import", "/settings"];
+const APP_PATHS = ["/dashboard", "/expenses", "/income", "/recurring", "/goals", "/budgets", "/clients", "/jobs", "/reports", "/debts", "/import", "/settings"];
 const NEVER = ["/reports/pdf", "/expenses/export", "/api/"];
 
 const isAppPath = (p) => APP_PATHS.some((a) => p === a || p.startsWith(a + "/")) && !NEVER.some((n) => p.startsWith(n));
@@ -31,7 +31,31 @@ async function trim(cache) {
   for (let i = 0; i < keys.length - MAX_PAGES; i++) await cache.delete(keys[i]);
 }
 
-async function pageRequest(request, url) {
+// A saved page is useless offline if the scripts it needs were never saved, so after saving a
+// page we also save the JS/CSS/fonts it points to (content-hashed files, safe to keep).
+async function saveAssetsOf(response) {
+  try {
+    const html = await response.text();
+    const found = new Set();
+    for (const m of html.matchAll(/static\/(?:chunks|css|media)\/[^"'\s\\<>?]+\.(?:js|css|woff2?)/g)) found.add("/_next/" + m[0]);
+    const cache = await caches.open(STATIC);
+    await Promise.all(
+      [...found].slice(0, 80).map(async (u) => {
+        if (await cache.match(u, { ignoreSearch: true })) return;
+        try {
+          const r = await fetch(u);
+          if (r.ok) await cache.put(u, r);
+        } catch {
+          /* offline mid-way: the next visit tries again */
+        }
+      }),
+    );
+  } catch {
+    /* ignore */
+  }
+}
+
+async function pageRequest(request, url, event) {
   const cache = await caches.open(PAGES);
   const key = url.pathname + url.search;
   try {
@@ -40,10 +64,12 @@ async function pageRequest(request, url) {
     if (res.ok && !res.redirected && isAppPath(url.pathname)) {
       await cache.put(key, res.clone());
       await trim(cache);
+      if (event) event.waitUntil(saveAssetsOf(res.clone()));
     }
     return res;
   } catch {
-    const hit = await cache.match(key);
+    // Exact copy first; otherwise the same page without its filters (e.g. /expenses).
+    const hit = (await cache.match(key)) || (await cache.match(url.pathname));
     if (hit) return hit;
     if (request.mode === "navigate") {
       const off = await caches.match(OFFLINE_URL);
@@ -62,7 +88,7 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname.startsWith("/_next/static/")) {
     event.respondWith(
       caches.open(STATIC).then(async (cache) => {
-        const hit = await cache.match(request);
+        const hit = await cache.match(request, { ignoreSearch: true });
         if (hit) return hit;
         const res = await fetch(request);
         if (res.ok) cache.put(request, res.clone());
@@ -78,7 +104,7 @@ self.addEventListener("fetch", (event) => {
 
   const warm = request.headers.get("X-Warm") === "1";
   if ((request.mode === "navigate" || warm) && (isAppPath(url.pathname) || url.pathname === OFFLINE_URL)) {
-    event.respondWith(pageRequest(request, url));
+    event.respondWith(pageRequest(request, url, event));
   }
 });
 

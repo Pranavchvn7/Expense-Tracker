@@ -6,7 +6,8 @@ import { SoftForm } from "@/components/SoftForm";
 import { SortHeader } from "@/components/SortHeader";
 import { CategoryTag } from "@/components/CategoryTag";
 import { createExpense, deleteExpense, setReconciled } from "@/actions/expenses";
-import { listCategories, listExpenses, paymentBreakdown } from "@/lib/queries";
+import { getExpense, listCategories, listExpenses, paymentBreakdown } from "@/lib/queries";
+import { uuid } from "@/lib/validation";
 import { PAYMENT_METHODS, paymentLabel } from "@/lib/payment-method";
 import { getUserCurrency } from "@/lib/preferences";
 import { formatMoney, monthLabel } from "@/lib/money";
@@ -25,6 +26,10 @@ export default async function ExpensesPage({
   const { month, q, categoryId, sort, dir, paymentMethod, reconciled } = parseListQuery(sp, today.month);
   const { page, perPage } = parsePaging(sp);
   const openAdd = (Array.isArray(sp.add) ? sp.add[0] : sp.add) === "1";
+  // "Copy" pre-fills the add form from one of your own expenses (looked up by id AND owner).
+  const rawFrom = Array.isArray(sp.from) ? sp.from[0] : sp.from;
+  const fromId = uuid.safeParse(rawFrom);
+  const copy = fromId.success ? await getExpense(fromId.data) : null;
   // Create anything that fell due since the last visit before reading the data.
   await materializeRecurring();
   const currency = await getUserCurrency();
@@ -74,37 +79,44 @@ export default async function ExpensesPage({
         </div>
       </div>
 
-      <details className="add" open={openAdd}>
+      {/* key: a different copied expense remounts this, so it opens again even if it was collapsed by hand. */}
+      <details key={copy?.id ?? "new"} id="add-expense" className="add" open={openAdd || Boolean(copy)}>
         <summary>Add an expense</summary>
         <div className="body">
-          <ActionForm action={createExpense} offlineKind="expense" submitLabel="Add expense" className="stack" resetOnSuccess>
+          <ActionForm key={copy?.id ?? "new"} action={createExpense} testId="create-expense" offlineKind="expense" submitLabel="Add expense" className="stack" resetOnSuccess successHref={copy ? "/expenses" : undefined}>
+            {copy && (
+              <p className="notice" role="note">
+                Copied from “{copy.description}”. Change anything you like, then add it.{" "}
+                <Link href="/expenses?add=1#add-expense" data-testid="copy-cancel">Clear</Link>
+              </p>
+            )}
             <div className="row">
               <label>Amount
-                <input name="amount" inputMode="decimal" pattern="\d{1,9}(\.\d{1,2})?" placeholder="0.00" required />
+                <input name="amount" defaultValue={copy ? (copy.amountMinor / 100).toFixed(2) : undefined} inputMode="decimal" pattern="\d{1,9}(\.\d{1,2})?" placeholder="0.00" required />
               </label>
               <label>Date
                 <input name="spentOn" type="date" defaultValue={today.iso} max={today.iso} required />
               </label>
             </div>
             <label>Description
-              <input name="description" maxLength={120} required />
+              <input name="description" defaultValue={copy?.description} maxLength={120} required />
             </label>
             <div className="row">
               <label>Category
-                <select name="categoryId" defaultValue="">
+                <select name="categoryId" defaultValue={copy?.categoryId ?? ""}>
                   <option value="">Uncategorised</option>
                   {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </label>
               <label>Paid with
-              <select name="paymentMethod" defaultValue="">
+              <select name="paymentMethod" defaultValue={copy?.paymentMethod ?? ""}>
                 <option value="">Not set</option>
                 {PAYMENT_METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
               </select>
             </label>
             </div>
             <label>Note (optional)
-              <textarea name="note" maxLength={500} rows={2} />
+              <textarea name="note" defaultValue={copy?.note ?? ""} maxLength={500} rows={2} />
             </label>
           </ActionForm>
         </div>
@@ -175,7 +187,7 @@ export default async function ExpensesPage({
         )}
       </SoftForm>
 
-      <div className="card section region" id="records">
+      <div className="card section region" id="records" data-testid="expense-records">
         {rows.length === 0 ? (
           <div className="empty">
             <IconInbox />
@@ -196,7 +208,7 @@ export default async function ExpensesPage({
             </thead>
             <tbody>
               {rows.map((e) => (
-                <tr key={e.id}>
+                <tr key={e.id} data-testid="expense-row">
                   <td data-label="Date">{e.spentOn.toISOString().slice(0, 10)}</td>
                   <td data-label="Description">
                     <span className="name-block">
@@ -214,13 +226,14 @@ export default async function ExpensesPage({
                   <td className="num" data-label="Amount">{formatMoney(e.amountMinor, e.currency)}</td>
                   <td className="nolabel">
                     <div className="cell-actions">
-                      <ActionForm action={setReconciled} submitLabel={e.reconciled ? "✓ Matched" : "Match"} className={e.reconciled ? "matched" : undefined}>
+                      <ActionForm action={setReconciled} testId="set-reconciled" submitLabel={e.reconciled ? "✓ Matched" : "Match"} className={e.reconciled ? "matched" : undefined}>
                         <input type="hidden" name="id" value={e.id} />
                         <input type="hidden" name="reconciled" value={e.reconciled ? "0" : "1"} />
                       </ActionForm>
-                      <Link className="btn ghost small" href={`/expenses/${e.id}/edit`}>Edit</Link>
+                      <Link className="btn ghost small" href={`/expenses/${e.id}/edit`} data-testid="expense-edit">Edit</Link>
+                      <Link className="btn ghost small" href={`/expenses?add=1&from=${e.id}#add-expense`} data-testid="expense-copy">Copy</Link>
                       <ActionForm
-                        action={deleteExpense}
+                        action={deleteExpense} testId="delete-expense"
                         submitLabel="Delete"
                         danger
                         confirmMessage="Delete this expense?"

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { SignOutButton } from "@/components/SignOutButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
+  IconBriefcase,
   IconCard,
   IconDashboard,
   IconMore,
@@ -15,12 +16,13 @@ import {
   IconReceipt,
   IconRepeat,
   IconSettings,
+  IconUsers,
   IconTarget,
   IconWallet,
   LogoMark,
 } from "@/components/icons";
 
-const items = [
+const baseItems = [
   { href: "/dashboard", label: "Dashboard", icon: <IconDashboard /> },
   { href: "/expenses", label: "Expenses", icon: <IconReceipt /> },
   { href: "/income", label: "Income", icon: <IconWallet /> },
@@ -31,11 +33,25 @@ const items = [
   { href: "/goals", label: "Goals", icon: <IconTarget /> },
   { href: "/settings", label: "Settings", icon: <IconSettings /> },
 ];
-// Phone bottom bar: the three daily pages, everything else lives under "More".
-const primary = items.slice(0, 3);
-const secondary = items.slice(3);
+// Freelance pages appear after Income for people who work as freelancers (alone or next to a job).
+const freelanceItems = [
+  { href: "/clients", label: "Clients", icon: <IconUsers /> },
+  { href: "/jobs", label: "Jobs", icon: <IconBriefcase /> },
+];
 
-export function AppNav({ name, theme }: { name: string; theme: "light" | "dark" | "system" }) {
+export function AppNav({
+  name,
+  theme,
+  workMode = "SALARIED",
+}: {
+  name: string;
+  theme: "light" | "dark" | "system";
+  workMode?: "SALARIED" | "FREELANCE" | "BOTH";
+}) {
+  const items = workMode === "SALARIED" ? baseItems : [...baseItems.slice(0, 3), ...freelanceItems, ...baseItems.slice(3)];
+  // Phone bottom bar: the three daily pages, everything else lives under "More".
+  const primary = items.slice(0, 3);
+  const secondary = items.slice(3);
   const pathname = usePathname();
   const [more, setMore] = useState(false);
   const active = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
@@ -66,7 +82,7 @@ export function AppNav({ name, theme }: { name: string; theme: "light" | "dark" 
         </Link>
         <div className="side-nav hide-scroll">
           {items.map((i) => (
-            <Link key={i.href} href={i.href} className="nav-link" aria-current={active(i.href) ? "page" : undefined}>
+            <Link key={i.href} href={i.href} className="nav-link" data-testid={`side-nav-${i.href.slice(1)}`} aria-current={active(i.href) ? "page" : undefined}>
               {i.icon}
               {i.label}
             </Link>
@@ -90,7 +106,7 @@ export function AppNav({ name, theme }: { name: string; theme: "light" | "dark" 
       </header>
 
       {fab && (
-        <Link href={fab.href} className="fab" aria-label={fab.label}>
+        <Link href={fab.href} className="fab" data-testid="fab-add" aria-label={fab.label} title={`${fab.label} (N)`}>
           <IconPlus />
         </Link>
       )}
@@ -103,7 +119,7 @@ export function AppNav({ name, theme }: { name: string; theme: "light" | "dark" 
             <span className="who-name">{name}</span>
           </div>
           {secondary.map((i) => (
-            <Link key={i.href} href={i.href} className="nav-link" aria-current={active(i.href) ? "page" : undefined}>
+            <Link key={i.href} href={i.href} className="nav-link" data-testid={`sheet-nav-${i.href.slice(1)}`} aria-current={active(i.href) ? "page" : undefined}>
               {i.icon}
               {i.label}
             </Link>
@@ -117,7 +133,7 @@ export function AppNav({ name, theme }: { name: string; theme: "light" | "dark" 
 
       <nav className="bottom-bar" aria-label="Main">
         {primary.map((i) => (
-          <Link key={i.href} href={i.href} className="tab" aria-current={active(i.href) ? "page" : undefined}>
+          <Link key={i.href} href={i.href} className="tab" data-testid={`tab-${i.href.slice(1)}`} aria-current={active(i.href) ? "page" : undefined}>
             {i.icon}
             {i.label}
           </Link>
@@ -125,6 +141,7 @@ export function AppNav({ name, theme }: { name: string; theme: "light" | "dark" 
         <button
           type="button"
           className="tab"
+          data-testid="tab-more"
           aria-expanded={more}
           aria-current={moreActive ? "page" : undefined}
           onClick={() => setMore((v) => !v)}

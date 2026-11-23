@@ -15,7 +15,7 @@ export const getUserPrefs = cache(async () => {
   const { userId } = await requireSession();
   const u = await prisma.user.findFirst({
     where: { id: userId },
-    select: { currency: true, country: true, timezone: true, name: true },
+    select: { currency: true, country: true, timezone: true, name: true, workMode: true },
   });
   const c = u?.currency;
   const currency: Currency = c === "USD" || c === "EUR" || c === "GBP" ? c : "INR";
@@ -26,6 +26,7 @@ export const getUserPrefs = cache(async () => {
     name: u?.name ?? "",
     timezone: tz ?? "UTC",
     timezoneSet: tz !== null,
+    workMode: (u?.workMode ?? "SALARIED") as "SALARIED" | "FREELANCE" | "BOTH",
   };
 });
 

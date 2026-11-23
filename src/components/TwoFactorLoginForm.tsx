@@ -30,14 +30,15 @@ export function TwoFactorLoginForm() {
   }
 
   return (
-    <form method="post" onSubmit={onSubmit} className="stack" autoComplete="off">
+    <form method="post" onSubmit={onSubmit} className="stack" autoComplete="off" data-testid="two-factor-login">
       <label>
         {useBackup ? "Backup code" : "6-digit code from your authenticator app"}
         {useBackup ? (
-          <input key="backup" name="code" type="text" maxLength={24} autoComplete="off" required />
+          <input key="backup" data-testid="two-factor-code" name="code" type="text" maxLength={24} autoComplete="off" required />
         ) : (
           <input
             key="totp"
+            data-testid="two-factor-code"
             name="code"
             type="text"
             inputMode="numeric"
@@ -48,7 +49,7 @@ export function TwoFactorLoginForm() {
           />
         )}
       </label>
-      <button className="btn" disabled={pending} type="submit">
+      <button className="btn" disabled={pending} type="submit" data-testid="two-factor-submit">
         {pending ? "Please wait…" : "Verify"}
       </button>
       <button
@@ -62,7 +63,7 @@ export function TwoFactorLoginForm() {
         {useBackup ? "Use authenticator app instead" : "Use a backup code instead"}
       </button>
       {error && (
-        <p role="alert" className="error">
+        <p role="alert" className="error" data-testid="two-factor-error">
           {error}
         </p>
       )}

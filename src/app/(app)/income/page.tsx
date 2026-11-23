@@ -7,6 +7,7 @@ import { formatMoney, monthLabel } from "@/lib/money";
 import { getUserToday } from "@/lib/preferences";
 import { Pager } from "@/components/Pager";
 import { parsePaging } from "@/lib/paging";
+import { KIND_LABEL } from "@/lib/pay-math";
 import { IconUpload } from "@/components/icons";
 import { addMonthsKey } from "@/lib/chart-math";
 import { monthSchema } from "@/lib/validation";
@@ -58,7 +59,7 @@ export default async function IncomePage({
       <details className="add" open={openAdd}>
         <summary>Add income</summary>
         <div className="body">
-          <ActionForm action={createIncome} offlineKind="income" submitLabel="Add income" className="stack" resetOnSuccess>
+          <ActionForm action={createIncome} testId="create-income" offlineKind="income" submitLabel="Add income" className="stack" resetOnSuccess>
             <div className="row">
               <label>Amount
                 <input name="amount" inputMode="decimal" pattern="\d{1,9}(\.\d{1,2})?" placeholder="0.00" required />
@@ -91,14 +92,16 @@ export default async function IncomePage({
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id}>
+                <tr key={r.id} data-testid="income-row">
                   <td data-label="Date">{r.receivedOn.toISOString().slice(0, 10)}</td>
                   <td data-label="Source">
                     <span className="name-block">
                       <span className="name-cell">
                         <span className="nm">{r.source}</span>
                         {r.recurringRuleId && <span className="tag">Recurring</span>}
+                        {r.job && r.paymentKind && <span className="tag" data-testid="payment-kind">{KIND_LABEL[r.paymentKind]}</span>}
                       </span>
+                      {r.job && <span className="muted note" data-testid="payment-job">Job: <Link href={`/jobs/${r.job.id}`}>{r.job.title}</Link> · {r.job.client.name}</span>}
                       {r.note && <span className="muted note">{r.note}</span>}
                     </span>
                   </td>
@@ -107,7 +110,7 @@ export default async function IncomePage({
                     <div className="cell-actions">
                       <Link className="btn ghost small" href={`/income/${r.id}/edit`}>Edit</Link>
                       <ActionForm
-                        action={deleteIncome}
+                        action={deleteIncome} testId="delete-income"
                         submitLabel="Delete"
                         danger
                         confirmMessage="Delete this income entry?"

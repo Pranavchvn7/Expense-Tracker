@@ -1,5 +1,81 @@
 # Changelog
 
+## 0.6.2
+### Added (freelance mode, part 3: job payments)
+- **Payments** section on each job: add an advance, part payment or final payment (amount, date, type, note). Shows Agreed, Received and Balance due, with a badge: Unpaid, Part paid, Paid in full, Overpaid (or "No price set")
+- The amount is pre-filled with the balance still due and the type is suggested (first payment = Advance)
+- Payments are stored as normal **Income**, so the dashboard, reports, CSV and PDFs include them. The Income page labels each one with its type, job and client
+- Jobs list and client page show a **Balance** column; the client page shows **Total received** and **Balance due**
+- Edit or delete a payment from the job page or the Income page
+
+### Security
+- The job is verified as the caller's own (`assertOwnJob`) before a payment is created; `userId` in every query; Zod validation; rate limit; shared 20,000 income-entry limit
+- A job that has payments cannot be deleted (cancel it instead); enforced in the action and by the database (`ON DELETE NO ACTION`). Account deletion still removes everything
+
+### Operations
+- **Migration**: `add_job_payments` (new `PaymentKind` enum, `Income.jobId`, `Income.paymentKind`, index). Apply to production with `migrate deploy` (both `DATABASE_URL` and `DIRECT_URL`) before merging. Existing income rows are untouched
+- No new dependency or environment variable
+
+## 0.6.1
+### Added (freelance mode, part 2: jobs)
+- **Jobs** page (Freelance and Both): create, edit, delete and list jobs with client, title, service type, date, start/end time, location, status (Enquiry, Booked, Completed, Cancelled), agreed amount and notes
+- Month navigation with "Completed" and "Pending" sections, status/client filters and paging; future jobs can be created
+- **Job page** with all details; **client page** now lists that client's jobs and has an "Add job" shortcut
+- A client that has jobs cannot be deleted (archive it instead); deleting the whole account still removes everything
+
+### Security
+- Every job query and change is scoped by `userId`; the chosen client must belong to the same user (`assertOwnClient`); explicit `select`s; Zod validation (real calendar dates, HH:MM times, end after start); rate limits; 20,000 jobs per user
+
+### Operations
+- **Migration**: `add_jobs` (new `JobStatus` enum and `Job` table). Apply to production with `migrate deploy` (both `DATABASE_URL` and `DIRECT_URL`) before merging
+- Fixed a duplicate `.card-head` CSS rule. No new dependency or environment variable
+
+## 0.6.0
+### Added (freelance mode, part 1: foundation and clients)
+- **Work type** in Settings: Salaried (default), Freelance, or Both. It only changes what is shown; nothing is hidden or deleted when you switch
+- **Clients** page (visible for Freelance and Both): add, edit, archive/restore and delete clients with name, phone, email, city, address, how they found you, and private notes; search by name, phone, email or city; show Active / Archived / All; sort by name or date added; 10/20/50 per page
+- **Client page** with all details (tap-to-call and email links) and a section where jobs and payments will appear in the next release
+- Phone numbers are cleaned and validated (7 to 15 digits, optional +); email is validated and lower-cased
+- Salaried-only accounts see a short "Freelance mode is off" page at /clients and a 404 for client detail pages
+
+### Security
+- Every client query and change is scoped to the signed-in user (`userId` in every `where`), with explicit `select`s, Zod validation, rate limits and a limit of 5,000 clients per user
+- Client details are removed with the account (database cascade). Search text is escaped by Prisma; links use only validated phone/email values
+
+### Operations
+- **Migration**: `add_work_mode_and_clients` (new `WorkMode` enum, `User.workMode` default SALARIED, new `Client` table). Apply to production with `migrate deploy` (set both `DATABASE_URL` and `DIRECT_URL`) before merging
+- No new dependency, no new environment variable. Existing users stay Salaried and see no change
+
+## Unreleased
+### Added
+- `e2e/`: base setup for a Playwright + TypeScript test framework (config, env guard, folder READMEs, scenario list, test-id reference) and `.github/workflows/e2e.yml` (manual + nightly). The page objects, fixtures, helpers and tests are written by hand. See `e2e/README.md`
+- More `data-testid` hooks: password, 2FA, import and report forms, create-goal forms
+- The app's `tsconfig.json` and ESLint config now exclude `e2e/`
+- No application code, migration or environment variable changes
+
+## 0.5.2
+### Fixed
+- Copy expense: a **Clear** link in the "Copied from…" note resets the form; copying a second expense re-opens the add form even if you had collapsed it, and the page scrolls to the form
+- Offline: pages other than the dashboard failed with "Something went wrong" because their scripts were never saved. Saved pages now bring their scripts/styles with them, and a page opened with filters falls back to its unfiltered saved copy. If a page truly was never saved the message now says "You are offline" instead of a generic error
+- CI: added the new `effect` advisory (GHSA-7589-6fvf-x4pw, dev tooling only) to the documented audit allowlist
+
+### Operations
+- No migration, no new dependency, no new environment variable
+- After deploying, open the app once online and wait ~10 seconds: the offline copies are rebuilt automatically (the old ones are replaced)
+
+## 0.5.1
+### Added
+- **Home Screen shortcuts**: long-press the installed app icon for "Add expense" and "Add income"
+- **Copy** button on each expense: opens the add form pre-filled (date = today) so repeat purchases take seconds
+- **Month-over-month**: the Spent card on the dashboard says how spending compares with the previous month
+- **Offline label**: when you are offline the banner says when the data you are looking at was saved
+- **Getting started** card on the dashboard for new accounts (first expense, budget, goal); it disappears once done
+- Press **N** anywhere (not while typing) to add an expense
+- `data-testid` attributes on navigation, forms (`<action-name>` / `-submit` / `-error`), rows, filters, pager, banner and notification settings, for the Playwright framework
+
+### Operations
+- No migration, no new dependency, no new environment variable
+
 ## 0.5.0
 ### Added
 - **Installable app (PWA)**: add it to your phone's Home Screen or install it from the browser; it opens like a normal app

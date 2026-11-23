@@ -20,7 +20,7 @@ export default async function EditExpensePage({ params }: { params: Promise<{ id
     <>
       <div className="page-head"><h1>Edit expense</h1></div>
       <ActionForm
-        action={updateExpense}
+        action={updateExpense} testId="update-expense"
         submitLabel="Save changes"
         className="card stack"
         successHref="/expenses"

@@ -127,7 +127,7 @@ export function TwoFactorSetup({ enabled }: { enabled: boolean }) {
 
   if (phase === "scan") {
     return (
-      <form method="post" onSubmit={confirm} className="card stack" autoComplete="off">
+      <form method="post" onSubmit={confirm} className="card stack" autoComplete="off" data-testid="two-factor-confirm">
         <strong>1. Scan this QR code with your authenticator app</strong>
         {qr && (
           // eslint-disable-next-line @next/next/no-img-element -- data: URL, nothing to optimise
@@ -167,7 +167,7 @@ export function TwoFactorSetup({ enabled }: { enabled: boolean }) {
         <p role="status">
           <strong>2FA is on.</strong>
         </p>
-        <form method="post" onSubmit={regenerate} className="card row">
+        <form method="post" onSubmit={regenerate} className="card row" data-testid="two-factor-regenerate">
           <label>
             Password
             <input name="password" type="password" maxLength={128} autoComplete="current-password" required />
@@ -176,7 +176,7 @@ export function TwoFactorSetup({ enabled }: { enabled: boolean }) {
             New backup codes
           </button>
         </form>
-        <form method="post" onSubmit={turnOff} className="card row">
+        <form method="post" onSubmit={turnOff} className="card row" data-testid="two-factor-turn-off">
           <label>
             Password
             <input name="password" type="password" maxLength={128} autoComplete="current-password" required />
@@ -195,7 +195,7 @@ export function TwoFactorSetup({ enabled }: { enabled: boolean }) {
   }
 
   return (
-    <form method="post" onSubmit={start} className="card row">
+    <form method="post" onSubmit={start} className="card row" data-testid="two-factor-start">
       <label>
         Confirm your password to begin
         <input name="password" type="password" maxLength={128} autoComplete="current-password" required />

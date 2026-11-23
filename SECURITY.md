@@ -84,11 +84,28 @@
 - **CSP**: added `worker-src 'self'` and `manifest-src 'self'` (needed because `strict-dynamic` ignores `'self'` for workers).
 - **Idempotent sync**: unique (userId, clientRef) so a replayed offline entry is stored once; the server re-validates every queued entry.
 
+## v0.6.0 additions
+- **Client data is personal data** (names, phones, emails, addresses, private notes). Every read and write includes `userId`; explicit `select`s; values are never logged; deleting the account cascades to clients.
+- Inputs: Zod with control-character stripping, length caps, phone normalisation (digits and optional +), email validation; 5,000 clients per user; per-user rate limits on create/update/archive/delete.
+- Access: `/clients` and client detail pages answer "not found" for another user's id and for Salaried-only accounts. Phone and email links are built only from validated values.
+- A client with jobs cannot be deleted (archive instead) so payment history is never orphaned.
+
+## v0.6.1 additions
+- **Jobs** hold event details, locations and notes: every read/write includes `userId`; the linked client is verified as the caller's own; explicit `select`s; values never logged.
+- Database: `Job.clientId` uses `ON DELETE NO ACTION` (blocks deleting a client with jobs); `Job.userId` cascades so account deletion removes everything.
+- Inputs: Zod with real-date check (rejects 30 Feb), HH:MM times, end after start, length caps; 20,000 jobs per user; rate limits on create/update/status/delete.
+
+## v0.6.2 additions
+- **Job payments** reuse the Income table: `Income.jobId` is only set after `assertOwnJob(userId, jobId)`; the payment label (client and job name) is built on the server, never taken from the client.
+- `Income.jobId` uses `ON DELETE NO ACTION`: a job with payments cannot be deleted, in the action and in the database; `userId` still cascades on account deletion.
+- Existing income edit/delete actions already filter by `userId`; they cannot change the job link.
+
 ## Accepted dependency advisories
-CI runs `audit-ci` and fails on any high or critical advisory that is not listed in `audit-ci.jsonc`. Several are accepted for now (picomatch, postcss, zod, deepmerge-ts), each with its reason written next to it in that file:
+CI runs `audit-ci` and fails on any high or critical advisory that is not listed in `audit-ci.jsonc`. Several are accepted for now (picomatch, postcss, zod, deepmerge-ts, effect), each with its reason written next to it in that file:
 - **deepmerge-ts (inside the `prisma` CLI, dev only):** never runs in the deployed app or on user input. `prisma` and `@prisma/client` are pinned to the same version (6.19.3) because a mismatched pair is a bigger risk than this advisory. Fix = Prisma 7 (breaking).
 - **postcss (inside next):** build-time only, runs on this repo's own CSS, never on user input. Fix = Next 16 (breaking).
 - **picomatch (dev tooling only):** glob matching inside eslint/typescript-eslint at lint time; never in the deployed app. Remove when the tooling ships a patched version.
+- **effect (inside `@prisma/config`, dev/build only):** ReDoS in a schema feature that only matters when untrusted input is decoded; Prisma only loads this repo's own config with it. Fix arrives with a Prisma release.
 - **zod:** the flaw needs a client-supplied array/set/map; no schema here accepts one, and request bodies are capped at 100 kb. Fix = zod 4 (breaking).
 
 Both upgrades are planned as their own branches with the full build and, later, the e2e suite to catch breakage. Remove the allowlist entry when each upgrade lands.

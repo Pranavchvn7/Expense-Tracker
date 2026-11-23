@@ -130,6 +130,8 @@ export async function listIncome(month: string, page: number, perPage: number) {
         note: true,
         receivedOn: true,
         recurringRuleId: true,
+        paymentKind: true,
+        job: { select: { id: true, title: true, client: { select: { name: true } } } },
       },
     }),
     prisma.income.groupBy({ by: ["currency"], where, _sum: { amountMinor: true } }),
@@ -177,4 +179,14 @@ export async function getMonthHighlights(month: string) {
       .map((p) => ({ method: p.paymentMethod, value: p._sum.amountMinor ?? 0, count: p._count._all }))
       .sort((a, b) => b.value - a.value),
   };
+}
+
+/** Has this person recorded anything yet? Drives the getting-started card. */
+export async function getLifetimeCounts() {
+  const { userId } = await requireSession();
+  const [expenses, income] = await Promise.all([
+    prisma.expense.count({ where: { userId }, take: 1 }),
+    prisma.income.count({ where: { userId }, take: 1 }),
+  ]);
+  return { expenses, income };
 }
