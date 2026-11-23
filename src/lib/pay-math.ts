@@ -60,3 +60,33 @@ export function sumByJob(rows: { jobId: string | null; minor: number }[]): Recor
   for (const r of rows) if (r.jobId) out[r.jobId] = (out[r.jobId] ?? 0) + r.minor;
   return out;
 }
+
+export const COST_KINDS = ["TRAVEL", "ASSISTANT", "PRODUCTS", "OTHER"] as const;
+export type CostKind = (typeof COST_KINDS)[number];
+
+export const COST_LABEL: Record<CostKind, string> = {
+  TRAVEL: "Travel",
+  ASSISTANT: "Assistant / helper",
+  PRODUCTS: "Products",
+  OTHER: "Other",
+};
+
+/** Expense description for a job cost: what the user typed, else "Kind – payee" or just the kind. */
+export function costDescription(kind: CostKind, payee?: string | null, what?: string | null): string {
+  const w = what?.trim();
+  const base = w || (payee?.trim() ? `${COST_LABEL[kind]} – ${payee.trim()}` : COST_LABEL[kind]);
+  return base.length <= 120 ? base : `${base.slice(0, 119)}…`;
+}
+
+export interface ProfitSummary {
+  profitMinor: number; // received minus costs so far (can be negative)
+  expectedMinor: number | null; // agreed minus costs, null when no price is agreed
+}
+
+/** Money kept so far, and what would be kept once the agreed amount is paid. */
+export function profitSummary(agreedMinor: number, receivedMinor: number, costsMinor: number): ProfitSummary {
+  const agreed = Math.max(0, Math.trunc(agreedMinor) || 0);
+  const rec = Math.max(0, Math.trunc(receivedMinor) || 0);
+  const costs = Math.max(0, Math.trunc(costsMinor) || 0);
+  return { profitMinor: rec - costs, expectedMinor: agreed > 0 ? agreed - costs : null };
+}

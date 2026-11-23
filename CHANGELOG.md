@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.6.3
+### Added (freelance mode, part 4: job costs and profit)
+- **Costs and profit** section on each job: add travel, an assistant/helper payment, products or other costs (amount, date, type, "paid to", what for). Shows Costs, Profit so far (received minus costs) and Profit when paid in full
+- Costs are stored as normal **Expenses**, so the dashboard, budgets, reports and CSV include them. The Expenses page labels each one with its type, job and client
+- **Filter by job or client**: "See them in Expenses / Income" links on the job and client pages show only that job's or client's entries across all months
+- Client page now also shows total **Costs** and **Profit**, with links to that client's payments and costs
+- Edit or delete a cost from the job page or the Expenses page
+
+### Security
+- The job is verified as the caller's own before a cost is created; `userId` in every query (including the job/client filters, which are validated UUIDs); Zod validation; rate limit; shared 50,000 expense limit
+- A job with payments **or costs** cannot be deleted (cancel it instead), in the action and in the database (`ON DELETE NO ACTION`)
+
+### Operations
+- **Migration**: `add_job_costs` (new `JobCostKind` enum, `Expense.jobId`, `costKind`, `payee`, index). Apply to production with `migrate deploy` (both `DATABASE_URL` and `DIRECT_URL`) before merging. Existing expenses are untouched
+- Costs are saved without a category for now (choose one by editing the expense). No new dependency or environment variable
+
 ## 0.6.2
 ### Added (freelance mode, part 3: job payments)
 - **Payments** section on each job: add an advance, part payment or final payment (amount, date, type, note). Shows Agreed, Received and Balance due, with a badge: Unpaid, Part paid, Paid in full, Overpaid (or "No price set")

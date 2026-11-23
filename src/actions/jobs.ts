@@ -100,8 +100,9 @@ export async function deleteJob(fd: FormData): Promise<ActionResult> {
     const job = await prisma.job.findFirst({ where: { id, userId }, select: { clientId: true } });
     if (!job) throw notFound();
     const payments = await prisma.income.count({ where: { userId, jobId: id } });
-    if (payments > 0) {
-      throw new HttpError(400, "This job has payments. Cancel the job instead, or delete its payments first.");
+    const costs = await prisma.expense.count({ where: { userId, jobId: id } });
+    if (payments > 0 || costs > 0) {
+      throw new HttpError(400, "This job has payments or costs. Cancel the job instead, or delete them first.");
     }
     const res = await prisma.job.deleteMany({ where: { id, userId } });
     if (res.count !== 1) throw notFound();

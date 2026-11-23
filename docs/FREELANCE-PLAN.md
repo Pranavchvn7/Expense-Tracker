@@ -1,6 +1,6 @@
 # Freelance mode: plan and release roadmap
 
-Status: **0.6.0 Clients, 0.6.1 Jobs shipped; 0.6.2 Job payments built**. Update the status column as each release ships, so any new session can resume from this file plus `CHANGELOG.md`.
+Status: **0.6.0 Clients, 0.6.1 Jobs shipped; 0.6.2 Job payments shipped; 0.6.3 Job costs + profit built**. Update the status column as each release ships, so any new session can resume from this file plus `CHANGELOG.md`.
 
 ## 1. Goal
 
@@ -37,8 +37,8 @@ Each release = one branch, at most one migration, tests for new pure logic, docs
 |---|---|---|---|
 | **0.6.0** Foundation + Clients | Work type setting (Settings → Work type); menu shows Clients when `FREELANCE` or `BOTH`; Clients page: add / edit / search / paginate / archive / delete; client detail page (details, empty "no jobs yet" state) | `workMode`, `Client` | **shipped** |
 | **0.6.1** Jobs core | Jobs page: create / edit / delete (rules above) / list; status; create future jobs; "This month: completed and pending" sections; client detail lists its jobs; job detail page | `Job` | **shipped** |
-| **0.6.2** Job payments | Add advance / partial / final payment on a job; balance due; status badges (Unpaid, Advance paid, Part paid, Paid in full, Overpaid); payments show in Income with client + job; client "total earned" | `Income.jobId/paymentKind` | **built (awaiting merge)** |
-| **0.6.3** Job expenses + profit | Add job costs (travel, assistant payment, products, other) from the job page; show in Expenses with client + job; filter Expenses/Income by job or client; job profit (paid minus costs) | `Expense.jobId` | planned |
+| **0.6.2** Job payments | Add advance / partial / final payment on a job; balance due; status badges (Unpaid, Advance paid, Part paid, Paid in full, Overpaid); payments show in Income with client + job; client "total earned" | `Income.jobId/paymentKind` | **shipped** |
+| **0.6.3** Job expenses + profit | Add job costs (travel, assistant payment, products, other) from the job page; show in Expenses with client + job; filter Expenses/Income by job or client; job profit (paid minus costs) | `Expense.jobId` | **built (awaiting merge)** |
 | **0.6.4** Calendar | Month grid showing jobs per day (status colours), day agenda list, upcoming-jobs card on the dashboard, double-booking warning for the same date/time | none | planned |
 | **0.6.5** Reminders | Push 1 day before a job (existing daily cron, deduplicated), new "Job reminders" toggle, in-app "Payments due" list for completed jobs with a balance | `notifyJobs` | planned |
 | **0.7.0** Freelance dashboard + reports | Dashboard for `FREELANCE`/`BOTH` (earned, outstanding, jobs this month, upcoming, top clients); monthly/yearly reports gain jobs completed, clients handled, earnings; **client report** (all jobs + related expenses + totals); **job report**; PDFs for both | none | planned |

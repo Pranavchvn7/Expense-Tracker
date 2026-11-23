@@ -100,6 +100,11 @@
 - `Income.jobId` uses `ON DELETE NO ACTION`: a job with payments cannot be deleted, in the action and in the database; `userId` still cascades on account deletion.
 - Existing income edit/delete actions already filter by `userId`; they cannot change the job link.
 
+## v0.6.3 additions
+- **Job costs** reuse the Expense table: `Expense.jobId` is only set after `assertOwnJob(userId, jobId)`; the cost label is built on the server.
+- `Expense.jobId` uses `ON DELETE NO ACTION` like payments, so a job with costs cannot be deleted; account deletion still cascades.
+- The `?job=` and `?client=` list filters accept only UUIDs and are always combined with `userId` (the client filter also re-checks `job.userId`), so another user's ids return nothing.
+
 ## Accepted dependency advisories
 CI runs `audit-ci` and fails on any high or critical advisory that is not listed in `audit-ci.jsonc`. Several are accepted for now (picomatch, postcss, zod, deepmerge-ts, effect), each with its reason written next to it in that file:
 - **deepmerge-ts (inside the `prisma` CLI, dev only):** never runs in the deployed app or on user input. `prisma` and `@prisma/client` are pinned to the same version (6.19.3) because a mismatched pair is a bigger risk than this advisory. Fix = Prisma 7 (breaking).

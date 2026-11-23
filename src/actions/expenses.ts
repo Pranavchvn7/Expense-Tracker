@@ -47,6 +47,8 @@ export async function createExpense(fd: FormData): Promise<ActionResult> {
     after(() => checkBudgetAlert(userId, input.categoryId, input.spentOn).catch(() => console.error("[budget-alert-error]")));
     revalidatePath("/expenses");
     revalidatePath("/dashboard");
+    revalidatePath("/jobs", "layout");
+    revalidatePath("/clients", "layout");
     return undefined;
   });
 }
@@ -74,6 +76,8 @@ export async function updateExpense(fd: FormData): Promise<ActionResult> {
     if (res.count !== 1) throw notFound();
     revalidatePath("/expenses");
     revalidatePath("/dashboard");
+    revalidatePath("/jobs", "layout");
+    revalidatePath("/clients", "layout");
     return undefined;
   });
 }
@@ -103,6 +107,8 @@ export async function deleteExpense(fd: FormData): Promise<ActionResult> {
     if (res.count !== 1) throw notFound();
     revalidatePath("/expenses");
     revalidatePath("/dashboard");
+    revalidatePath("/jobs", "layout");
+    revalidatePath("/clients", "layout");
     return undefined;
   });
 }

@@ -112,10 +112,16 @@ export async function listRecentExpenses(month: string, page: number, perPage: n
   return { rows: rows.slice(0, perPage), hasNext: rows.length > perPage, currency };
 }
 
-export async function listIncome(month: string, page: number, perPage: number) {
+export async function listIncome(month: string, page: number, perPage: number, filter: { jobId?: string; clientId?: string } = {}) {
   const { userId } = await requireSession();
   const { start, end } = monthRange(month);
-  const where = { userId, receivedOn: { gte: start, lt: end } };
+  const byJob = Boolean(filter.jobId || filter.clientId);
+  const where = {
+    userId,
+    ...(byJob ? {} : { receivedOn: { gte: start, lt: end } }),
+    ...(filter.jobId ? { jobId: filter.jobId } : {}),
+    ...(filter.clientId ? { job: { clientId: filter.clientId, userId } } : {}),
+  };
   const [rows, totals] = await Promise.all([
     prisma.income.findMany({
       where,
