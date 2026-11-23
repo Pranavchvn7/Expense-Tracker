@@ -7,6 +7,7 @@ import { formatMoney, monthLabel } from "@/lib/money";
 import { getUserToday } from "@/lib/preferences";
 import { Pager } from "@/components/Pager";
 import { parsePaging } from "@/lib/paging";
+import { KIND_LABEL } from "@/lib/pay-math";
 import { IconUpload } from "@/components/icons";
 import { addMonthsKey } from "@/lib/chart-math";
 import { monthSchema } from "@/lib/validation";
@@ -98,7 +99,9 @@ export default async function IncomePage({
                       <span className="name-cell">
                         <span className="nm">{r.source}</span>
                         {r.recurringRuleId && <span className="tag">Recurring</span>}
+                        {r.job && r.paymentKind && <span className="tag" data-testid="payment-kind">{KIND_LABEL[r.paymentKind]}</span>}
                       </span>
+                      {r.job && <span className="muted note" data-testid="payment-job">Job: <Link href={`/jobs/${r.job.id}`}>{r.job.title}</Link> · {r.job.client.name}</span>}
                       {r.note && <span className="muted note">{r.note}</span>}
                     </span>
                   </td>

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
-import { notFound, safely, type ActionResult, limitReached } from "@/lib/errors";
+import { HttpError, notFound, safely, type ActionResult, limitReached } from "@/lib/errors";
 import { getUserCurrency } from "@/lib/preferences";
 import { assertOwnClient } from "@/lib/ownership";
 import { formToObject, idInput, jobInput, jobStatusInput, jobUpdate } from "@/lib/validation";
@@ -91,10 +91,7 @@ export async function setJobStatus(fd: FormData): Promise<ActionResult> {
   });
 }
 
-/**
- * Deletes a job. When payments and costs are linked to jobs (next release) a job that has any
- * will be refused and "cancelled" suggested, so money history is never orphaned.
- */
+/** Deletes a job. A job with payments is refused (cancel it instead) so money history is never orphaned. */
 export async function deleteJob(fd: FormData): Promise<ActionResult> {
   return safely(async () => {
     const { userId } = await requireSession();
@@ -102,6 +99,10 @@ export async function deleteJob(fd: FormData): Promise<ActionResult> {
     const { id } = idInput.parse(formToObject(fd));
     const job = await prisma.job.findFirst({ where: { id, userId }, select: { clientId: true } });
     if (!job) throw notFound();
+    const payments = await prisma.income.count({ where: { userId, jobId: id } });
+    if (payments > 0) {
+      throw new HttpError(400, "This job has payments. Cancel the job instead, or delete its payments first.");
+    }
     const res = await prisma.job.deleteMany({ where: { id, userId } });
     if (res.count !== 1) throw notFound();
     refresh(id, job.clientId);

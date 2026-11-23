@@ -13,6 +13,9 @@ const MAX_INCOME_PER_USER = 20_000;
 function refresh() {
   revalidatePath("/income");
   revalidatePath("/dashboard");
+  // A payment may belong to a job: refresh the job, client and job list pages too.
+  revalidatePath("/jobs", "layout");
+  revalidatePath("/clients", "layout");
 }
 
 export async function createIncome(fd: FormData): Promise<ActionResult> {

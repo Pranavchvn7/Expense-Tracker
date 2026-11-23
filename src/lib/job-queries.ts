@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 import { monthRange } from "@/lib/queries";
 import { summarize, type JobStatus } from "@/lib/job-math";
+import { sumByJob } from "@/lib/pay-math";
 
 // Every query: session first, userId in where, explicit select.
 export type JobFilter = "all" | "pending" | "completed" | "cancelled";
@@ -124,4 +125,37 @@ export async function clientOptions() {
     take: 500,
     select: { id: true, name: true },
   });
+}
+
+/** Money received per job, for a page of jobs (one grouped query, no per-row lookups). */
+export async function paidByJob(jobIds: string[]): Promise<Record<string, number>> {
+  const { userId } = await requireSession();
+  if (jobIds.length === 0) return {};
+  const rows = await prisma.income.groupBy({
+    by: ["jobId"],
+    where: { userId, jobId: { in: jobIds.slice(0, 500) } },
+    _sum: { amountMinor: true },
+  });
+  return sumByJob(rows.map((r) => ({ jobId: r.jobId, minor: r._sum.amountMinor ?? 0 })));
+}
+
+/** The payments recorded for one job, oldest first. */
+export async function jobPayments(jobId: string) {
+  const { userId } = await requireSession();
+  return prisma.income.findMany({
+    where: { userId, jobId },
+    orderBy: [{ receivedOn: "asc" }, { createdAt: "asc" }],
+    take: 200,
+    select: { id: true, amountMinor: true, currency: true, receivedOn: true, paymentKind: true, note: true },
+  });
+}
+
+/** Everything a client has paid across all their jobs, per currency. */
+export async function clientPaidTotal(clientId: string) {
+  const { userId } = await requireSession();
+  const agg = await prisma.income.aggregate({
+    where: { userId, job: { clientId, userId } },
+    _sum: { amountMinor: true },
+  });
+  return agg._sum.amountMinor ?? 0;
 }

@@ -229,6 +229,26 @@ Your to-do list. Write the tests one by one; tick them off as you go.
 | GOAL-12 | R | Goals pagination | 10 per page (create many via loop) |
 | GOAL-13 | R | Dashboard carousel | Shows goals, arrows/swipe move between them |
 
+## PAY: job payments (project: `app`, work type Freelance)
+
+| ID | Type | Test case | Expected |
+|---|---|---|---|
+| PAY-01 | S | Job with agreed 10000: add an Advance of 4000 | Received 4,000, Balance 6,000, badge "Part paid" |
+| PAY-02 | R | Add the remaining balance as Final payment | Balance 0, badge "Paid in full" |
+| PAY-03 | R | Pay more than agreed | Badge "Overpaid", shows the "Over by" amount |
+| PAY-04 | R | Job with no agreed amount, add a payment | Badge "No price set", no balance shown |
+| PAY-05 | R | Amount empty, 0, negative, 3 decimals; future date | Rejected with a clear message |
+| PAY-06 | R | Add a payment, open Income for that month | Row shows type tag, job link and client name; month total includes it |
+| PAY-07 | R | Dashboard income for the month | Includes the payment |
+| PAY-08 | R | Delete a payment on the job page | Balance due returns; Income page no longer lists it |
+| PAY-09 | R | Edit a payment's amount from the job page | Totals and badge recalculate |
+| PAY-10 | R | Try to delete a job that has payments | Refused with "Cancel the job instead"; job remains |
+| PAY-11 | R | Cancel a job that has an advance | Payment kept; client "Total received" still counts it |
+| PAY-12 | R | Jobs list and client page Balance column | Matches the job page for each job |
+| PAY-13 | R | Client page totals with two jobs | Total received and Balance due are the sums (cancelled jobs owe nothing) |
+| PAY-14 | R | Second user opens the first user's job id, or posts a payment for it | Not found; nothing created |
+| PAY-15 | R | Delete the account (disposable user) | Succeeds; jobs, clients and payments gone |
+
 ## DEBT: debt tracker (project: `app`)
 
 | ID | Type | Test case | Expected |
