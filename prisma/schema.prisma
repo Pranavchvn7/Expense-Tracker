@@ -205,9 +205,22 @@ model Income {
 
   clientRef   String?  @db.VarChar(36)
 
+  // Freelance: a payment received for a job. NoAction so a job with payments cannot be deleted
+  // (account deletion still cascades because every row is removed in the same statement).
+  jobId       String?
+  job         Job?     @relation(fields: [jobId], references: [id], onDelete: NoAction)
+  paymentKind PaymentKind?
+
   @@unique([recurringRuleId, receivedOn])
   @@unique([userId, clientRef])
   @@index([userId, receivedOn])
+  @@index([userId, jobId])
+}
+
+enum PaymentKind {
+  ADVANCE
+  PARTIAL
+  FINAL
 }
 
 enum RecurringKind {
@@ -439,6 +452,7 @@ model Job {
   agreedAmountMinor Int       @default(0) // the price agreed with the client; 0 = not agreed yet
   currency          String    @db.VarChar(3)
   notes             String?   @db.VarChar(1000)
+  payments          Income[]
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 

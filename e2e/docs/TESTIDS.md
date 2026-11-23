@@ -63,6 +63,10 @@ Several forms with the same id can exist on one page (one per row). Narrow with 
 
 `create-job`, `update-job`, `set-job-status`, `cancel-job`, `reopen-job`, `delete-job` (+ `-submit`, `-error`), `job-row`, `job-status`, `job-view`, `job-edit`, `job-details`, `job-money`, `job-records`, `job-summary`, `job-count-completed`, `job-count-pending`, `job-count-cancelled`, `client-add-job`, `client-job-row`, `client-jobs`, menu link `side-nav-jobs` / `sheet-nav-jobs`.
 
+## Job payments (v0.6.2)
+
+`add-job-payment` (+ `-submit`, `-error`), `pay-status`, `pay-summary`, `pay-agreed`, `pay-received`, `pay-balance`, `payment-row`, `payment-edit`, `job-balance` (Jobs list), `client-money`, `client-paid`, `client-due`, and on the Income page `payment-kind`, `payment-job`. Deleting a payment uses `delete-income`.
+
 ## Import
 
 `import-kind`, `import-format`, `import-file`, `import-preview`, `import-confirm`, `import-error`, `import-notice`.

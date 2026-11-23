@@ -3,8 +3,9 @@ import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/ActionForm";
 import { deleteClient, setClientArchived } from "@/actions/clients";
 import { getClient } from "@/lib/client-queries";
-import { jobsForClient } from "@/lib/job-queries";
+import { jobsForClient, paidByJob } from "@/lib/job-queries";
 import { formatDay, jobBucket, STATUS_LABEL } from "@/lib/job-math";
+import { paySummary } from "@/lib/pay-math";
 import { formatMoney } from "@/lib/money";
 import { getUserPrefs, getUserToday } from "@/lib/preferences";
 import { uuid } from "@/lib/validation";
@@ -16,6 +17,10 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   if (prefs.workMode === "SALARIED") notFound();
   const [client, jobs, today] = await Promise.all([getClient(id), jobsForClient(id), getUserToday()]);
   if (!client) notFound();
+  const paid = await paidByJob(jobs.map((j) => j.id));
+  const totalPaid = jobs.reduce((n, j) => n + (paid[j.id] ?? 0), 0);
+  const totalDue = jobs.reduce((n, j) => n + (j.status === "CANCELLED" ? 0 : paySummary(j.agreedAmountMinor, paid[j.id] ?? 0).balanceMinor), 0);
+  const money = jobs[0]?.currency ?? "INR";
   const completed = jobs.filter((j) => j.status === "COMPLETED").length;
 
   return (
@@ -51,10 +56,14 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           <p className="muted">No jobs for this client yet. Payments and the full history will build up here as you add jobs.</p>
         ) : (
           <>
-            <p className="muted">{jobs.length} job{jobs.length === 1 ? "" : "s"} · {completed} completed</p>
+            <dl className="money-summary" data-testid="client-money">
+              <div><dt>Jobs</dt><dd>{jobs.length} ({completed} completed)</dd></div>
+              <div><dt>Total received</dt><dd data-testid="client-paid">{formatMoney(totalPaid, money)}</dd></div>
+              <div><dt>Balance due</dt><dd data-testid="client-due">{formatMoney(totalDue, money)}</dd></div>
+            </dl>
             <table className="responsive">
               <thead>
-                <tr><th>Date</th><th>Job</th><th className="num">Agreed</th><th>Status</th></tr>
+                <tr><th>Date</th><th>Job</th><th className="num">Agreed</th><th className="num">Balance</th><th>Status</th></tr>
               </thead>
               <tbody>
                 {jobs.map((j) => {
@@ -64,6 +73,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                       <td data-label="Date">{formatDay(j.eventDate)}</td>
                       <td data-label="Job"><Link className="nm" href={`/jobs/${j.id}`}>{j.title}</Link></td>
                       <td className="num" data-label="Agreed">{j.agreedAmountMinor > 0 ? formatMoney(j.agreedAmountMinor, j.currency) : <span className="muted">—</span>}</td>
+                      <td className="num" data-label="Balance">{(() => { const s = paySummary(j.agreedAmountMinor, paid[j.id] ?? 0); return s.state === "none" ? <span className="muted">—</span> : s.state === "paid" ? <span className="tag pay-paid">Paid</span> : s.state === "over" ? <span className="tag pay-over">Over</span> : formatMoney(s.balanceMinor, j.currency); })()}</td>
                       <td data-label="Status"><span className={`tag st-${bucket}`}>{bucket === "overdue" ? `${STATUS_LABEL[j.status]} · update` : STATUS_LABEL[j.status]}</span></td>
                     </tr>
                   );

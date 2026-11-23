@@ -651,3 +651,11 @@ td > .name-cell, td > .name-block { max-width: 100%; }
 .tag.st-upcoming { background: var(--brand-soft); color: var(--brand-strong); border-color: transparent; }
 .tag.st-overdue { background: var(--danger-soft); color: var(--danger); border-color: transparent; }
 .tag.st-cancelled { text-decoration: line-through; }
+.tag.pay-paid { background: var(--income-soft); color: var(--income); border-color: transparent; }
+.tag.pay-part { background: var(--brand-soft); color: var(--brand-strong); border-color: transparent; }
+.tag.pay-unpaid { background: var(--danger-soft); color: var(--danger); border-color: transparent; }
+.tag.pay-over { background: var(--brand-soft); color: var(--brand-strong); border-color: transparent; }
+.money-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 0 0 16px; }
+.money-summary > div { padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; }
+.money-summary dt { font-size: 0.8rem; color: var(--muted); margin: 0; }
+.money-summary dd { margin: 2px 0 0; font-weight: 600; font-variant-numeric: tabular-nums; }

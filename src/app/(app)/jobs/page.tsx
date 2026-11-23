@@ -6,9 +6,10 @@ import { Pager } from "@/components/Pager";
 import { SoftForm } from "@/components/SoftForm";
 import { SortHeader } from "@/components/SortHeader";
 import { createJob, setJobStatus } from "@/actions/jobs";
-import { clientOptions, listJobs, monthJobCounts, type JobFilter, type JobSort } from "@/lib/job-queries";
+import { clientOptions, listJobs, paidByJob, monthJobCounts, type JobFilter, type JobSort } from "@/lib/job-queries";
 import { formatDay, jobBucket, STATUS_LABEL, timeRangeLabel } from "@/lib/job-math";
 import { addMonthsKey } from "@/lib/chart-math";
+import { paySummary } from "@/lib/pay-math";
 import { formatMoney, monthLabel } from "@/lib/money";
 import { getUserPrefs, getUserToday } from "@/lib/preferences";
 import { buildHref, parsePaging } from "@/lib/paging";
@@ -50,6 +51,8 @@ export default async function JobsPage({
     monthJobCounts(month, today.iso),
     clientOptions(),
   ]);
+
+  const paid = await paidByJob(rows.map((r) => r.id));
 
   const keep = {
     month,
@@ -163,6 +166,7 @@ export default async function JobsPage({
                 <th>Job</th>
                 <th>Client</th>
                 <SortHeader label="Agreed" column="amount" sort={sort} dir={dir} basePath="/jobs" params={sortParams} className="num" />
+                <th className="num">Balance</th>
                 <th>Status</th>
                 <th><span className="sr-only">Actions</span></th>
               </tr>
@@ -172,6 +176,7 @@ export default async function JobsPage({
                 const iso = j.eventDate.toISOString().slice(0, 10);
                 const bucket = jobBucket(j.status, iso, today.iso);
                 const when = timeRangeLabel(j.startTime, j.endTime);
+                const pay = paySummary(j.agreedAmountMinor, paid[j.id] ?? 0);
                 return (
                   <tr key={j.id} id={`job-${j.id}`} data-testid="job-row">
                     <td data-label="Date">
@@ -186,6 +191,9 @@ export default async function JobsPage({
                     </td>
                     <td data-label="Client"><Link href={`/clients/${j.client.id}`}>{j.client.name}</Link></td>
                     <td className="num" data-label="Agreed">{j.agreedAmountMinor > 0 ? formatMoney(j.agreedAmountMinor, j.currency) : <span className="muted">—</span>}</td>
+                    <td className="num" data-label="Balance" data-testid="job-balance">
+                      {pay.state === "none" ? <span className="muted">—</span> : pay.state === "paid" ? <span className="tag pay-paid">Paid</span> : pay.state === "over" ? <span className="tag pay-over">Over</span> : formatMoney(pay.balanceMinor, j.currency)}
+                    </td>
                     <td data-label="Status">
                       <span className={`tag st-${bucket}`} data-testid="job-status">
                         {bucket === "overdue" ? `${STATUS_LABEL[j.status]} · update` : STATUS_LABEL[j.status]}

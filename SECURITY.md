@@ -95,6 +95,11 @@
 - Database: `Job.clientId` uses `ON DELETE NO ACTION` (blocks deleting a client with jobs); `Job.userId` cascades so account deletion removes everything.
 - Inputs: Zod with real-date check (rejects 30 Feb), HH:MM times, end after start, length caps; 20,000 jobs per user; rate limits on create/update/status/delete.
 
+## v0.6.2 additions
+- **Job payments** reuse the Income table: `Income.jobId` is only set after `assertOwnJob(userId, jobId)`; the payment label (client and job name) is built on the server, never taken from the client.
+- `Income.jobId` uses `ON DELETE NO ACTION`: a job with payments cannot be deleted, in the action and in the database; `userId` still cascades on account deletion.
+- Existing income edit/delete actions already filter by `userId`; they cannot change the job link.
+
 ## Accepted dependency advisories
 CI runs `audit-ci` and fails on any high or critical advisory that is not listed in `audit-ci.jsonc`. Several are accepted for now (picomatch, postcss, zod, deepmerge-ts, effect), each with its reason written next to it in that file:
 - **deepmerge-ts (inside the `prisma` CLI, dev only):** never runs in the deployed app or on user input. `prisma` and `@prisma/client` are pinned to the same version (6.19.3) because a mismatched pair is a bigger risk than this advisory. Fix = Prisma 7 (breaking).

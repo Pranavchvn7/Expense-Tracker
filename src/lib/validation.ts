@@ -4,6 +4,7 @@ import { isCountryCode } from "@/lib/countries";
 import { isValidTimeZone } from "@/lib/tz";
 import { normalizePhone } from "@/lib/phone";
 import { endAfterStart, JOB_STATUSES, TIME_RE } from "@/lib/job-math";
+import { PAYMENT_KINDS } from "@/lib/pay-math";
 
 // Strip control characters and normalise whitespace. Output encoding is handled
 // by React (no dangerouslySetInnerHTML anywhere); this keeps stored data clean.
@@ -359,6 +360,14 @@ const endMsg = { message: "End time must be later than the start time.", path: [
 export const jobInput = jobFields.refine(endCheck, endMsg);
 export const jobUpdate = jobFields.extend({ id: uuid }).refine(endCheck, endMsg);
 export const jobStatusInput = z.object({ id: uuid, status: jobStatusSchema });
+
+export const jobPaymentInput = z.object({
+  jobId: uuid,
+  amount: amountSchema,
+  receivedOn: dateSchema,
+  kind: z.enum(PAYMENT_KINDS, { message: "must be Advance, Part payment or Final payment" }),
+  note: optionalCleanText(500),
+});
 
 export const sessionRefInput = z.object({ ref: z.string().regex(/^[a-f0-9]{24}$/) });
 

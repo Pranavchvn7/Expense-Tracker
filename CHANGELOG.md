@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.6.2
+### Added (freelance mode, part 3: job payments)
+- **Payments** section on each job: add an advance, part payment or final payment (amount, date, type, note). Shows Agreed, Received and Balance due, with a badge: Unpaid, Part paid, Paid in full, Overpaid (or "No price set")
+- The amount is pre-filled with the balance still due and the type is suggested (first payment = Advance)
+- Payments are stored as normal **Income**, so the dashboard, reports, CSV and PDFs include them. The Income page labels each one with its type, job and client
+- Jobs list and client page show a **Balance** column; the client page shows **Total received** and **Balance due**
+- Edit or delete a payment from the job page or the Income page
+
+### Security
+- The job is verified as the caller's own (`assertOwnJob`) before a payment is created; `userId` in every query; Zod validation; rate limit; shared 20,000 income-entry limit
+- A job that has payments cannot be deleted (cancel it instead); enforced in the action and by the database (`ON DELETE NO ACTION`). Account deletion still removes everything
+
+### Operations
+- **Migration**: `add_job_payments` (new `PaymentKind` enum, `Income.jobId`, `Income.paymentKind`, index). Apply to production with `migrate deploy` (both `DATABASE_URL` and `DIRECT_URL`) before merging. Existing income rows are untouched
+- No new dependency or environment variable
+
 ## 0.6.1
 ### Added (freelance mode, part 2: jobs)
 - **Jobs** page (Freelance and Both): create, edit, delete and list jobs with client, title, service type, date, start/end time, location, status (Enquiry, Booked, Completed, Cancelled), agreed amount and notes
