@@ -22,19 +22,19 @@ export function ForgotPasswordForm() {
 
   if (done) {
     return (
-      <p className="notice" role="status">
+      <p className="notice" role="status" data-testid="forgot-password-sent">
         If an account exists for that email, we have sent a reset link. It is valid for 15 minutes.
       </p>
     );
   }
 
   return (
-    <form method="post" onSubmit={onSubmit} className="stack">
+    <form method="post" onSubmit={onSubmit} className="stack" data-testid="forgot-password">
       <label>
         Email
         <input name="email" type="email" maxLength={254} autoComplete="email" required />
       </label>
-      <button className="btn" disabled={pending} type="submit">
+      <button className="btn" disabled={pending} type="submit" data-testid="forgot-password-submit">
         {pending ? "Please wait…" : "Send reset link"}
       </button>
     </form>

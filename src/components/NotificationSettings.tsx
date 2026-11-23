@@ -124,7 +124,7 @@ export function NotificationSettings({
   }
 
   return (
-    <div className="card stack">
+    <div className="card stack" data-testid="notification-settings">
       <h3>Push notifications</h3>
       {!publicKey ? (
         <p className="muted">Push notifications are not set up on this server yet.</p>
@@ -137,11 +137,11 @@ export function NotificationSettings({
         <div className="row">
           {enabledHere ? (
             <>
-              <button className="btn ghost" type="button" disabled={busy} onClick={() => void disable()}>Turn off on this device</button>
-              <button className="btn soft" type="button" disabled={busy} onClick={() => void test()}>Send test notification</button>
+              <button className="btn ghost" type="button" disabled={busy} data-testid="push-disable" onClick={() => void disable()}>Turn off on this device</button>
+              <button className="btn soft" type="button" disabled={busy} data-testid="push-test" onClick={() => void test()}>Send test notification</button>
             </>
           ) : (
-            <button className="btn" type="button" disabled={busy || permission === "denied"} onClick={() => void enable()}>Turn on for this device</button>
+            <button className="btn" type="button" disabled={busy || permission === "denied"} data-testid="push-enable" onClick={() => void enable()}>Turn on for this device</button>
           )}
         </div>
       )}
@@ -149,7 +149,7 @@ export function NotificationSettings({
       {note && <p role="status" className="notice">{note}</p>}
       {problem && <p role="alert" className="error">{problem}</p>}
 
-      <ActionForm action={setNotifyPrefs} submitLabel="Save alert choices" className="stack">
+      <ActionForm action={setNotifyPrefs} testId="set-notify-prefs" submitLabel="Save alert choices" className="stack">
         <div className="row">
           <label>Budget alerts (80% used, and over budget)
             <select name="budget" defaultValue={notifyBudget ? "1" : "0"}>
@@ -174,7 +174,7 @@ export function NotificationSettings({
         Add to Home Screen.
       </p>
       <div className="row">
-        <button className="btn ghost" type="button" onClick={() => void clearDevice()}>Clear offline data on this device</button>
+        <button className="btn ghost" type="button" data-testid="clear-offline" onClick={() => void clearDevice()}>Clear offline data on this device</button>
       </div>
     </div>
   );

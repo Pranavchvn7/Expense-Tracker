@@ -1,0 +1,22 @@
+{
+  "name": "expense-tracker-e2e",
+  "private": true,
+  "version": "0.1.0",
+  "description": "End-to-end tests (Playwright + TypeScript) for Expense Tracker. Runs against Staging only.",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:smoke": "playwright test --grep @smoke",
+    "codegen": "playwright codegen",
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0",
+    "@types/node": "^22.0.0",
+    "dotenv": "^16.4.5",
+    "typescript": "^5.6.0"
+  }
+}

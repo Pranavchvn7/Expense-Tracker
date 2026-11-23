@@ -36,16 +36,16 @@ export function Pager({
     (anchor ? `#${anchor}` : "");
 
   return (
-    <nav className="pager" aria-label="Pagination">
+    <nav className="pager" aria-label="Pagination" data-testid="pager">
       <div className="pager-links">
         {page > 1 ? (
-          <Link className="btn ghost small" href={link(page - 1)} scroll={false}>← Previous</Link>
+          <Link className="btn ghost small" href={link(page - 1)} scroll={false} data-testid="pager-prev">← Previous</Link>
         ) : (
           <span className="btn ghost small is-disabled" aria-disabled="true">← Previous</span>
         )}
         <span className="muted">Page {page}</span>
         {hasNext ? (
-          <Link className="btn ghost small" href={link(page + 1)} scroll={false}>Next →</Link>
+          <Link className="btn ghost small" href={link(page + 1)} scroll={false} data-testid="pager-next">Next →</Link>
         ) : (
           <span className="btn ghost small is-disabled" aria-disabled="true">Next →</span>
         )}

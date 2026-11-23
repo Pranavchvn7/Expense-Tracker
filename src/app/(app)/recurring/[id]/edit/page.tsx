@@ -20,7 +20,7 @@ export default async function EditRulePage({ params }: { params: Promise<{ id: s
           <p>Changes apply to future entries only. Type, repeat and first date cannot be changed.</p>
         </div>
       </div>
-      <ActionForm action={updateRule} submitLabel="Save changes" className="card stack" successHref="/recurring">
+      <ActionForm action={updateRule} testId="update-rule" submitLabel="Save changes" className="card stack" successHref="/recurring">
         <input type="hidden" name="id" value={rule.id} />
         <div className="row">
           <label>Amount

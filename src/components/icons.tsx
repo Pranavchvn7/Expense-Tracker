@@ -179,3 +179,12 @@ export const IconCard = () => (
     <path d="M3 10h18M7 15h4" />
   </Icon>
 );
+
+export const IconUsers = () => (
+  <Icon>
+    <circle cx="9" cy="8" r="3.5" />
+    <path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5" />
+    <circle cx="17.5" cy="9" r="2.5" />
+    <path d="M17 14.2c2.5.2 4.1 1.7 4.5 4.3" />
+  </Icon>
+);
