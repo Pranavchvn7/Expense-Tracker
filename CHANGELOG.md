@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.6.1
+### Added (freelance mode, part 2: jobs)
+- **Jobs** page (Freelance and Both): create, edit, delete and list jobs with client, title, service type, date, start/end time, location, status (Enquiry, Booked, Completed, Cancelled), agreed amount and notes
+- Month navigation with "Completed" and "Pending" sections, status/client filters and paging; future jobs can be created
+- **Job page** with all details; **client page** now lists that client's jobs and has an "Add job" shortcut
+- A client that has jobs cannot be deleted (archive it instead); deleting the whole account still removes everything
+
+### Security
+- Every job query and change is scoped by `userId`; the chosen client must belong to the same user (`assertOwnClient`); explicit `select`s; Zod validation (real calendar dates, HH:MM times, end after start); rate limits; 20,000 jobs per user
+
+### Operations
+- **Migration**: `add_jobs` (new `JobStatus` enum and `Job` table). Apply to production with `migrate deploy` (both `DATABASE_URL` and `DIRECT_URL`) before merging
+- Fixed a duplicate `.card-head` CSS rule. No new dependency or environment variable
+
 ## 0.6.0
 ### Added (freelance mode, part 1: foundation and clients)
 - **Work type** in Settings: Salaried (default), Freelance, or Both. It only changes what is shown; nothing is hidden or deleted when you switch

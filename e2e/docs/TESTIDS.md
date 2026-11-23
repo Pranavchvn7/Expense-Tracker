@@ -59,6 +59,10 @@ Several forms with the same id can exist on one page (one per row). Narrow with 
 
 `create-client`, `update-client`, `delete-client`, `set-client-archived` (+ `-submit`, `-error`), `client-row`, `client-view`, `client-edit`, `client-records`, `client-details`, `client-jobs`, `freelance-off`, `filter-filter-clients`, `set-work-mode`, menu link `side-nav-clients` / `sheet-nav-clients`.
 
+## Jobs (v0.6.1)
+
+`create-job`, `update-job`, `set-job-status`, `cancel-job`, `reopen-job`, `delete-job` (+ `-submit`, `-error`), `job-row`, `job-status`, `job-view`, `job-edit`, `job-details`, `job-money`, `job-records`, `job-summary`, `job-count-completed`, `job-count-pending`, `job-count-cancelled`, `client-add-job`, `client-job-row`, `client-jobs`, menu link `side-nav-jobs` / `sheet-nav-jobs`.
+
 ## Import
 
 `import-kind`, `import-format`, `import-file`, `import-preview`, `import-confirm`, `import-error`, `import-notice`.

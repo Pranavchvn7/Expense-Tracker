@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { SignOutButton } from "@/components/SignOutButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
+  IconBriefcase,
   IconCard,
   IconDashboard,
   IconMore,
@@ -33,7 +34,10 @@ const baseItems = [
   { href: "/settings", label: "Settings", icon: <IconSettings /> },
 ];
 // Freelance pages appear after Income for people who work as freelancers (alone or next to a job).
-const freelanceItems = [{ href: "/clients", label: "Clients", icon: <IconUsers /> }];
+const freelanceItems = [
+  { href: "/clients", label: "Clients", icon: <IconUsers /> },
+  { href: "/jobs", label: "Jobs", icon: <IconBriefcase /> },
+];
 
 export function AppNav({
   name,

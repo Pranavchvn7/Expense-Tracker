@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
-import { notFound, safely, type ActionResult, limitReached } from "@/lib/errors";
+import { HttpError, notFound, safely, type ActionResult, limitReached } from "@/lib/errors";
 import { clientArchiveInput, clientInput, clientUpdate, formToObject, idInput } from "@/lib/validation";
 
 const MAX_CLIENTS = 5_000;
@@ -78,15 +78,15 @@ export async function setClientArchived(fd: FormData): Promise<ActionResult> {
   });
 }
 
-/**
- * Deletes a client. When jobs exist (next release) a client with jobs will be refused and
- * archiving suggested instead, so job history and payments are never orphaned.
- */
+/** Deletes a client. A client with jobs is refused (archive instead) so job history is never orphaned. */
 export async function deleteClient(fd: FormData): Promise<ActionResult> {
   return safely(async () => {
     const { userId } = await requireSession();
     await rateLimit(`client:delete:${userId}`, 30, 60);
     const { id } = idInput.parse(formToObject(fd));
+    if ((await prisma.job.count({ where: { clientId: id, userId } })) > 0) {
+      throw new HttpError(400, "This client has jobs. Archive the client instead, or delete its jobs first.");
+    }
     const res = await prisma.client.deleteMany({ where: { id, userId } });
     if (res.count !== 1) throw notFound();
     refresh(id);

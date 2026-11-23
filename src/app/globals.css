@@ -645,3 +645,9 @@ td > .name-cell, td > .name-block { max-width: 100%; }
 .kv dt { color: var(--muted); font-size: 0.82rem; margin-bottom: 2px; }
 .kv dd { margin: 0; overflow-wrap: anywhere; }
 .kv dd.pre { white-space: pre-wrap; }
+
+/* Job status tags */
+.tag.st-completed { background: var(--income-soft); color: var(--income); border-color: transparent; }
+.tag.st-upcoming { background: var(--brand-soft); color: var(--brand-strong); border-color: transparent; }
+.tag.st-overdue { background: var(--danger-soft); color: var(--danger); border-color: transparent; }
+.tag.st-cancelled { text-decoration: line-through; }

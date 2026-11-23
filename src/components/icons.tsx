@@ -188,3 +188,11 @@ export const IconUsers = () => (
     <path d="M17 14.2c2.5.2 4.1 1.7 4.5 4.3" />
   </Icon>
 );
+
+export const IconBriefcase = () => (
+  <Icon>
+    <rect x="3" y="7" width="18" height="13" rx="2" />
+    <path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7" />
+    <path d="M3 13h18" />
+  </Icon>
+);

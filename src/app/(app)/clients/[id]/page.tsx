@@ -3,7 +3,10 @@ import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/ActionForm";
 import { deleteClient, setClientArchived } from "@/actions/clients";
 import { getClient } from "@/lib/client-queries";
-import { getUserPrefs } from "@/lib/preferences";
+import { jobsForClient } from "@/lib/job-queries";
+import { formatDay, jobBucket, STATUS_LABEL } from "@/lib/job-math";
+import { formatMoney } from "@/lib/money";
+import { getUserPrefs, getUserToday } from "@/lib/preferences";
 import { uuid } from "@/lib/validation";
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -11,8 +14,9 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   if (!uuid.safeParse(id).success) notFound();
   const prefs = await getUserPrefs();
   if (prefs.workMode === "SALARIED") notFound();
-  const client = await getClient(id);
+  const [client, jobs, today] = await Promise.all([getClient(id), jobsForClient(id), getUserToday()]);
   if (!client) notFound();
+  const completed = jobs.filter((j) => j.status === "COMPLETED").length;
 
   return (
     <>
@@ -39,8 +43,35 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       </div>
 
       <div className="card section" data-testid="client-jobs">
-        <h2>Jobs and payments</h2>
-        <p className="muted">Jobs, payments and the full history with this client will appear here as soon as you add jobs.</p>
+        <div className="card-head">
+          <h2>Jobs</h2>
+          <Link className="btn soft small" href="/jobs?add=1" data-testid="client-add-job">Add a job</Link>
+        </div>
+        {jobs.length === 0 ? (
+          <p className="muted">No jobs for this client yet. Payments and the full history will build up here as you add jobs.</p>
+        ) : (
+          <>
+            <p className="muted">{jobs.length} job{jobs.length === 1 ? "" : "s"} · {completed} completed</p>
+            <table className="responsive">
+              <thead>
+                <tr><th>Date</th><th>Job</th><th className="num">Agreed</th><th>Status</th></tr>
+              </thead>
+              <tbody>
+                {jobs.map((j) => {
+                  const bucket = jobBucket(j.status, j.eventDate.toISOString().slice(0, 10), today.iso);
+                  return (
+                    <tr key={j.id} data-testid="client-job-row">
+                      <td data-label="Date">{formatDay(j.eventDate)}</td>
+                      <td data-label="Job"><Link className="nm" href={`/jobs/${j.id}`}>{j.title}</Link></td>
+                      <td className="num" data-label="Agreed">{j.agreedAmountMinor > 0 ? formatMoney(j.agreedAmountMinor, j.currency) : <span className="muted">—</span>}</td>
+                      <td data-label="Status"><span className={`tag st-${bucket}`}>{bucket === "overdue" ? `${STATUS_LABEL[j.status]} · update` : STATUS_LABEL[j.status]}</span></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </>
+        )}
       </div>
 
       <div className="card section">

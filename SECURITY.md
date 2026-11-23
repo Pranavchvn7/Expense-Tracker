@@ -88,7 +88,12 @@
 - **Client data is personal data** (names, phones, emails, addresses, private notes). Every read and write includes `userId`; explicit `select`s; values are never logged; deleting the account cascades to clients.
 - Inputs: Zod with control-character stripping, length caps, phone normalisation (digits and optional +), email validation; 5,000 clients per user; per-user rate limits on create/update/archive/delete.
 - Access: `/clients` and client detail pages answer "not found" for another user's id and for Salaried-only accounts. Phone and email links are built only from validated values.
-- Planned: when jobs arrive, a client with jobs cannot be deleted (archive instead) so payment history is never orphaned.
+- A client with jobs cannot be deleted (archive instead) so payment history is never orphaned.
+
+## v0.6.1 additions
+- **Jobs** hold event details, locations and notes: every read/write includes `userId`; the linked client is verified as the caller's own; explicit `select`s; values never logged.
+- Database: `Job.clientId` uses `ON DELETE NO ACTION` (blocks deleting a client with jobs); `Job.userId` cascades so account deletion removes everything.
+- Inputs: Zod with real-date check (rejects 30 Feb), HH:MM times, end after start, length caps; 20,000 jobs per user; rate limits on create/update/status/delete.
 
 ## Accepted dependency advisories
 CI runs `audit-ci` and fails on any high or critical advisory that is not listed in `audit-ci.jsonc`. Several are accepted for now (picomatch, postcss, zod, deepmerge-ts, effect), each with its reason written next to it in that file:

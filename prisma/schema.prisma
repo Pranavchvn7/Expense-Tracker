@@ -45,6 +45,7 @@ model User {
   // Freelance mode (v0.6): SALARIED is today's behaviour; FREELANCE and BOTH add Clients, Jobs and more.
   workMode      WorkMode  @default(SALARIED)
   clients       Client[]
+  jobs          Job[]
   notificationLogs  NotificationLog[]
   twoFactor     TwoFactor[]
 
@@ -403,9 +404,45 @@ model Client {
   source    String?  @db.VarChar(60) // how they found you: Instagram, referral...
   notes     String?  @db.VarChar(1000)
   archived  Boolean  @default(false)
+  jobs      Job[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([userId, archived, name])
   @@index([userId, createdAt])
+}
+
+enum JobStatus {
+  ENQUIRY
+  BOOKED
+  COMPLETED
+  CANCELLED
+}
+
+// One piece of work for a client (a bridal booking, a shoot...). Payments and job costs will link
+// here through the existing Income and Expense tables in a later release.
+model Job {
+  id                String    @id @default(uuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientId          String
+  // NoAction (not Cascade): a client with jobs cannot be deleted by accident. Deleting the whole
+  // account still works because jobs and clients are both removed by the user cascade.
+  client            Client    @relation(fields: [clientId], references: [id], onDelete: NoAction)
+  title             String    @db.VarChar(100)
+  serviceType       String?   @db.VarChar(60)
+  eventDate         DateTime  @db.Date
+  startTime         String?   @db.VarChar(5) // "HH:MM", local time of the job
+  endTime           String?   @db.VarChar(5)
+  location          String?   @db.VarChar(200)
+  status            JobStatus @default(BOOKED)
+  agreedAmountMinor Int       @default(0) // the price agreed with the client; 0 = not agreed yet
+  currency          String    @db.VarChar(3)
+  notes             String?   @db.VarChar(1000)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([userId, eventDate])
+  @@index([userId, clientId])
+  @@index([userId, status, eventDate])
 }
