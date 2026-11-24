@@ -71,6 +71,10 @@ Several forms with the same id can exist on one page (one per row). Narrow with 
 
 `add-job-cost` (+ `-submit`, `-error`), `job-costs`, `cost-summary`, `cost-total`, `profit-now`, `profit-expected`, `cost-row`, `cost-edit`, `job-income-link`, `job-expenses-link`, `client-costs`, `client-profit`, `client-income-link`, `client-expenses-link`; on Expenses `cost-kind`, `cost-job`, `expense-job-filter`, `expense-job-filter-clear`; on Income `income-job-filter`, `income-job-filter-clear`. Deleting a cost uses `delete-expense`.
 
+## Calendar (v0.6.4)
+
+`calendar`, `cal-day` (has `data-date="YYYY-MM-DD"`), `cal-count`, `cal-prev`, `cal-next`, `cal-today`, `cal-add-job`, `cal-agenda`, `cal-agenda-add`, `agenda-item`, `agenda-clash`; job page `double-booking`, `double-booking-calendar`; dashboard `upcoming-jobs`, `upcoming-job`, `upcoming-calendar`; menu `side-nav-calendar` / `sheet-nav-calendar`.
+
 ## Import
 
 `import-kind`, `import-format`, `import-file`, `import-preview`, `import-confirm`, `import-error`, `import-notice`.

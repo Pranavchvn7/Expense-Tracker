@@ -269,6 +269,26 @@ Your to-do list. Write the tests one by one; tick them off as you go.
 | COST-14 | R | Client page totals with two jobs | Costs and Profit are the sums |
 | COST-15 | R | Second user opens `/expenses?job=<other user's job id>` or posts a cost for it | Empty list / not found; nothing created |
 
+## CAL: calendar and double booking (project: `app`, work type Freelance)
+
+| ID | Type | Test case | Expected |
+|---|---|---|---|
+| CAL-01 | S | Open Calendar with a job today | Today is highlighted; the day shows the job and a count |
+| CAL-02 | R | Next / previous month, then Today | Month label changes; Today returns to the current month |
+| CAL-03 | R | Click a day with two jobs | Agenda lists both, timed ones first, untimed last as "All day" |
+| CAL-04 | R | Click a day with nothing | "Nothing booked this day." |
+| CAL-05 | S | Two jobs on one date, 10:00-12:00 and 11:00-13:00 | Both flagged "Overlaps with"; day has a red border; job page shows "Double booking" |
+| CAL-06 | R | Two jobs 10:00-12:00 and 12:00-14:00 | No warning (touching is fine) |
+| CAL-07 | R | One job with no end time at 10:00, another at 11:30 | Overlap warning (2 hour default); at 12:00 no warning |
+| CAL-08 | R | A job with no time and another on the same date | Soft "Same day" notice |
+| CAL-09 | R | Cancel one of two clashing jobs | Warning disappears |
+| CAL-10 | R | Jobs in a neighbouring month's padding days | Shown greyed in the grid; counted only in their own month |
+| CAL-11 | R | Dashboard "Upcoming jobs" | Next 5 pending jobs, soonest first; completed/cancelled/past ones absent; Clash tag when two clash |
+| CAL-12 | R | Salaried account opens /calendar | "Freelance mode is off" |
+| CAL-13 | R | /calendar?month=bad&day=bad | Falls back to the current month without an error |
+| CAL-14 | R | Phone width | Grid shows counts, not titles; agenda stacks; no horizontal scroll |
+| CAL-15 | R | Second user's jobs | Never appear in the first user's calendar |
+
 ## DEBT: debt tracker (project: `app`)
 
 | ID | Type | Test case | Expected |

@@ -196,3 +196,10 @@ export const IconBriefcase = () => (
     <path d="M3 13h18" />
   </Icon>
 );
+
+export const IconCalendar = () => (
+  <Icon>
+    <rect x="3" y="5" width="18" height="16" rx="2" />
+    <path d="M3 10h18M8 3v4M16 3v4" />
+  </Icon>
+);

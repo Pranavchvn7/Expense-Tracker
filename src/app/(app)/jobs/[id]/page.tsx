@@ -5,7 +5,8 @@ import { deleteJob, setJobStatus } from "@/actions/jobs";
 import { addJobCost, addJobPayment } from "@/actions/job-payments";
 import { deleteExpense } from "@/actions/expenses";
 import { deleteIncome } from "@/actions/income";
-import { getJob, jobCosts, jobPayments } from "@/lib/job-queries";
+import { findConflicts } from "@/lib/cal-math";
+import { getJob, jobCosts, jobPayments, jobsOnDate } from "@/lib/job-queries";
 import { COST_KINDS, COST_LABEL, KIND_LABEL, PAYMENT_KINDS, paySummary, profitSummary, suggestAmountMinor, suggestKind, toDecimalString } from "@/lib/pay-math";
 import { formatDay, jobBucket, STATUS_LABEL, timeRangeLabel } from "@/lib/job-math";
 import { formatMoney } from "@/lib/money";
@@ -26,6 +27,12 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
   const prefill = suggestAmountMinor(job.agreedAmountMinor, paid);
   const defaultKind = suggestKind(paid);
   const iso = job.eventDate.toISOString().slice(0, 10);
+  const sameDay = await jobsOnDate(iso, job.id);
+  const conflicts = findConflicts(
+    { id: job.id, eventDate: iso, startTime: job.startTime, endTime: job.endTime, status: job.status },
+    sameDay.map((o) => ({ id: o.id, eventDate: iso, startTime: o.startTime, endTime: o.endTime, status: o.status, title: o.title, client: o.client.name })),
+  );
+  const top = conflicts[0];
   const bucket = jobBucket(job.status, iso, today.iso);
   const when = timeRangeLabel(job.startTime, job.endTime);
 
@@ -45,6 +52,17 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
           <Link className="btn soft small" href={`/jobs/${job.id}/edit`} data-testid="job-edit">Edit</Link>
         </div>
       </div>
+
+      {top && job.status !== "CANCELLED" && (
+        <div className="notice warn" role="note" data-testid="double-booking">
+          <strong>{top.kind === "overlap" ? "Double booking:" : "Heads up:"}</strong>{" "}
+          {top.kind === "overlap" ? "this job overlaps with" : "you have another job the same day, so check the times:"}{" "}
+          {conflicts.map((c, i) => (
+            <span key={c.job.id}>{i > 0 ? ", " : ""}<Link href={`/jobs/${c.job.id}`}>{c.job.title}</Link> ({c.job.client}{c.job.startTime ? `, ${c.job.startTime}` : ""})</span>
+          ))}
+          . <Link href={`/calendar?month=${iso.slice(0, 7)}&day=${iso}`} data-testid="double-booking-calendar">See the day</Link>
+        </div>
+      )}
 
       <div className="card section" data-testid="job-details">
         <h2>Details</h2>

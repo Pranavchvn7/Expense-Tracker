@@ -34,7 +34,7 @@ const config: NextConfig = {
         ],
       },
       // Private, per-user pages must never be cached by shared caches.
-      ...["dashboard", "expenses", "income", "recurring", "goals", "budgets", "clients", "jobs", "reports", "debts", "import", "settings"].map((p) => ({
+      ...["dashboard", "expenses", "income", "recurring", "goals", "budgets", "clients", "jobs", "calendar", "reports", "debts", "import", "settings"].map((p) => ({
         source: `/${p}/:path*`,
         headers: [{ key: "Cache-Control", value: "private, no-store" }],
       })),

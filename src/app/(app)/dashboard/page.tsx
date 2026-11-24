@@ -10,6 +10,9 @@ import { monthlyNeeded, percent } from "@/lib/goal-math";
 import { formatMoney, monthLabel } from "@/lib/money";
 import { addMonthsKey } from "@/lib/chart-math";
 import { getUserToday, getUserPrefs } from "@/lib/preferences";
+import { upcomingJobs } from "@/lib/job-queries";
+import { clashingIds } from "@/lib/cal-math";
+import { formatDay, timeRangeLabel } from "@/lib/job-math";
 import { monthSchema } from "@/lib/validation";
 import { parsePaging } from "@/lib/paging";
 import { compareSpending, momText } from "@/lib/mom-math";
@@ -41,6 +44,8 @@ export default async function DashboardPage({
   await materializeRecurring();
   const today = await getUserToday();
   const prefs = await getUserPrefs();
+  const upcoming = prefs.workMode === "SALARIED" ? [] : await upcomingJobs(today.iso, 5);
+  const upcomingClash = clashingIds(upcoming.map((j) => ({ id: j.id, eventDate: j.eventDate.toISOString().slice(0, 10), startTime: j.startTime, endTime: j.endTime, status: j.status })));
   // Query strings are untrusted: validate, fall back to safe defaults.
   const rawMonth = monthSchema.safeParse(Array.isArray(sp.month) ? sp.month[0] : sp.month);
   const month = rawMonth.success && rawMonth.data <= today.month ? rawMonth.data : today.month;
@@ -140,6 +145,33 @@ export default async function DashboardPage({
               <Link href="/settings#notifications">Turn on alerts and install the app (optional)</Link>
             </li>
           </ul>
+        </div>
+      )}
+
+      {prefs.workMode !== "SALARIED" && (
+        <div className="card section" data-testid="upcoming-jobs">
+          <div className="card-head">
+            <h2>Upcoming jobs</h2>
+            <Link className="btn soft small" href="/calendar" data-testid="upcoming-calendar">Calendar</Link>
+          </div>
+          {upcoming.length === 0 ? (
+            <p className="muted">No upcoming jobs. <Link href="/jobs?add=1">Add a job</Link></p>
+          ) : (
+            <ul className="agenda">
+              {upcoming.map((j) => (
+                <li key={j.id} data-testid="upcoming-job">
+                  <span className="agenda-time">{formatDay(j.eventDate)}</span>
+                  <span className="name-block">
+                    <span className="name-cell">
+                      <Link className="nm" href={`/jobs/${j.id}`}>{j.title}</Link>
+                      {upcomingClash.has(j.id) && <span className="tag st-overdue">Clash</span>}
+                    </span>
+                    <span className="muted note">{j.client.name}{timeRangeLabel(j.startTime, j.endTime) ? ` · ${timeRangeLabel(j.startTime, j.endTime)}` : ""}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 
