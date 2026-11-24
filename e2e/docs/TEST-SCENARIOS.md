@@ -309,6 +309,26 @@ Your to-do list. Write the tests one by one; tick them off as you go.
 | REM-14 | Manual | Same with reminders Off, or the job Cancelled/Enquiry | No notification |
 | REM-15 | Manual | Call `/api/cron/reminders` without or with a wrong secret | 401 |
 
+## FREP: freelance dashboard and reports (project: `app`)
+
+| ID | Type | Test case | Expected |
+|---|---|---|---|
+| FREP-01 | S | Freelance account: open Overview | Freelance summary and upcoming jobs appear before the usual cards; income card says "Money in" |
+| FREP-02 | S | Both account: open Overview | Income / Spent / Balance cards first; freelance summary below them; income card says "Income" |
+| FREP-03 | R | Salaried account: open Overview | No freelance summary, no upcoming jobs |
+| FREP-04 | R | Freelance account with no data | Checklist: client, job, payment; each tick appears when done |
+| FREP-05 | S | Job agreed 10000, 4000 received, 500 cost this month | Received 4,000; Costs 500; Profit 3,500; Still owed counts the balance once the job is Completed |
+| FREP-06 | R | Move the Overview to last month | Freelance figures follow the month |
+| FREP-07 | R | Top clients | Largest receiver first; clicking opens the client report |
+| FREP-08 | R | Reports → month with freelance data | Freelance section shown with the same period; PDF has a "Freelance work" block |
+| FREP-09 | R | Reports with a category filter | Freelance section stays, with the note that it ignores the filter |
+| FREP-10 | S | Client report | Totals equal the sum of its jobs; cancelled job's deposit still counts as received |
+| FREP-11 | S | Client report PDF | Downloads; contains the name and money, no phone, email or notes |
+| FREP-12 | S | Job report and PDF | Balance, profit, payments and costs match the job page |
+| FREP-13 | R | Salaried account opens a client or job report URL | Not found |
+| FREP-14 | R | Another user's client or job id | Not found; PDF route returns 404 |
+| FREP-15 | R | Press Download PDF 11 times in a minute | The 11th is refused (rate limit) |
+
 ## DEBT: debt tracker (project: `app`)
 
 | ID | Type | Test case | Expected |

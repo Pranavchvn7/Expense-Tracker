@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.7.0
+### Added (freelance mode, part 7: dashboard and reports)
+- **Freelance summary** on the Overview for the chosen month: money received from clients, job costs, profit, jobs done / booked, clients handled, **still owed to you** (with a link to Payments due), top clients and services
+- **Freelance vs Both is now real**: *Freelance* opens the Overview with the freelance summary and upcoming jobs first, a client / job / payment checklist, and income labelled "Money in". *Both* keeps the usual income / spending / savings Overview first, with the freelance summary right below it. *Salaried* is unchanged
+- **Reports** gain a Freelance section (same figures for the report period) and a Freelance block in the report PDF
+- **Client report** (`/reports/client/<id>`): every job with agreed, received, costs and profit; totals; payments and costs lists; **PDF download**
+- **Job report** (`/reports/job/<id>`): job details, payments, costs, balance and profit; **PDF download**
+- "Client report" and "Job report" buttons on the client and job pages; top clients on the Overview and Reports link to their client report
+- Settings → Work type explains the three modes
+
+### Security
+- All freelance report queries are scoped by `userId` with explicit `select`s and bounded row counts; report ids are validated UUIDs and another user's id returns "not found"
+- PDFs are built on the server with the existing no-network PDF library, share the 10-a-minute PDF rate limit, use only Latin-1 text, and carry no phone, email, address or private notes (client name and job details only). Filenames contain only the date
+
+### Operations
+- **No migration**, no new dependency or environment variable
+
 ## 0.6.5
 ### Added (freelance mode, part 6: reminders and payments due)
 - **Job reminders**: the daily reminder run (about 09:00 India time) now also sends one push per person listing how many **booked** jobs they have tomorrow, in their own timezone. Tapping it opens that day in the Calendar

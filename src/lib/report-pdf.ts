@@ -19,6 +19,17 @@ export type PdfReport = {
   monthlySpent: number[];
   monthlyIncome: number[];
   top: { description: string; amountMinor: number; date: string; category: string }[];
+  /** Freelance work in the same period (Freelance and Both accounts only). */
+  freelance?: {
+    jobsCompleted: number;
+    jobsPending: number;
+    clientsHandled: number;
+    receivedMinor: number;
+    costsMinor: number;
+    profitMinor: number;
+    topClients: { label: string; value: number }[];
+    services: { label: string; count: number }[];
+  };
 };
 
 const A4: [number, number] = [595.28, 841.89];
@@ -155,6 +166,32 @@ export async function buildReportPdf(r: PdfReport): Promise<Uint8Array> {
     for (const p of r.payments) w.row([p.label, String(p.count), money(p.value)], c);
   }
 
+  if (r.freelance) {
+    const fl = r.freelance;
+    w.heading("Freelance work");
+    const kv: [string, string][] = [
+      ["Jobs completed", String(fl.jobsCompleted)],
+      ["Jobs booked or pending", String(fl.jobsPending)],
+      ["Clients handled", String(fl.clientsHandled)],
+      ["Received from clients", money(fl.receivedMinor)],
+      ["Job costs", money(fl.costsMinor)],
+      ["Profit (received minus costs)", money(fl.profitMinor)],
+    ];
+    for (const [k, v] of kv) w.row([k, v], [{ x: M, w: 300 }, { x: right, align: "right", w: 180 }]);
+    if (fl.topClients.length) {
+      w.heading("Top clients by money received");
+      const c: Col[] = [{ x: M, w: 330 }, { x: right, align: "right", w: 160 }];
+      w.row(["Client", "Received"], c, { bold: true });
+      for (const t of fl.topClients) w.row([t.label, money(t.value)], c);
+    }
+    if (fl.services.length) {
+      w.heading("Services");
+      const c: Col[] = [{ x: M, w: 330 }, { x: right, align: "right", w: 160 }];
+      w.row(["Service", "Jobs"], c, { bold: true });
+      for (const t of fl.services) w.row([t.label, String(t.count)], c);
+    }
+  }
+
   if (r.top.length) {
     w.heading("Largest expenses");
     const c: Col[] = [{ x: M, w: 70 }, { x: M + 78, w: 220 }, { x: M + 305, w: 100 }, { x: right, align: "right", w: 130 }];
@@ -169,5 +206,56 @@ export async function buildReportPdf(r: PdfReport): Promise<Uint8Array> {
     p.drawText(t, { x: right - font.widthOfTextAtSize(t, 8), y: 28, size: 8, font, color: MUTED });
   });
 
+  return doc.save();
+}
+
+export type TablePdf = {
+  title: string; // e.g. "Client report"
+  subtitle: string; // e.g. the client or job name
+  note?: string; // small grey line under the subtitle
+  generatedOn: string;
+  summary: [string, string][];
+  tables: { heading: string; cols: { label: string; w: number; align?: "right" }[]; rows: string[][] }[];
+};
+
+/** A simple titled report: key/value summary followed by any number of tables. Same fonts and footer. */
+export async function buildTablePdf(r: TablePdf): Promise<Uint8Array> {
+  const doc = await PDFDocument.create();
+  doc.setTitle(pdfSafe(r.title));
+  doc.setProducer("Expense Tracker");
+  doc.setCreator("Expense Tracker");
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const bold = await doc.embedFont(StandardFonts.HelveticaBold);
+  const w = new Writer(doc, font, bold);
+  const right = A4[0] - M;
+
+  w.text(r.title, { size: 20, bold: true, color: BRAND });
+  w.gap(20);
+  w.text(r.subtitle, { size: 13, bold: true });
+  w.gap(15);
+  w.text(`Generated: ${r.generatedOn}${r.note ? `   |   ${r.note}` : ""}`, { size: 9, color: MUTED });
+  w.gap(8);
+
+  w.heading("Summary");
+  for (const [k, v] of r.summary) w.row([k, v], [{ x: M, w: 300 }, { x: right, align: "right", w: 180 }]);
+
+  for (const t of r.tables) {
+    if (t.rows.length === 0) continue;
+    w.heading(t.heading);
+    let x = M;
+    const cols: Col[] = t.cols.map((c) => {
+      const col: Col = c.align === "right" ? { x: x + c.w, align: "right", w: c.w - 6 } : { x, w: c.w - 6 };
+      x += c.w;
+      return col;
+    });
+    w.row(t.cols.map((c) => c.label), cols, { bold: true });
+    for (const row of t.rows) w.row(row, cols);
+  }
+
+  const pages = doc.getPages();
+  pages.forEach((p, i) => {
+    const t = `Expense Tracker  |  Page ${i + 1} of ${pages.length}`;
+    p.drawText(t, { x: right - font.widthOfTextAtSize(t, 8), y: 28, size: 8, font, color: MUTED });
+  });
   return doc.save();
 }
