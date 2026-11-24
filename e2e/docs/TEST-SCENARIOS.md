@@ -491,3 +491,7 @@ Your to-do list. Write the tests one by one; tick them off as you go.
 - UI-10 Expenses filters line up; Apply is reachable at every width
 - UI-11 No horizontal page scroll at the six widths, light and dark
 - UI-12 Theme Light/Dark/System changes every page
+
+## UI-13..14 Grid row buttons and accents (v0.8.2)
+- UI-13 In every grid record the action buttons share one height and one centre line, desktop and phone
+- UI-14 Overview: Balance card is the green hero card; income, spending, balance and savings tiles show their colour accent in light and dark

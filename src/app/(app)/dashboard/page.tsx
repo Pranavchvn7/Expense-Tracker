@@ -211,7 +211,7 @@ export default async function DashboardPage({
             {momLine ? <><br /><span data-testid="mom-line">{momLine}</span></> : null}
           </span>
         </div>
-        <div className={`card stat ${net >= 0 ? "pos" : "neg"}`}>
+        <div className={`card stat hero ${net >= 0 ? "pos" : "neg"}`}>
           <span className="label"><span className="pill-icon net"><IconScale /></span>Balance</span>
           <span className="value">{formatMoney(net, currency)}</span>
           <span className="hint">Income minus spending</span>
