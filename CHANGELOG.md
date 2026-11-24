@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.3 (roadmap 0.7.1)
+### Added
+- Clients: "Export CSV" (name, contact, city, address, source, notes, archived); "Where clients come from" summary of lead sources
+- Client page: History timeline, newest first, grouped by year, with each job, its status and what was received
+- Jobs: "Export CSV" (date, start, job, client, service, location, status, currency, agreed, received, balance); "Busiest months" for the last 12 months (top 3, cancelled jobs left out)
+- Income: heading reads "Client payments" for freelance-only accounts
+- Exports are rate limited (shared with the expense export) and contain only your own rows
+- No database change
+
 ## 0.8.2
 ### Changed
 - Every grid record (Expenses, Income, Jobs, Clients, Budgets, Debts, Recurring, Goals, Job page): Match / Edit / Copy / Delete are one row of equal buttons (same width and height), right aligned and centred on the row; on phones they are four equal buttons across the card

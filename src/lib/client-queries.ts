@@ -69,3 +69,10 @@ export async function clientCounts() {
   ]);
   return { active, archived };
 }
+
+/** Lead sources of this user's active clients (blank when not recorded), for the lead-source summary. */
+export async function clientSources(): Promise<string[]> {
+  const { userId } = await requireSession();
+  const rows = await prisma.client.findMany({ where: { userId, archived: false }, take: 2000, select: { source: true } });
+  return rows.map((r) => (r.source ?? "").trim());
+}

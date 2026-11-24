@@ -495,3 +495,13 @@ Your to-do list. Write the tests one by one; tick them off as you go.
 ## UI-13..14 Grid row buttons and accents (v0.8.2)
 - UI-13 In every grid record the action buttons share one height and one centre line, desktop and phone
 - UI-14 Overview: Balance card is the green hero card; income, spending, balance and savings tiles show their colour accent in light and dark
+
+## CSV-01..04, HIS-01..04 (v0.8.3)
+- CSV-01 Clients Export CSV downloads a file with only your clients; names with commas are quoted
+- CSV-02 Jobs Export CSV includes agreed, received and balance; cancelled jobs show balance 0
+- CSV-03 A second user never sees your clients or jobs in an export
+- CSV-04 Export is rate limited (10 per hour, shared with the expense export)
+- HIS-01 Where clients come from lists sources with counts; blank sources show Not recorded
+- HIS-02 Busiest months shows at most 3 months from the last 12, most booked first
+- HIS-03 Client History lists jobs newest first with year headings and money received
+- HIS-04 Freelance-only accounts see the Income page titled Client payments
