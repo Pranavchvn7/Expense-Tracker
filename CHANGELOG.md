@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.2
+### Changed
+- Every grid record (Expenses, Income, Jobs, Clients, Budgets, Debts, Recurring, Goals, Job page): Match / Edit / Copy / Delete are one row of equal buttons (same width and height), right aligned and centred on the row; on phones they are four equal buttons across the card
+- Pastel accents back as small icon tiles on the Overview cards (lime income, peach spending, lavender balance, sky savings)
+- Overview Balance card is the green hero card from the reference
+- No database or behaviour change
+
 ## 0.8.1
 ### Fixed (from staging screenshots)
 - Expense rows: Match / Edit / Copy / Delete sit in one tidy 2x2 block (4 across on phones), no uneven wrapping

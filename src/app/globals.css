@@ -1190,3 +1190,43 @@ td[data-label="Date"] { white-space: nowrap; }
 .cal-day.sel .cal-chip { background: rgb(255 255 255 / 0.18); color: var(--nav-on-text); }
 .cal-day.clash .cal-num { color: var(--bad-fg); }
 .cal-chip.st-completed { background: var(--ok-bg); color: var(--ok-fg); } .cal-chip.st-upcoming { background: var(--info-bg); color: var(--info-fg); } .cal-chip.st-overdue { background: var(--bad-bg); color: var(--bad-fg); }
+
+/* v0.8.2: one row of equal buttons in every grid record (same width and height, right aligned, centred on the row) */
+.cell-actions, td .cell-actions, table.responsive td .cell-actions { display: flex; flex-wrap: nowrap; justify-content: flex-end; align-items: center; gap: 6px; }
+.cell-actions > *, .cell-actions form { flex: 0 0 auto; margin: 0; display: block; }
+.cell-actions .btn, .cell-actions form .btn { width: 84px; min-width: 84px; height: 32px; min-height: 32px; padding: 0 8px; justify-content: center; font-size: 0.82rem; line-height: 1; border-radius: 9px; white-space: nowrap; }
+@media (min-width: 720px) { table.responsive td.nolabel { width: 1%; white-space: nowrap; vertical-align: middle; } }
+@media (max-width: 719px) {
+  table.responsive td.nolabel { width: 100%; }
+  .cell-actions { justify-content: stretch; width: 100%; }
+  .cell-actions > *, .cell-actions form { flex: 1 1 0; min-width: 0; }
+  .cell-actions .btn, .cell-actions form .btn { width: 100%; min-width: 0; }
+}
+
+/* v0.8.2: the pastel accents come back as small icon tiles on white cards */
+:root { --tile-lime: #daf39f; --tile-lav: #ebd3ff; --tile-peach: #ffdeb0; --tile-sky: #bbdaec; }
+:root[data-theme="dark"], :root:not([data-theme="light"]) { --tile-lime: #2f4a1a; --tile-lav: #3a2a4d; --tile-peach: #4a3418; --tile-sky: #1d3a4d; }
+.stat .pill-icon.income { background: var(--tile-lime); color: var(--text); }
+.stat .pill-icon.spend { background: var(--tile-peach); color: var(--text); }
+.stat .pill-icon.net { background: var(--tile-lav); color: var(--text); }
+.stat.with-ring .pill-icon { background: var(--tile-sky); color: var(--text); }
+.stat .pill-icon .icon { width: 16px; height: 16px; }
+
+/* v0.8.2: green hero card for the balance (matches the reference "My balance" card) */
+.stat.hero { background: var(--brand); border-color: var(--brand); color: #fff; }
+.stat.hero .label, .stat.hero .value, .stat.hero .hint, .stat.hero.pos .value, .stat.hero.neg .value { color: #fff; }
+.stat.hero .hint { color: rgb(255 255 255 / 0.78); }
+.stat.hero .pill-icon.net { background: rgb(255 255 255 / 0.22); color: #fff; }
+:root[data-theme="dark"] .stat.hero, :root:not([data-theme="light"]) .stat.hero { color: var(--on-brand); }
+:root[data-theme="dark"] .stat.hero .label, :root[data-theme="dark"] .stat.hero .value, :root[data-theme="dark"] .stat.hero .hint, :root:not([data-theme="light"]) .stat.hero .label, :root:not([data-theme="light"]) .stat.hero .value, :root:not([data-theme="light"]) .stat.hero .hint { color: var(--on-brand); }
+:root[data-theme="dark"] .stat.hero .pill-icon.net, :root:not([data-theme="light"]) .stat.hero .pill-icon.net { background: rgb(0 0 0 / 0.14); color: var(--on-brand); }
+@media (max-width: 719px) {
+  .cell-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .cell-actions > *, .cell-actions form { flex: none; width: 100%; min-width: 0; }
+  .cell-actions .btn, .cell-actions form .btn { width: 100%; min-width: 0; padding: 0 4px; font-size: 0.78rem; }
+}
+@media (max-width: 719px) {
+  table.responsive td .cell-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; justify-content: stretch; width: 100%; }
+  table.responsive td .cell-actions > *, table.responsive td .cell-actions form { flex: none; width: 100%; min-width: 0; margin: 0; }
+}
+.cell-actions .btn, .cell-actions form .btn, table.responsive td .cell-actions .btn { display: inline-flex; align-items: center; justify-content: center; text-align: center; vertical-align: middle; }
