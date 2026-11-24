@@ -16,7 +16,7 @@ export function FreelanceSummary({
 }) {
   const cur = s.currency;
   return (
-    <div className="section" data-testid={testId}>
+    <div className="section stack" data-testid={testId}>
       <div className="card-head">
         <h2>Freelance work · {periodLabel}</h2>
         <Link className="btn soft small" href="/jobs" data-testid="fl-jobs-link">Jobs</Link>

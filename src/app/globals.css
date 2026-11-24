@@ -1142,3 +1142,51 @@ td .nm, .name-block .nm { display: block; max-width: 36ch; overflow: hidden; tex
 .filters input, .filters select { height: 40px; width: 100%; }
 @media (min-width: 1100px) { .filters > .btn, .filters > button { width: auto; min-width: 120px; justify-self: start; } }
 @media (min-width: 720px) { table.responsive thead th:last-child:not(.num) { text-align: right; } }
+
+/* v0.8.1 fixes from staging screenshots */
+.side-nav { scrollbar-width: none; -ms-overflow-style: none; }
+.side-nav::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.stack { display: grid; gap: 20px; }
+.stack > * { margin-top: 0; }
+@media (max-width: 899px) { .stack { gap: 16px; } }
+
+/* Month switcher: the link-as-button rule must not turn its arrows into pills */
+.content .month-nav { display: inline-flex; align-items: center; gap: 4px; padding: 3px; border-radius: 12px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
+.content .month-nav a:not([class]), .content .month-nav a { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border-radius: 9px; background: transparent; box-shadow: none; color: var(--text); font-size: 1rem; line-height: 1; }
+.content .month-nav a:hover { background: var(--bg); box-shadow: none; }
+.content .month-nav a[aria-disabled="true"] { opacity: 0.35; }
+.content .month-nav .current { min-width: 104px; padding: 0 8px; text-align: center; font-weight: 700; }
+.month-nav .icon { width: 16px; height: 16px; }
+
+/* Row actions: a fixed 2x2 block of equal buttons (4 across on phones) so nothing wraps unevenly */
+.cell-actions { display: grid; grid-template-columns: repeat(2, 72px); gap: 6px; justify-content: end; flex-wrap: nowrap; }
+.cell-actions > *, .cell-actions form { margin: 0; min-width: 0; }
+.cell-actions .btn, .cell-actions form .btn { width: 100%; min-height: 32px; padding: 0 8px; font-size: 0.82rem; border-radius: 9px; }
+.cell-actions form .btn { background: var(--card); color: var(--text); box-shadow: inset 0 0 0 1px var(--line); }
+.cell-actions form .btn:hover { box-shadow: inset 0 0 0 1px var(--muted); opacity: 1; }
+.cell-actions form.matched .btn { background: var(--ok-bg); color: var(--ok-fg); box-shadow: none; }
+.cell-actions form .btn.danger, .cell-actions .btn.danger { background: var(--bad-bg); color: var(--bad-fg); box-shadow: none; }
+@media (max-width: 719px) { .cell-actions { grid-template-columns: repeat(4, minmax(0, 1fr)); justify-content: stretch; width: 100%; } }
+table.responsive td.nolabel { width: 1%; white-space: nowrap; }
+
+/* Description cell: names wrap to two lines, badges wrap below instead of squeezing the name */
+.name-cell { flex-wrap: wrap; gap: 4px 8px; }
+.name-cell .nm { flex: 1 1 12ch; min-width: 0; max-width: none; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; white-space: normal; overflow: hidden; overflow-wrap: anywhere; font-weight: 600; text-overflow: clip; }
+td .nm, .name-block .nm { max-width: none; }
+.name-block .note { white-space: normal; overflow: visible; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.name-block .note a:not([class]) { padding: 1px 10px; font-size: 0.78rem; }
+@media (max-width: 719px) { .name-cell { justify-content: flex-end; } .name-cell .nm { flex: 0 1 auto; text-align: right; } }
+
+/* v0.8.1 polish */
+td[data-label="Date"] { white-space: nowrap; }
+.skeleton { border-radius: var(--radius); }
+.skeleton.stat { height: 108px; } .skeleton.title { height: 34px; }
+.empty .icon { color: var(--brand); }
+.card-head { margin-bottom: 12px; }
+.stack > .card-head { margin-bottom: -4px; }
+.cal-day.today .cal-num { background: var(--brand-soft); color: var(--brand); }
+.cal-day.sel { background: var(--nav-on); color: var(--nav-on-text); }
+.cal-day.sel .cal-num { color: var(--nav-on-text); background: transparent; }
+.cal-day.sel .cal-chip { background: rgb(255 255 255 / 0.18); color: var(--nav-on-text); }
+.cal-day.clash .cal-num { color: var(--bad-fg); }
+.cal-chip.st-completed { background: var(--ok-bg); color: var(--ok-fg); } .cal-chip.st-upcoming { background: var(--info-bg); color: var(--info-fg); } .cal-chip.st-overdue { background: var(--bad-bg); color: var(--bad-fg); }
