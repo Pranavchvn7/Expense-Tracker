@@ -49,6 +49,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
           </p>
         </div>
         <div className="actions">
+          <Link className="btn soft small" href={`/reports/job/${job.id}`} data-testid="job-report-link">Job report</Link>
           <Link className="btn soft small" href={`/jobs/${job.id}/edit`} data-testid="job-edit">Edit</Link>
         </div>
       </div>

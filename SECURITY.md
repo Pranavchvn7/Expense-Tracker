@@ -114,6 +114,11 @@
 - Delivery is deduplicated per user and day, and limited to users who turned reminders on, are not Salaried-only, and have a registered device. Failures are logged by type only, never with user data.
 - `/jobs/due` and the Jobs-page card are read-only and scoped by `userId`.
 
+## v0.7.0 additions
+- **Client and job reports** are read-only and scoped by `userId`; the client and job ids come from the URL, are validated as UUIDs, and are looked up with the owner in the `where`, so another person's id behaves like a missing page.
+- **PDF content minimisation:** client reports include the client name and money only, never phone, email, address, notes or lead source. Job reports leave out notes. File names never contain names.
+- Aggregations are bounded (2,000 jobs per period, 1,000 payments and costs per client, 500 jobs per client report).
+
 ## Accepted dependency advisories
 CI runs `audit-ci` and fails on any high or critical advisory that is not listed in `audit-ci.jsonc`. Several are accepted for now (picomatch, postcss, zod, deepmerge-ts, effect), each with its reason written next to it in that file:
 - **deepmerge-ts (inside the `prisma` CLI, dev only):** never runs in the deployed app or on user input. `prisma` and `@prisma/client` are pinned to the same version (6.19.3) because a mismatched pair is a bigger risk than this advisory. Fix = Prisma 7 (breaking).

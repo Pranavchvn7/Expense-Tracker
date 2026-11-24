@@ -79,6 +79,10 @@ Several forms with the same id can exist on one page (one per row). Narrow with 
 
 `notify-jobs` (Settings select inside `set-notify-prefs`), Jobs page `due-card`, `due-card-row`, `due-see-all`; `/jobs/due`: `due-list`, `due-row`, `due-count`, `due-total`, `due-back`. The push itself cannot be asserted in Playwright; test the preference and the lists.
 
+## Freelance dashboard and reports (v0.7.0)
+
+Dashboard `dash-freelance` (+ `-top-clients`, `-services`), `fl-received`, `fl-costs`, `fl-profit`, `fl-jobs`, `fl-outstanding`, `fl-due-link`, `fl-jobs-link`, `top-client-row`; Reports `report-freelance` (same inner ids); client report `client-report-summary`, `cr-jobs`, `cr-received`, `cr-balance`, `cr-profit`, `client-report-jobs`, `client-report-job-row`, `client-report-payments`, `client-report-costs`, `client-report-pdf`, link `client-report-link`; job report `job-report-summary`, `jr-agreed`, `jr-received`, `jr-balance`, `jr-profit`, `job-report-payments`, `job-report-costs`, `job-report-pdf`, link `job-report-link`.
+
 ## Import
 
 `import-kind`, `import-format`, `import-file`, `import-preview`, `import-confirm`, `import-error`, `import-notice`.

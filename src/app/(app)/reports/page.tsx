@@ -10,7 +10,9 @@ import { getReport, listReportExpenses } from "@/lib/report-queries";
 import { parseReportQuery, resolveRange } from "@/lib/report-range";
 import { paymentLabel } from "@/lib/payment-method";
 import { formatMoney, monthLabel } from "@/lib/money";
-import { getUserToday } from "@/lib/preferences";
+import { getUserPrefs, getUserToday } from "@/lib/preferences";
+import { freelanceSummary } from "@/lib/freelance-queries";
+import { FreelanceSummary } from "@/components/FreelanceSummary";
 import { parsePaging } from "@/lib/paging";
 import { IconDownload, IconInbox } from "@/components/icons";
 
@@ -24,9 +26,11 @@ export default async function ReportsPage({
   const { input, categoryIds, includeNone } = parseReportQuery(sp);
   const { range, notice } = resolveRange(input, today.iso);
   const { page, perPage } = parsePaging(sp);
-  const [r, tx] = await Promise.all([
+  const prefs = await getUserPrefs();
+  const [r, tx, fl] = await Promise.all([
     getReport(range, categoryIds, includeNone),
     listReportExpenses(range, categoryIds, includeNone, page, perPage),
+    prefs.workMode === "SALARIED" ? Promise.resolve(null) : freelanceSummary(range),
   ]);
 
   // Only the validated range and ids are used to build links (PDF, pager).
@@ -45,7 +49,8 @@ export default async function ReportsPage({
   const lastShown = range.endIso > today.iso ? today.iso : range.endIso;
   const days = Math.max(1, Math.round((Date.parse(lastShown) - Date.parse(range.startIso)) / 86_400_000) + 1);
   const net = r.incomeMinor - r.spentMinor;
-  const empty = r.expenseCount === 0 && r.incomeMinor === 0;
+  const flHasData = Boolean(fl && (fl.jobsCompleted + fl.jobsPending + fl.jobsCancelled > 0 || fl.receivedMinor > 0 || fl.costsMinor > 0));
+  const empty = r.expenseCount === 0 && r.incomeMinor === 0 && !flHasData;
 
   return (
     <>
@@ -101,6 +106,13 @@ export default async function ReportsPage({
               )}
               <div className="card stat"><span className="label">Average per day</span><span className="value">{formatMoney(Math.round(r.spentMinor / days), r.currency)}</span><span className="hint">Over {days} day{days === 1 ? "" : "s"}</span></div>
             </div>
+
+            {fl && flHasData && (
+              <>
+                <FreelanceSummary s={fl} periodLabel={range.label} testId="report-freelance" />
+                {r.filtered && <p className="muted">Freelance figures ignore the category filter.</p>}
+              </>
+            )}
 
             {r.months.length > 1 && (
               <div className="card section">
