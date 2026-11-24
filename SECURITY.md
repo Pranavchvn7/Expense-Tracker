@@ -105,6 +105,10 @@
 - `Expense.jobId` uses `ON DELETE NO ACTION` like payments, so a job with costs cannot be deleted; account deletion still cascades.
 - The `?job=` and `?client=` list filters accept only UUIDs and are always combined with `userId` (the client filter also re-checks `job.userId`), so another user's ids return nothing.
 
+## v0.6.4 additions
+- The calendar is read-only: no new write path. Queries include `userId`, use explicit `select`s and cap rows (600 per grid, 50 per day check). `month` and `day` are validated before use; anything else falls back to today.
+- Client and job names shown in the calendar are rendered as text (React escapes them); push notifications are unchanged and still carry no client names.
+
 ## Accepted dependency advisories
 CI runs `audit-ci` and fails on any high or critical advisory that is not listed in `audit-ci.jsonc`. Several are accepted for now (picomatch, postcss, zod, deepmerge-ts, effect), each with its reason written next to it in that file:
 - **deepmerge-ts (inside the `prisma` CLI, dev only):** never runs in the deployed app or on user input. `prisma` and `@prisma/client` are pinned to the same version (6.19.3) because a mismatched pair is a bigger risk than this advisory. Fix = Prisma 7 (breaking).

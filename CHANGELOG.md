@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.6.4
+### Added (freelance mode, part 5: calendar)
+- **Calendar** page (Freelance and Both): a month grid (Monday first) showing each day's jobs, coloured by status, with month navigation and a Today button. Tap a day to see its **agenda**: time, job, client, place, status
+- **Double-booking warning**: two jobs overlap when their times overlap (a job with no end time is assumed to last 2 hours); a job with no time on the same date as another is flagged softly ("Same day"). Cancelled jobs never clash. Warnings appear on the job page, in the day agenda and as a red day in the grid. Saving is never blocked
+- **Upcoming jobs** card on the Dashboard (next 5 pending jobs, with a Clash tag)
+- Phone layout: the grid shows a job count per day instead of titles
+
+### Security
+- Calendar and conflict queries are scoped by `userId` with explicit `select`; month and day come from validated query strings only; no new action or write path
+
+### Operations
+- **No migration**, no new dependency or environment variable. `/calendar` was added to the protected routes, the security-header paths and the offline page list
+
 ## 0.6.3
 ### Added (freelance mode, part 4: job costs and profit)
 - **Costs and profit** section on each job: add travel, an assistant/helper payment, products or other costs (amount, date, type, "paid to", what for). Shows Costs, Profit so far (received minus costs) and Profit when paid in full

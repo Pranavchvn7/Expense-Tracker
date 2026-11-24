@@ -182,3 +182,47 @@ export async function jobCosts(jobId: string) {
     select: { id: true, amountMinor: true, currency: true, spentOn: true, costKind: true, payee: true, description: true },
   });
 }
+
+const dayDate = (iso: string) => new Date(`${iso}T00:00:00Z`);
+
+/** Jobs shown in a month grid (including the padding days of the neighbouring months). */
+export async function calendarJobs(fromIso: string, toIso: string) {
+  const { userId } = await requireSession();
+  return prisma.job.findMany({
+    where: { userId, eventDate: { gte: dayDate(fromIso), lte: dayDate(toIso) } },
+    orderBy: [{ eventDate: "asc" }, { startTime: { sort: "asc", nulls: "last" } }, { id: "asc" }],
+    take: 600,
+    select: {
+      id: true,
+      title: true,
+      eventDate: true,
+      startTime: true,
+      endTime: true,
+      status: true,
+      location: true,
+      client: { select: { id: true, name: true } },
+    },
+  });
+}
+
+/** Other jobs on the same date as a job (for the double-booking check). Cancelled ones are skipped. */
+export async function jobsOnDate(iso: string, excludeId?: string) {
+  const { userId } = await requireSession();
+  return prisma.job.findMany({
+    where: { userId, eventDate: dayDate(iso), status: { not: "CANCELLED" }, ...(excludeId ? { id: { not: excludeId } } : {}) },
+    orderBy: [{ startTime: { sort: "asc", nulls: "last" } }, { id: "asc" }],
+    take: 50,
+    select: { id: true, title: true, eventDate: true, startTime: true, endTime: true, status: true, client: { select: { name: true } } },
+  });
+}
+
+/** The next pending jobs from today on (dashboard card). */
+export async function upcomingJobs(todayIso: string, limit = 5) {
+  const { userId } = await requireSession();
+  return prisma.job.findMany({
+    where: { userId, eventDate: { gte: dayDate(todayIso) }, status: { in: ["ENQUIRY", "BOOKED"] } },
+    orderBy: [{ eventDate: "asc" }, { startTime: { sort: "asc", nulls: "last" } }, { id: "asc" }],
+    take: limit,
+    select: { id: true, title: true, eventDate: true, startTime: true, endTime: true, status: true, client: { select: { name: true } } },
+  });
+}
