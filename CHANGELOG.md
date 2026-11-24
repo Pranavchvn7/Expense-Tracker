@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.8.1
+### Fixed (from staging screenshots)
+- Expense rows: Match / Edit / Copy / Delete sit in one tidy 2x2 block (4 across on phones), no uneven wrapping
+- Description cell: name wraps to two lines, badges and the Job link wrap below instead of squeezing the name; dates no longer break
+- Month switcher arrows are no longer turned into pills
+- Freelance block on the Overview: even spacing between the title, the KPI row and Top clients
+- Sidebar scrollbar hidden (the menu still scrolls)
+- Calendar today / selected / status colours match the new look; loading skeletons match card shape
+- No database or behaviour change
+
 ## 0.8.0
 ### Changed (finance-SaaS look, replaces the 0.7.2 pastel colours)
 - White frame, light grey work area, white cards with a hairline border, one green accent, black active menu item, status tags with a dot
