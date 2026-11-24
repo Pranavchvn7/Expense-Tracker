@@ -61,7 +61,7 @@ export function FreelanceSummary({
                 <tbody>
                   {s.topClients.map((c) => (
                     <tr key={c.id} data-testid="top-client-row">
-                      <td><Link className="nm" href={`/reports/client/${c.id}`}>{c.label}</Link></td>
+                      <td><Link className="nm" href={`/reports?client=${c.id}`}>{c.label}</Link></td>
                       <td className="num income">{formatMoney(c.value, cur)}</td>
                     </tr>
                   ))}

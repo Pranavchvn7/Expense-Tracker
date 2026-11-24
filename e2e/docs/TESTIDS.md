@@ -90,3 +90,7 @@ Dashboard `dash-freelance` (+ `-top-clients`, `-services`), `fl-received`, `fl-c
 ## Not covered by test ids yet (ask if you need them)
 
 Charts, goal calculators and suggestion cards, report summary cards and "Download PDF" link, budget progress bars, settings module headers, the public share page. Until then use role/label/text locators. If a locator is awkward, that is a signal to add a test id to the app (a tiny change).
+
+## v0.7.2 Reports picker and app bar
+- `picker-period-btn`, `picker-client-btn`, `picker-job-btn`, `picker-client-select`, `picker-job-select`
+- `client-report-pdf`, `job-report-pdf`, `appbar-search`, `appbar-user`

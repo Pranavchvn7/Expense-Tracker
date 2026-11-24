@@ -4,6 +4,8 @@ import { getTheme, getUserPrefs } from "@/lib/preferences";
 import { AppNav } from "@/components/AppNav";
 import { SessionWatcher } from "@/components/SessionWatcher";
 import { Shortcuts } from "@/components/Shortcuts";
+import Link from "next/link";
+import { IconSearch } from "@/components/icons";
 import { OfflineManager } from "@/components/OfflineManager";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +24,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       {/* When this page was produced; shown if a saved copy is opened offline. */}
       <span id="page-rendered" hidden data-at={new Date().toISOString()} />
       <AppNav name={session.user.name} theme={theme} workMode={workMode} />
+      <header className="appbar">
+        <form className="global-search" action="/expenses" method="get" role="search">
+          <IconSearch />
+          <input name="q" type="search" placeholder="Search expenses" aria-label="Search expenses" maxLength={80} autoComplete="off" data-testid="appbar-search" />
+        </form>
+        <Link href="/settings" className="user-pill" data-testid="appbar-user">
+          <span className="avatar" aria-hidden="true">{(session.user.name.trim()[0] ?? "?").toUpperCase()}</span>
+          <span>{session.user.name}</span>
+        </Link>
+      </header>
       <main className="content">{children}</main>
     </div>
   );
