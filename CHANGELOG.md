@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.2
+### Changed (Elevate look)
+- New look: soft grey frame on a pale blue page, white cards, pastel stat cards (lime, lavender, peach, sky), black pill buttons, Manrope font, rounded sidebar with a lime active item, top bar with search and user pill (desktop)
+- Links now look like buttons everywhere
+- **Reports**: "Period report", "Client report" and "Job report" buttons; the last two open a dropdown to pick a client or job, then show that report on the page with a PDF button
+- Soft rise and hover-lift animations on desktop cards (off with reduced motion)
+- Fewer explanatory lines on the job page
+- No database change
+
 ## 0.7.0
 ### Added (freelance mode, part 7: dashboard and reports)
 - **Freelance summary** on the Overview for the chosen month: money received from clients, job costs, profit, jobs done / booked, clients handled, **still owed to you** (with a link to Payments due), top clients and services
@@ -8,6 +17,7 @@
 - **Client report** (`/reports/client/<id>`): every job with agreed, received, costs and profit; totals; payments and costs lists; **PDF download**
 - **Job report** (`/reports/job/<id>`): job details, payments, costs, balance and profit; **PDF download**
 - "Client report" and "Job report" buttons on the client and job pages; top clients on the Overview and Reports link to their client report
+- **Reports page picker**: a "Client and job reports" section on the Reports page lists your clients and your 15 latest jobs, each linking straight to its report
 - Settings → Work type explains the three modes
 
 ### Security

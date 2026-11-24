@@ -67,7 +67,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
               <div><dt>Profit</dt><dd data-testid="client-profit">{formatMoney(kept, money)}</dd></div>
             </dl>
             <p className="muted">
-              <Link href={`/reports/client/${client.id}`} data-testid="client-report-link">Client report</Link>{" · "}
+              <Link href={`/reports?client=${client.id}`} data-testid="client-report-link">Client report</Link>{" · "}
               <Link href={`/income?client=${client.id}`} data-testid="client-income-link">Payments in Income</Link>{" · "}
               <Link href={`/expenses?client=${client.id}`} data-testid="client-expenses-link">Costs in Expenses</Link>
             </p>

@@ -475,3 +475,11 @@ Your to-do list. Write the tests one by one; tick them off as you go.
 4. SET, SHARE, IMP
 5. MOB, SEC
 6. OFF (new project in the config), A11Y
+
+## UI-01..06 Elevate look and report picker (v0.7.2)
+- UI-01 Reports shows Period / Client / Job buttons; Client and Job open a dropdown
+- UI-02 Choosing a client shows its report in place with a PDF button that downloads a PDF
+- UI-03 Choosing a job does the same
+- UI-04 App bar search sends you to Expenses filtered by the text (desktop)
+- UI-05 No horizontal scroll at 390px and 1280px on every page
+- UI-06 Active sidebar item is highlighted; mobile bottom bar shows the active tab

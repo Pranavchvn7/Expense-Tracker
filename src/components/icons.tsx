@@ -203,3 +203,10 @@ export const IconCalendar = () => (
     <path d="M3 10h18M8 3v4M16 3v4" />
   </Icon>
 );
+
+export const IconSearch = () => (
+  <Icon>
+    <circle cx="11" cy="11" r="7" />
+    <path d="M20 20l-3.5-3.5" />
+  </Icon>
+);
