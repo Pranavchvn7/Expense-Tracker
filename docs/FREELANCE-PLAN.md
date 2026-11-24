@@ -1,6 +1,6 @@
 # Freelance mode: plan and release roadmap
 
-Status: **0.6.0 Clients, 0.6.1 Jobs shipped; 0.6.2 Job payments shipped; 0.6.3 Job costs + profit shipped; 0.6.4 Calendar built**. Update the status column as each release ships, so any new session can resume from this file plus `CHANGELOG.md`.
+Status: **0.6.0 Clients, 0.6.1 Jobs shipped; 0.6.2 Job payments shipped; 0.6.3 Job costs + profit shipped; 0.6.4 Calendar shipped; 0.6.5 Reminders built**. Update the status column as each release ships, so any new session can resume from this file plus `CHANGELOG.md`.
 
 ## 1. Goal
 
@@ -40,7 +40,7 @@ Each release = one branch, at most one migration, tests for new pure logic, docs
 | **0.6.2** Job payments | Add advance / partial / final payment on a job; balance due; status badges (Unpaid, Advance paid, Part paid, Paid in full, Overpaid); payments show in Income with client + job; client "total earned" | `Income.jobId/paymentKind` | **shipped** |
 | **0.6.3** Job expenses + profit | Add job costs (travel, assistant payment, products, other) from the job page; show in Expenses with client + job; filter Expenses/Income by job or client; job profit (paid minus costs) | `Expense.jobId` | **shipped** |
 | **0.6.4** Calendar | Month grid showing jobs per day (status colours), day agenda list, upcoming-jobs card on the dashboard, double-booking warning for the same date/time | none | **built (awaiting merge)** |
-| **0.6.5** Reminders | Push 1 day before a job (existing daily cron, deduplicated), new "Job reminders" toggle, in-app "Payments due" list for completed jobs with a balance | `notifyJobs` | planned |
+| **0.6.5** Reminders | Push 1 day before a job (existing daily cron, deduplicated), new "Job reminders" toggle, in-app "Payments due" list for completed jobs with a balance | `notifyJobs` | **built (awaiting merge)** |
 | **0.7.0** Freelance dashboard + reports | Dashboard for `FREELANCE`/`BOTH` (earned, outstanding, jobs this month, upcoming, top clients); monthly/yearly reports gain jobs completed, clients handled, earnings; **client report** (all jobs + related expenses + totals); **job report**; PDFs for both | none | planned |
 | **0.7.1** Polish and insights | Client history timeline, lead-source summary, busiest months, CSV export of clients and jobs, "only freelance" wording (Income shown as client payments) | none | planned |
 | **0.8.x** Optional extras | Receipt/invoice PDF per payment or job, WhatsApp share text for confirmations and balance reminders (link only, no API), `.ics` calendar export, service packages with default prices, assistant payout summary, portfolio photos via presigned uploads (needs bucket) | varies | ideas |

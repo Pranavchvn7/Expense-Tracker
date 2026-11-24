@@ -109,6 +109,11 @@
 - The calendar is read-only: no new write path. Queries include `userId`, use explicit `select`s and cap rows (600 per grid, 50 per day check). `month` and `day` are validated before use; anything else falls back to today.
 - Client and job names shown in the calendar are rendered as text (React escapes them); push notifications are unchanged and still carry no client names.
 
+## v0.6.5 additions
+- **Job reminders** run inside the existing secret-protected cron route (Bearer `CRON_SECRET`, constant-time compare, same 401 for every failure). Only the count of jobs is sent; no names, places, times or amounts reach a lock screen.
+- Delivery is deduplicated per user and day, and limited to users who turned reminders on, are not Salaried-only, and have a registered device. Failures are logged by type only, never with user data.
+- `/jobs/due` and the Jobs-page card are read-only and scoped by `userId`.
+
 ## Accepted dependency advisories
 CI runs `audit-ci` and fails on any high or critical advisory that is not listed in `audit-ci.jsonc`. Several are accepted for now (picomatch, postcss, zod, deepmerge-ts, effect), each with its reason written next to it in that file:
 - **deepmerge-ts (inside the `prisma` CLI, dev only):** never runs in the deployed app or on user input. `prisma` and `@prisma/client` are pinned to the same version (6.19.3) because a mismatched pair is a bigger risk than this advisory. Fix = Prisma 7 (breaking).

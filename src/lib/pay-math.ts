@@ -90,3 +90,24 @@ export function profitSummary(agreedMinor: number, receivedMinor: number, costsM
   const costs = Math.max(0, Math.trunc(costsMinor) || 0);
   return { profitMinor: rec - costs, expectedMinor: agreed > 0 ? agreed - costs : null };
 }
+
+export interface DueJob {
+  id: string;
+  eventDate: string; // YYYY-MM-DD
+  agreedMinor: number;
+  paidMinor: number;
+}
+
+/** Jobs with money still owed (a price is agreed and not fully paid), oldest event first. */
+export function dueJobs<T extends { id: string; eventDate: string; agreedAmountMinor: number }>(
+  jobs: T[],
+  paid: Record<string, number>,
+): (T & { paidMinor: number; balanceMinor: number })[] {
+  const out: (T & { paidMinor: number; balanceMinor: number })[] = [];
+  for (const j of jobs) {
+    const p = paid[j.id] ?? 0;
+    const s = paySummary(j.agreedAmountMinor, p);
+    if (s.state === "unpaid" || s.state === "part") out.push({ ...j, paidMinor: p, balanceMinor: s.balanceMinor });
+  }
+  return out.sort((a, b) => (a.eventDate === b.eventDate ? a.id.localeCompare(b.id) : a.eventDate < b.eventDate ? -1 : 1));
+}

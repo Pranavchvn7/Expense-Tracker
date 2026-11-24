@@ -31,7 +31,7 @@ export default async function SettingsPage() {
   ]);
   const { currency } = prefs;
   const { userId } = await requireSession();
-  const notify = await prisma.user.findFirst({ where: { id: userId }, select: { notifyBudget: true, notifyRenewals: true } });
+  const notify = await prisma.user.findFirst({ where: { id: userId }, select: { notifyBudget: true, notifyRenewals: true, notifyJobs: true } });
   const countries = countryOptions();
   const zones = listTimeZones();
   const thisMonth = new Date().toISOString().slice(0, 7);
@@ -215,6 +215,8 @@ export default async function SettingsPage() {
             publicKey={env.VAPID_PRIVATE_KEY && env.VAPID_SUBJECT ? (env.VAPID_PUBLIC_KEY ?? null) : null}
             notifyBudget={notify?.notifyBudget ?? true}
             notifyRenewals={notify?.notifyRenewals ?? true}
+            notifyJobs={notify?.notifyJobs ?? true}
+            showJobs={prefs.workMode !== "SALARIED"}
           />
         </div>
       </details>

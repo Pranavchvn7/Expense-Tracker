@@ -56,7 +56,7 @@ export async function unsubscribePush(endpoint: unknown): Promise<ActionResult> 
   });
 }
 
-const prefs = z.object({ budget: z.enum(["0", "1"]), renewals: z.enum(["0", "1"]) });
+const prefs = z.object({ budget: z.enum(["0", "1"]), renewals: z.enum(["0", "1"]), jobs: z.enum(["0", "1"]).optional() });
 
 export async function setNotifyPrefs(fd: FormData): Promise<ActionResult> {
   return safely(async () => {
@@ -65,7 +65,12 @@ export async function setNotifyPrefs(fd: FormData): Promise<ActionResult> {
     const input = prefs.parse(formToObject(fd));
     await prisma.user.update({
       where: { id: userId },
-      data: { notifyBudget: input.budget === "1", notifyRenewals: input.renewals === "1" },
+      data: {
+        notifyBudget: input.budget === "1",
+        notifyRenewals: input.renewals === "1",
+        // Only sent by the form for freelance accounts; otherwise the saved choice is left alone.
+        ...(input.jobs ? { notifyJobs: input.jobs === "1" } : {}),
+      },
       select: { id: true },
     });
     revalidatePath("/settings");
