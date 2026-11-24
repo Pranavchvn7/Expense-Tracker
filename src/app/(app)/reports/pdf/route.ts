@@ -1,7 +1,8 @@
 import { requireSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
 import { HttpError } from "@/lib/errors";
-import { getUserToday } from "@/lib/preferences";
+import { getUserPrefs, getUserToday } from "@/lib/preferences";
+import { freelanceSummary } from "@/lib/freelance-queries";
 import { getReport } from "@/lib/report-queries";
 import { parseReportQuery, resolveRange } from "@/lib/report-range";
 import { buildReportPdf } from "@/lib/report-pdf";
@@ -24,6 +25,8 @@ export async function GET(req: Request) {
     const { range } = resolveRange(input, today.iso);
 
     const r = await getReport(range, categoryIds, includeNone);
+    const prefs = await getUserPrefs();
+    const fl = prefs.workMode === "SALARIED" ? null : await freelanceSummary(range);
     const lastShown = range.endIso > today.iso ? today.iso : range.endIso;
     const bytes = await buildReportPdf({
       rangeLabel: range.label,
@@ -40,6 +43,18 @@ export async function GET(req: Request) {
       monthlySpent: r.monthlySpent,
       monthlyIncome: r.monthlyIncome,
       top: r.top,
+      freelance: fl
+        ? {
+            jobsCompleted: fl.jobsCompleted,
+            jobsPending: fl.jobsPending,
+            clientsHandled: fl.clientsHandled,
+            receivedMinor: fl.receivedMinor,
+            costsMinor: fl.costsMinor,
+            profitMinor: fl.profitMinor,
+            topClients: fl.topClients.map((t) => ({ label: t.label, value: t.value })),
+            services: fl.services,
+          }
+        : undefined,
     });
 
     // The filename is built only from validated values (range kind and start date).

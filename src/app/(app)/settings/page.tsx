@@ -31,7 +31,7 @@ export default async function SettingsPage() {
   ]);
   const { currency } = prefs;
   const { userId } = await requireSession();
-  const notify = await prisma.user.findFirst({ where: { id: userId }, select: { notifyBudget: true, notifyRenewals: true } });
+  const notify = await prisma.user.findFirst({ where: { id: userId }, select: { notifyBudget: true, notifyRenewals: true, notifyJobs: true } });
   const countries = countryOptions();
   const zones = listTimeZones();
   const thisMonth = new Date().toISOString().slice(0, 7);
@@ -85,9 +85,15 @@ export default async function SettingsPage() {
         <summary><h2>Work type</h2></summary>
         <div className="module-body">
           <p className="lead muted">
-            Choose how you earn. Freelance and Both add Clients (and soon Jobs, a calendar and client reports) to the menu.
-            Nothing is hidden or deleted when you switch, and everything for salaried work stays available.
+            Choose how you earn. Freelance and Both add Clients, Jobs and the Calendar to the menu, and a freelance
+            summary (money received, job costs, profit, who owes you) to the Overview and Reports. Nothing is hidden or
+            deleted when you switch, and everything for salaried work stays available.
           </p>
+          <ul className="muted">
+            <li><strong>Salaried:</strong> the regular money tools only.</li>
+            <li><strong>Freelance:</strong> work comes first. The Overview opens with your freelance summary and a client and job checklist, and income is labelled “Money in” (client payments plus anything else).</li>
+            <li><strong>Both:</strong> the usual Overview first (income, spending, savings), with the freelance summary right below it.</li>
+          </ul>
           <div className="card">
             <ActionForm action={setWorkMode} testId="set-work-mode" submitLabel="Save work type" className="row">
               <label>I work as
@@ -215,6 +221,8 @@ export default async function SettingsPage() {
             publicKey={env.VAPID_PRIVATE_KEY && env.VAPID_SUBJECT ? (env.VAPID_PUBLIC_KEY ?? null) : null}
             notifyBudget={notify?.notifyBudget ?? true}
             notifyRenewals={notify?.notifyRenewals ?? true}
+            notifyJobs={notify?.notifyJobs ?? true}
+            showJobs={prefs.workMode !== "SALARIED"}
           />
         </div>
       </details>

@@ -6,7 +6,7 @@ import { Pager } from "@/components/Pager";
 import { SoftForm } from "@/components/SoftForm";
 import { SortHeader } from "@/components/SortHeader";
 import { createJob, setJobStatus } from "@/actions/jobs";
-import { clientOptions, listJobs, paidByJob, monthJobCounts, type JobFilter, type JobSort } from "@/lib/job-queries";
+import { clientOptions, listJobs, paidByJob, paymentsDue, monthJobCounts, type JobFilter, type JobSort } from "@/lib/job-queries";
 import { formatDay, jobBucket, STATUS_LABEL, timeRangeLabel } from "@/lib/job-math";
 import { addMonthsKey } from "@/lib/chart-math";
 import { paySummary } from "@/lib/pay-math";
@@ -52,7 +52,7 @@ export default async function JobsPage({
     clientOptions(),
   ]);
 
-  const paid = await paidByJob(rows.map((r) => r.id));
+  const [paid, due] = await Promise.all([paidByJob(rows.map((r) => r.id)), paymentsDue(5)]);
 
   const keep = {
     month,
@@ -101,6 +101,26 @@ export default async function JobsPage({
           <span className="hint">This month</span>
         </Link>
       </div>
+
+      {due.length > 0 && (
+        <div className="card section" data-testid="due-card">
+          <div className="card-head">
+            <h2>Payments due</h2>
+            <Link className="btn soft small" href="/jobs/due" data-testid="due-see-all">See all</Link>
+          </div>
+          <ul className="agenda">
+            {due.map((d) => (
+              <li key={d.id} data-testid="due-card-row">
+                <span className="agenda-time">{formatDay(d.eventDate)}</span>
+                <span className="name-block">
+                  <span className="name-cell"><Link className="nm" href={`/jobs/${d.id}`}>{d.title}</Link></span>
+                  <span className="muted note">{d.client.name} · owes {formatMoney(d.balanceMinor, d.currency)}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <details className="add" open={openAdd || (clients.length > 0 && counts.completed + counts.pending + counts.cancelled === 0 && !hasFilter)}>
         <summary>Add a job</summary>

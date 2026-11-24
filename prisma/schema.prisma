@@ -41,6 +41,7 @@ model User {
   // Which push notifications this person wants (they still need to enable push on a device).
   notifyBudget   Boolean @default(true)
   notifyRenewals Boolean @default(true)
+  notifyJobs     Boolean @default(true)
   pushSubscriptions PushSubscription[]
   // Freelance mode (v0.6): SALARIED is today's behaviour; FREELANCE and BOTH add Clients, Jobs and more.
   workMode      WorkMode  @default(SALARIED)

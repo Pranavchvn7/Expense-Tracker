@@ -19,10 +19,14 @@ export function NotificationSettings({
   publicKey,
   notifyBudget,
   notifyRenewals,
+  notifyJobs,
+  showJobs,
 }: {
   publicKey: string | null;
   notifyBudget: boolean;
   notifyRenewals: boolean;
+  notifyJobs: boolean;
+  showJobs: boolean;
 }) {
   const router = useRouter();
   const [, startRefresh] = useTransition();
@@ -164,8 +168,16 @@ export function NotificationSettings({
             </select>
           </label>
         </div>
+        {showJobs && (
+          <label>Job reminders (the day before, about 09:00)
+            <select name="jobs" defaultValue={notifyJobs ? "1" : "0"} data-testid="notify-jobs">
+              <option value="1">On</option>
+              <option value="0">Off</option>
+            </select>
+          </label>
+        )}
       </ActionForm>
-      <p className="muted">Notifications never show amounts, so nothing private appears on a locked screen.</p>
+      <p className="muted">Notifications never show amounts or client names, so nothing private appears on a locked screen.</p>
 
       <h3>Offline use</h3>
       <p className="muted">

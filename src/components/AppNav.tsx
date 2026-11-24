@@ -7,6 +7,7 @@ import { SignOutButton } from "@/components/SignOutButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   IconBriefcase,
+  IconCalendar,
   IconCard,
   IconDashboard,
   IconMore,
@@ -37,6 +38,7 @@ const baseItems = [
 const freelanceItems = [
   { href: "/clients", label: "Clients", icon: <IconUsers /> },
   { href: "/jobs", label: "Jobs", icon: <IconBriefcase /> },
+  { href: "/calendar", label: "Calendar", icon: <IconCalendar /> },
 ];
 
 export function AppNav({

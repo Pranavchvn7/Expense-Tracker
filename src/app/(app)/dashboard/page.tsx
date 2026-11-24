@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { materializeRecurring } from "@/lib/recurring";
-import { listBudgets, monthTotalsByCategory } from "@/lib/queries";
+import { listBudgets, monthRange, monthTotalsByCategory } from "@/lib/queries";
 import { getDashboardData, getLifetimeCounts, getMonthHighlights, listRecentExpenses } from "@/lib/finance-queries";
 import { paymentLabel } from "@/lib/payment-method";
 import { CardHead } from "@/components/cards/CardHead";
@@ -10,6 +10,11 @@ import { monthlyNeeded, percent } from "@/lib/goal-math";
 import { formatMoney, monthLabel } from "@/lib/money";
 import { addMonthsKey } from "@/lib/chart-math";
 import { getUserToday, getUserPrefs } from "@/lib/preferences";
+import { upcomingJobs } from "@/lib/job-queries";
+import { freelanceLifetime, freelanceSummary, outstanding } from "@/lib/freelance-queries";
+import { FreelanceSummary } from "@/components/FreelanceSummary";
+import { clashingIds } from "@/lib/cal-math";
+import { formatDay, timeRangeLabel } from "@/lib/job-math";
 import { monthSchema } from "@/lib/validation";
 import { parsePaging } from "@/lib/paging";
 import { compareSpending, momText } from "@/lib/mom-math";
@@ -41,6 +46,8 @@ export default async function DashboardPage({
   await materializeRecurring();
   const today = await getUserToday();
   const prefs = await getUserPrefs();
+  const upcoming = prefs.workMode === "SALARIED" ? [] : await upcomingJobs(today.iso, 5);
+  const upcomingClash = clashingIds(upcoming.map((j) => ({ id: j.id, eventDate: j.eventDate.toISOString().slice(0, 10), startTime: j.startTime, endTime: j.endTime, status: j.status })));
   // Query strings are untrusted: validate, fall back to safe defaults.
   const rawMonth = monthSchema.safeParse(Array.isArray(sp.month) ? sp.month[0] : sp.month);
   const month = rawMonth.success && rawMonth.data <= today.month ? rawMonth.data : today.month;
@@ -68,13 +75,58 @@ export default async function DashboardPage({
   const shownBudgets = budgets.filter((b) => b.currency === currency);
   const prevSpent = data.trend.spent.length >= 2 ? (data.trend.spent[data.trend.spent.length - 2] ?? 0) : 0;
   const momLine = momText(compareSpending(data.spentMinor, prevSpent), monthLabel(addMonthsKey(month, -1)));
-  const steps = [
+  const mode = prefs.workMode;
+  const flData = mode === "SALARIED" ? null : await Promise.all([freelanceSummary(monthRange(month)), outstanding(), mode === "FREELANCE" ? freelanceLifetime() : Promise.resolve(null)]);
+  const fl = flData?.[0] ?? null;
+  const owed = flData?.[1] ?? null;
+  const life = flData?.[2] ?? null;
+  const salariedSteps = [
     { done: lifetime.expenses > 0, label: "Add your first expense", href: "/expenses?add=1" },
     { done: budgets.length > 0, label: "Set a monthly budget for a category", href: "/budgets?add=1" },
     { done: goals.length > 0, label: "Create a savings goal", href: "/goals" },
   ];
+  // Freelance accounts get a work-first checklist; Salaried and Both keep the money-basics one.
+  const freelanceSteps = [
+    { done: (life?.clients ?? 0) > 0, label: "Add your first client", href: "/clients?add=1" },
+    { done: (life?.jobs ?? 0) > 0, label: "Add a job", href: "/jobs?add=1" },
+    { done: (life?.payments ?? 0) > 0, label: "Record a client payment on a job", href: "/jobs" },
+  ];
+  const steps = prefs.workMode === "FREELANCE" ? freelanceSteps : salariedSteps;
   const showStarter = steps.some((s) => !s.done);
   const empty = data.expenseCount === 0 && data.incomeMinor === 0;
+
+  const upcomingCard = fl ? (
+        <div className="card section" data-testid="upcoming-jobs">
+          <div className="card-head">
+            <h2>Upcoming jobs</h2>
+            <Link className="btn soft small" href="/calendar" data-testid="upcoming-calendar">Calendar</Link>
+          </div>
+          {upcoming.length === 0 ? (
+            <p className="muted">No upcoming jobs. <Link href="/jobs?add=1">Add a job</Link></p>
+          ) : (
+            <ul className="agenda">
+              {upcoming.map((j) => (
+                <li key={j.id} data-testid="upcoming-job">
+                  <span className="agenda-time">{formatDay(j.eventDate)}</span>
+                  <span className="name-block">
+                    <span className="name-cell">
+                      <Link className="nm" href={`/jobs/${j.id}`}>{j.title}</Link>
+                      {upcomingClash.has(j.id) && <span className="tag st-overdue">Clash</span>}
+                    </span>
+                    <span className="muted note">{j.client.name}{timeRangeLabel(j.startTime, j.endTime) ? ` · ${timeRangeLabel(j.startTime, j.endTime)}` : ""}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+  ) : null;
+  const freelanceBlock = fl ? (
+    <>
+      <FreelanceSummary s={fl} periodLabel={monthLabel(month)} outstanding={owed} testId="dash-freelance" />
+      {upcomingCard}
+    </>
+  ) : null;
 
   const carousel = goals.map((g) => {
     const per = monthlyNeeded(Math.max(g.targetMinor - g.savedMinor, 0), g.targetDate, today.date);
@@ -143,11 +195,13 @@ export default async function DashboardPage({
         </div>
       )}
 
+      {mode === "FREELANCE" && freelanceBlock}
+
       <div className="grid stats section">
         <div className="card stat income">
-          <span className="label"><span className="pill-icon income"><IconArrowDown /></span>Income</span>
+          <span className="label"><span className="pill-icon income"><IconArrowDown /></span>{mode === "FREELANCE" ? "Money in" : "Income"}</span>
           <span className="value">{formatMoney(data.incomeMinor, currency)}</span>
-          <span className="hint">Money received</span>
+          <span className="hint">{mode === "FREELANCE" ? "Client payments and other income" : "Money received"}</span>
         </div>
         <div className="card stat spend">
           <span className="label"><span className="pill-icon spend"><IconArrowUp /></span>Spent</span>
@@ -171,6 +225,8 @@ export default async function DashboardPage({
           <Ring percent={rate ?? 0} tone={rate !== null && rate < 0 ? "neg" : "pos"} label={rate === null ? "No savings rate yet" : `Savings rate ${rate}%`} />
         </div>
       </div>
+
+      {mode === "BOTH" && freelanceBlock}
 
       {empty && (
         <div className="card section">

@@ -269,6 +269,66 @@ Your to-do list. Write the tests one by one; tick them off as you go.
 | COST-14 | R | Client page totals with two jobs | Costs and Profit are the sums |
 | COST-15 | R | Second user opens `/expenses?job=<other user's job id>` or posts a cost for it | Empty list / not found; nothing created |
 
+## CAL: calendar and double booking (project: `app`, work type Freelance)
+
+| ID | Type | Test case | Expected |
+|---|---|---|---|
+| CAL-01 | S | Open Calendar with a job today | Today is highlighted; the day shows the job and a count |
+| CAL-02 | R | Next / previous month, then Today | Month label changes; Today returns to the current month |
+| CAL-03 | R | Click a day with two jobs | Agenda lists both, timed ones first, untimed last as "All day" |
+| CAL-04 | R | Click a day with nothing | "Nothing booked this day." |
+| CAL-05 | S | Two jobs on one date, 10:00-12:00 and 11:00-13:00 | Both flagged "Overlaps with"; day has a red border; job page shows "Double booking" |
+| CAL-06 | R | Two jobs 10:00-12:00 and 12:00-14:00 | No warning (touching is fine) |
+| CAL-07 | R | One job with no end time at 10:00, another at 11:30 | Overlap warning (2 hour default); at 12:00 no warning |
+| CAL-08 | R | A job with no time and another on the same date | Soft "Same day" notice |
+| CAL-09 | R | Cancel one of two clashing jobs | Warning disappears |
+| CAL-10 | R | Jobs in a neighbouring month's padding days | Shown greyed in the grid; counted only in their own month |
+| CAL-11 | R | Dashboard "Upcoming jobs" | Next 5 pending jobs, soonest first; completed/cancelled/past ones absent; Clash tag when two clash |
+| CAL-12 | R | Salaried account opens /calendar | "Freelance mode is off" |
+| CAL-13 | R | /calendar?month=bad&day=bad | Falls back to the current month without an error |
+| CAL-14 | R | Phone width | Grid shows counts, not titles; agenda stacks; no horizontal scroll |
+| CAL-15 | R | Second user's jobs | Never appear in the first user's calendar |
+
+## REM: job reminders and payments due (project: `app`, work type Freelance)
+
+| ID | Type | Test case | Expected |
+|---|---|---|---|
+| REM-01 | R | Settings → Notifications on a Freelance account | "Job reminders" select is visible, On by default |
+| REM-02 | R | Same page on a Salaried account | No "Job reminders" select |
+| REM-03 | R | Set Job reminders Off, save, reload | Choice is kept; budget and renewal choices unchanged |
+| REM-04 | R | Save alert choices on a Salaried account after earlier turning jobs Off | Job reminders choice is not changed |
+| REM-05 | S | Completed job, agreed 10000, paid 4000 | Appears in Payments due with balance 6,000 |
+| REM-06 | R | Pay the balance | Job leaves Payments due |
+| REM-07 | R | Job with no agreed price, or still Booked, or Cancelled | Never listed |
+| REM-08 | R | Two due jobs | Oldest event first; total owed is the sum; "n days ago" is correct |
+| REM-09 | R | Jobs page card shows at most 5 and "See all" opens the full list | Counts agree |
+| REM-10 | R | No jobs owing | Card is hidden on Jobs; /jobs/due shows "Nothing is owed to you" |
+| REM-11 | R | Salaried account opens /jobs/due | "Freelance mode is off" |
+| REM-12 | R | Other user's jobs | Never listed |
+| REM-13 | Manual | Booked job tomorrow, push enabled, trigger the cron with the secret | One notification "You have 1 job tomorrow", no names; second trigger sends nothing |
+| REM-14 | Manual | Same with reminders Off, or the job Cancelled/Enquiry | No notification |
+| REM-15 | Manual | Call `/api/cron/reminders` without or with a wrong secret | 401 |
+
+## FREP: freelance dashboard and reports (project: `app`)
+
+| ID | Type | Test case | Expected |
+|---|---|---|---|
+| FREP-01 | S | Freelance account: open Overview | Freelance summary and upcoming jobs appear before the usual cards; income card says "Money in" |
+| FREP-02 | S | Both account: open Overview | Income / Spent / Balance cards first; freelance summary below them; income card says "Income" |
+| FREP-03 | R | Salaried account: open Overview | No freelance summary, no upcoming jobs |
+| FREP-04 | R | Freelance account with no data | Checklist: client, job, payment; each tick appears when done |
+| FREP-05 | S | Job agreed 10000, 4000 received, 500 cost this month | Received 4,000; Costs 500; Profit 3,500; Still owed counts the balance once the job is Completed |
+| FREP-06 | R | Move the Overview to last month | Freelance figures follow the month |
+| FREP-07 | R | Top clients | Largest receiver first; clicking opens the client report |
+| FREP-08 | R | Reports → month with freelance data | Freelance section shown with the same period; PDF has a "Freelance work" block |
+| FREP-09 | R | Reports with a category filter | Freelance section stays, with the note that it ignores the filter |
+| FREP-10 | S | Client report | Totals equal the sum of its jobs; cancelled job's deposit still counts as received |
+| FREP-11 | S | Client report PDF | Downloads; contains the name and money, no phone, email or notes |
+| FREP-12 | S | Job report and PDF | Balance, profit, payments and costs match the job page |
+| FREP-13 | R | Salaried account opens a client or job report URL | Not found |
+| FREP-14 | R | Another user's client or job id | Not found; PDF route returns 404 |
+| FREP-15 | R | Press Download PDF 11 times in a minute | The 11th is refused (rate limit) |
+
 ## DEBT: debt tracker (project: `app`)
 
 | ID | Type | Test case | Expected |

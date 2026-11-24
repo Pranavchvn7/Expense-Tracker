@@ -1,5 +1,50 @@
 # Changelog
 
+## 0.7.0
+### Added (freelance mode, part 7: dashboard and reports)
+- **Freelance summary** on the Overview for the chosen month: money received from clients, job costs, profit, jobs done / booked, clients handled, **still owed to you** (with a link to Payments due), top clients and services
+- **Freelance vs Both is now real**: *Freelance* opens the Overview with the freelance summary and upcoming jobs first, a client / job / payment checklist, and income labelled "Money in". *Both* keeps the usual income / spending / savings Overview first, with the freelance summary right below it. *Salaried* is unchanged
+- **Reports** gain a Freelance section (same figures for the report period) and a Freelance block in the report PDF
+- **Client report** (`/reports/client/<id>`): every job with agreed, received, costs and profit; totals; payments and costs lists; **PDF download**
+- **Job report** (`/reports/job/<id>`): job details, payments, costs, balance and profit; **PDF download**
+- "Client report" and "Job report" buttons on the client and job pages; top clients on the Overview and Reports link to their client report
+- Settings → Work type explains the three modes
+
+### Security
+- All freelance report queries are scoped by `userId` with explicit `select`s and bounded row counts; report ids are validated UUIDs and another user's id returns "not found"
+- PDFs are built on the server with the existing no-network PDF library, share the 10-a-minute PDF rate limit, use only Latin-1 text, and carry no phone, email, address or private notes (client name and job details only). Filenames contain only the date
+
+### Operations
+- **No migration**, no new dependency or environment variable
+
+## 0.6.5
+### Added (freelance mode, part 6: reminders and payments due)
+- **Job reminders**: the daily reminder run (about 09:00 India time) now also sends one push per person listing how many **booked** jobs they have tomorrow, in their own timezone. Tapping it opens that day in the Calendar
+- **Settings → Notifications**: new "Job reminders" choice (On by default), shown for Freelance and Both accounts
+- **Payments due** list (Jobs page card and `/jobs/due`): completed jobs with an agreed price that are not fully paid, oldest first, with days since the event, amount paid, balance and a total owed
+- The two reminder types run independently, so a failure in one does not stop the other
+
+### Security
+- Reminder text never contains client names, places, times or amounts. One reminder per person per day (`NotificationLog` key `jobs:<date>`); the run is bounded (one query, 5,000 jobs) and only reads jobs of users who opted in and have a push device
+- The payments-due query is scoped by `userId` with explicit `select`s and reads at most 5,000 completed jobs
+
+### Operations
+- **Migration**: `add_job_reminders` (`User.notifyJobs` boolean, default true). Apply to production with `migrate deploy` (both `DATABASE_URL` and `DIRECT_URL`) before merging
+- No new dependency or environment variable; the existing cron schedule and `CRON_SECRET` are reused. Push must already be set up (VAPID keys) for reminders to be sent
+
+## 0.6.4
+### Added (freelance mode, part 5: calendar)
+- **Calendar** page (Freelance and Both): a month grid (Monday first) showing each day's jobs, coloured by status, with month navigation and a Today button. Tap a day to see its **agenda**: time, job, client, place, status
+- **Double-booking warning**: two jobs overlap when their times overlap (a job with no end time is assumed to last 2 hours); a job with no time on the same date as another is flagged softly ("Same day"). Cancelled jobs never clash. Warnings appear on the job page, in the day agenda and as a red day in the grid. Saving is never blocked
+- **Upcoming jobs** card on the Dashboard (next 5 pending jobs, with a Clash tag)
+- Phone layout: the grid shows a job count per day instead of titles
+
+### Security
+- Calendar and conflict queries are scoped by `userId` with explicit `select`; month and day come from validated query strings only; no new action or write path
+
+### Operations
+- **No migration**, no new dependency or environment variable. `/calendar` was added to the protected routes, the security-header paths and the offline page list
+
 ## 0.6.3
 ### Added (freelance mode, part 4: job costs and profit)
 - **Costs and profit** section on each job: add travel, an assistant/helper payment, products or other costs (amount, date, type, "paid to", what for). Shows Costs, Profit so far (received minus costs) and Profit when paid in full
