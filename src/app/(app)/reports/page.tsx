@@ -11,7 +11,8 @@ import { parseReportQuery, resolveRange } from "@/lib/report-range";
 import { paymentLabel } from "@/lib/payment-method";
 import { formatMoney, monthLabel } from "@/lib/money";
 import { getUserPrefs, getUserToday } from "@/lib/preferences";
-import { freelanceSummary } from "@/lib/freelance-queries";
+import { freelanceSummary, reportPicker } from "@/lib/freelance-queries";
+import { formatDay } from "@/lib/job-math";
 import { FreelanceSummary } from "@/components/FreelanceSummary";
 import { parsePaging } from "@/lib/paging";
 import { IconDownload, IconInbox } from "@/components/icons";
@@ -27,10 +28,11 @@ export default async function ReportsPage({
   const { range, notice } = resolveRange(input, today.iso);
   const { page, perPage } = parsePaging(sp);
   const prefs = await getUserPrefs();
-  const [r, tx, fl] = await Promise.all([
+  const [r, tx, fl, picker] = await Promise.all([
     getReport(range, categoryIds, includeNone),
     listReportExpenses(range, categoryIds, includeNone, page, perPage),
     prefs.workMode === "SALARIED" ? Promise.resolve(null) : freelanceSummary(range),
+    prefs.workMode === "SALARIED" ? Promise.resolve(null) : reportPicker(),
   ]);
 
   // Only the validated range and ids are used to build links (PDF, pager).
@@ -79,6 +81,47 @@ export default async function ReportsPage({
         includeNone={includeNone}
       />
       {notice && <p className="notice" role="note">{notice}</p>}
+
+      {picker && (
+        <details className="module" id="client-job-reports" data-testid="report-picker" open>
+          <summary><h2>Client and job reports</h2></summary>
+          <div className="module-body">
+            <div className="grid two equal">
+              <div>
+                <h3>Client report</h3>
+                {picker.clients.length === 0 ? (
+                  <p className="muted">No clients yet. <Link href="/clients?add=1">Add a client</Link></p>
+                ) : (
+                  <ul className="agenda" data-testid="report-picker-clients">
+                    {picker.clients.map((c) => (
+                      <li key={c.id} data-testid="report-picker-client">
+                        <Link className="nm" href={`/reports/client/${c.id}`}>{c.name}</Link>
+                        <span className="muted note">{c.archived ? "Archived" : ""}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <div>
+                <h3>Job report (latest jobs)</h3>
+                {picker.jobs.length === 0 ? (
+                  <p className="muted">No jobs yet. <Link href="/jobs?add=1">Add a job</Link></p>
+                ) : (
+                  <ul className="agenda" data-testid="report-picker-jobs">
+                    {picker.jobs.map((j) => (
+                      <li key={j.id} data-testid="report-picker-job">
+                        <Link className="nm" href={`/reports/job/${j.id}`}>{j.title}</Link>
+                        <span className="muted note">{j.client.name} · {formatDay(j.eventDate)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <p className="muted">Older jobs: open the job and choose “Job report”.</p>
+              </div>
+            </div>
+          </div>
+        </details>
+      )}
 
       {/* Everything below refreshes when the filters change; the filter form above stays put. */}
       <div id="report-body" className="region">

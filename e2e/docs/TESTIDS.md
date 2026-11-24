@@ -81,7 +81,7 @@ Several forms with the same id can exist on one page (one per row). Narrow with 
 
 ## Freelance dashboard and reports (v0.7.0)
 
-Dashboard `dash-freelance` (+ `-top-clients`, `-services`), `fl-received`, `fl-costs`, `fl-profit`, `fl-jobs`, `fl-outstanding`, `fl-due-link`, `fl-jobs-link`, `top-client-row`; Reports `report-freelance` (same inner ids); client report `client-report-summary`, `cr-jobs`, `cr-received`, `cr-balance`, `cr-profit`, `client-report-jobs`, `client-report-job-row`, `client-report-payments`, `client-report-costs`, `client-report-pdf`, link `client-report-link`; job report `job-report-summary`, `jr-agreed`, `jr-received`, `jr-balance`, `jr-profit`, `job-report-payments`, `job-report-costs`, `job-report-pdf`, link `job-report-link`.
+Dashboard `dash-freelance` (+ `-top-clients`, `-services`), `fl-received`, `fl-costs`, `fl-profit`, `fl-jobs`, `fl-outstanding`, `fl-due-link`, `fl-jobs-link`, `top-client-row`; Reports `report-freelance` (same inner ids); client report `client-report-summary`, `cr-jobs`, `cr-received`, `cr-balance`, `cr-profit`, `client-report-jobs`, `client-report-job-row`, `client-report-payments`, `client-report-costs`, `client-report-pdf`, link `client-report-link`; job report `job-report-summary`, `jr-agreed`, `jr-received`, `jr-balance`, `jr-profit`, `job-report-payments`, `job-report-costs`, `job-report-pdf`, link `job-report-link`; Reports page picker `report-picker`, `report-picker-clients`, `report-picker-client`, `report-picker-jobs`, `report-picker-job`.
 
 ## Import
 

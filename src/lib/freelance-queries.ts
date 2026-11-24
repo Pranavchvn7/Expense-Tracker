@@ -163,3 +163,23 @@ export async function jobReport(jobId: string) {
 }
 export type JobReport = NonNullable<Awaited<ReturnType<typeof jobReport>>>;
 
+
+/** Clients and recent jobs to pick from on the Reports page. */
+export async function reportPicker() {
+  const { userId } = await requireSession();
+  const [clients, jobs] = await Promise.all([
+    prisma.client.findMany({
+      where: { userId },
+      orderBy: [{ archived: "asc" }, { name: "asc" }, { id: "asc" }],
+      take: 100,
+      select: { id: true, name: true, archived: true },
+    }),
+    prisma.job.findMany({
+      where: { userId },
+      orderBy: [{ eventDate: "desc" }, { id: "asc" }],
+      take: 15,
+      select: { id: true, title: true, eventDate: true, client: { select: { name: true } } },
+    }),
+  ]);
+  return { clients, jobs };
+}

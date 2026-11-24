@@ -8,6 +8,7 @@
 - **Client report** (`/reports/client/<id>`): every job with agreed, received, costs and profit; totals; payments and costs lists; **PDF download**
 - **Job report** (`/reports/job/<id>`): job details, payments, costs, balance and profit; **PDF download**
 - "Client report" and "Job report" buttons on the client and job pages; top clients on the Overview and Reports link to their client report
+- **Reports page picker**: a "Client and job reports" section on the Reports page lists your clients and your 15 latest jobs, each linking straight to its report
 - Settings → Work type explains the three modes
 
 ### Security
