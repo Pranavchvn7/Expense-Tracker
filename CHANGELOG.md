@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.6.5
+### Added (freelance mode, part 6: reminders and payments due)
+- **Job reminders**: the daily reminder run (about 09:00 India time) now also sends one push per person listing how many **booked** jobs they have tomorrow, in their own timezone. Tapping it opens that day in the Calendar
+- **Settings → Notifications**: new "Job reminders" choice (On by default), shown for Freelance and Both accounts
+- **Payments due** list (Jobs page card and `/jobs/due`): completed jobs with an agreed price that are not fully paid, oldest first, with days since the event, amount paid, balance and a total owed
+- The two reminder types run independently, so a failure in one does not stop the other
+
+### Security
+- Reminder text never contains client names, places, times or amounts. One reminder per person per day (`NotificationLog` key `jobs:<date>`); the run is bounded (one query, 5,000 jobs) and only reads jobs of users who opted in and have a push device
+- The payments-due query is scoped by `userId` with explicit `select`s and reads at most 5,000 completed jobs
+
+### Operations
+- **Migration**: `add_job_reminders` (`User.notifyJobs` boolean, default true). Apply to production with `migrate deploy` (both `DATABASE_URL` and `DIRECT_URL`) before merging
+- No new dependency or environment variable; the existing cron schedule and `CRON_SECRET` are reused. Push must already be set up (VAPID keys) for reminders to be sent
+
 ## 0.6.4
 ### Added (freelance mode, part 5: calendar)
 - **Calendar** page (Freelance and Both): a month grid (Monday first) showing each day's jobs, coloured by status, with month navigation and a Today button. Tap a day to see its **agenda**: time, job, client, place, status

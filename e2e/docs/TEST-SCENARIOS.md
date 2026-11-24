@@ -289,6 +289,26 @@ Your to-do list. Write the tests one by one; tick them off as you go.
 | CAL-14 | R | Phone width | Grid shows counts, not titles; agenda stacks; no horizontal scroll |
 | CAL-15 | R | Second user's jobs | Never appear in the first user's calendar |
 
+## REM: job reminders and payments due (project: `app`, work type Freelance)
+
+| ID | Type | Test case | Expected |
+|---|---|---|---|
+| REM-01 | R | Settings → Notifications on a Freelance account | "Job reminders" select is visible, On by default |
+| REM-02 | R | Same page on a Salaried account | No "Job reminders" select |
+| REM-03 | R | Set Job reminders Off, save, reload | Choice is kept; budget and renewal choices unchanged |
+| REM-04 | R | Save alert choices on a Salaried account after earlier turning jobs Off | Job reminders choice is not changed |
+| REM-05 | S | Completed job, agreed 10000, paid 4000 | Appears in Payments due with balance 6,000 |
+| REM-06 | R | Pay the balance | Job leaves Payments due |
+| REM-07 | R | Job with no agreed price, or still Booked, or Cancelled | Never listed |
+| REM-08 | R | Two due jobs | Oldest event first; total owed is the sum; "n days ago" is correct |
+| REM-09 | R | Jobs page card shows at most 5 and "See all" opens the full list | Counts agree |
+| REM-10 | R | No jobs owing | Card is hidden on Jobs; /jobs/due shows "Nothing is owed to you" |
+| REM-11 | R | Salaried account opens /jobs/due | "Freelance mode is off" |
+| REM-12 | R | Other user's jobs | Never listed |
+| REM-13 | Manual | Booked job tomorrow, push enabled, trigger the cron with the secret | One notification "You have 1 job tomorrow", no names; second trigger sends nothing |
+| REM-14 | Manual | Same with reminders Off, or the job Cancelled/Enquiry | No notification |
+| REM-15 | Manual | Call `/api/cron/reminders` without or with a wrong secret | 401 |
+
 ## DEBT: debt tracker (project: `app`)
 
 | ID | Type | Test case | Expected |

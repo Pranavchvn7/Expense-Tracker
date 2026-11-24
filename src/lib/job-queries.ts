@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 import { monthRange } from "@/lib/queries";
 import { summarize, type JobStatus } from "@/lib/job-math";
-import { sumByJob } from "@/lib/pay-math";
+import { dueJobs, sumByJob } from "@/lib/pay-math";
 
 // Every query: session first, userId in where, explicit select.
 export type JobFilter = "all" | "pending" | "completed" | "cancelled";
@@ -225,4 +225,39 @@ export async function upcomingJobs(todayIso: string, limit = 5) {
     take: limit,
     select: { id: true, title: true, eventDate: true, startTime: true, endTime: true, status: true, client: { select: { name: true } } },
   });
+}
+
+/**
+ * Completed jobs with money still owed, oldest first. Reads completed priced jobs in batches of 500
+ * (at most 10 batches) and keeps those with a balance, so fully paid old jobs never hide newer unpaid ones.
+ */
+export async function paymentsDue(limit = 100) {
+  const { userId } = await requireSession();
+  const found: Awaited<ReturnType<typeof dueRows>> = [];
+  let cursor: string | undefined;
+  for (let i = 0; i < 10 && found.length < limit; i++) {
+    const batch = await dueRows(userId, cursor);
+    if (batch.length === 0) break;
+    const paid = await paidByJob(batch.map((b) => b.id));
+    for (const d of dueJobs(batch.map((b) => ({ ...b, eventDate: b.eventDate.toISOString().slice(0, 10) })), paid)) {
+      const row = batch.find((b) => b.id === d.id);
+      if (row) found.push({ ...row, paidMinor: d.paidMinor, balanceMinor: d.balanceMinor });
+    }
+    if (batch.length < 500) break;
+    cursor = batch[batch.length - 1]?.id;
+  }
+  return found
+    .sort((a, b) => (a.eventDate.getTime() - b.eventDate.getTime()) || a.id.localeCompare(b.id))
+    .slice(0, limit);
+}
+
+async function dueRows(userId: string, cursor?: string) {
+  const rows = await prisma.job.findMany({
+    where: { userId, status: "COMPLETED", agreedAmountMinor: { gt: 0 } },
+    orderBy: [{ eventDate: "asc" }, { id: "asc" }],
+    take: 500,
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    select: { id: true, title: true, eventDate: true, agreedAmountMinor: true, currency: true, client: { select: { id: true, name: true } } },
+  });
+  return rows.map((r) => ({ ...r, paidMinor: 0, balanceMinor: 0 }));
 }

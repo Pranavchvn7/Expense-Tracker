@@ -75,6 +75,10 @@ Several forms with the same id can exist on one page (one per row). Narrow with 
 
 `calendar`, `cal-day` (has `data-date="YYYY-MM-DD"`), `cal-count`, `cal-prev`, `cal-next`, `cal-today`, `cal-add-job`, `cal-agenda`, `cal-agenda-add`, `agenda-item`, `agenda-clash`; job page `double-booking`, `double-booking-calendar`; dashboard `upcoming-jobs`, `upcoming-job`, `upcoming-calendar`; menu `side-nav-calendar` / `sheet-nav-calendar`.
 
+## Reminders and payments due (v0.6.5)
+
+`notify-jobs` (Settings select inside `set-notify-prefs`), Jobs page `due-card`, `due-card-row`, `due-see-all`; `/jobs/due`: `due-list`, `due-row`, `due-count`, `due-total`, `due-back`. The push itself cannot be asserted in Playwright; test the preference and the lists.
+
 ## Import
 
 `import-kind`, `import-format`, `import-file`, `import-preview`, `import-confirm`, `import-error`, `import-notice`.
