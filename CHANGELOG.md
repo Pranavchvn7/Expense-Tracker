@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.0
+### Changed (finance-SaaS look, replaces the 0.7.2 pastel colours)
+- White frame, light grey work area, white cards with a hairline border, one green accent, black active menu item, status tags with a dot
+- Sidebar: labelled groups (Main menu, Manage), its own scroll area, footer (theme and Sign out) always visible, fits all pages at 1280x720 without scrolling
+- KPI rows never leave a single card alone on a row (5 cards: one row on wide screens, 3+2 on medium, full-width last card on phones)
+- Expenses: compact Paid with cards, filter bar on one baseline, long descriptions shorten with an ellipsis, Actions column aligned right, 40px controls
+- Same rhythm (20px desktop, 16px mobile) between all blocks; dark theme tokens updated to match
+- No database or behaviour change
+
 ## 0.7.2
 ### Changed (Elevate look)
 - New look: soft grey frame on a pale blue page, white cards, pastel stat cards (lime, lavender, peach, sky), black pill buttons, Manrope font, rounded sidebar with a lime active item, top bar with search and user pill (desktop)

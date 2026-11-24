@@ -483,3 +483,11 @@ Your to-do list. Write the tests one by one; tick them off as you go.
 - UI-04 App bar search sends you to Expenses filtered by the text (desktop)
 - UI-05 No horizontal scroll at 390px and 1280px on every page
 - UI-06 Active sidebar item is highlighted; mobile bottom bar shows the active tab
+
+## UI-07..12 Finance-SaaS look (v0.8.0)
+- UI-07 Sidebar shows Main menu and Manage groups; only the open page is dark
+- UI-08 At 1280x720 the sidebar footer (theme, Sign out) is visible; with many pages the menu scrolls on its own
+- UI-09 Dashboard KPI row has no card alone on a row at 1920, 1366, 1280, 768, 390, 360 wide
+- UI-10 Expenses filters line up; Apply is reachable at every width
+- UI-11 No horizontal page scroll at the six widths, light and dark
+- UI-12 Theme Light/Dark/System changes every page

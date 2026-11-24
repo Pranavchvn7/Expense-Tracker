@@ -54,6 +54,10 @@ export function AppNav({
   // Phone bottom bar: the three daily pages, everything else lives under "More".
   const primary = items.slice(0, 3);
   const secondary = items.slice(3);
+  // Desktop sidebar groups: daily pages first, setup and planning pages under their own label.
+  const mainCount = workMode === "SALARIED" ? 3 : 6;
+  const main = items.slice(0, mainCount);
+  const manage = items.slice(mainCount);
   const pathname = usePathname();
   const [more, setMore] = useState(false);
   const active = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
@@ -82,14 +86,22 @@ export function AppNav({
         <Link href="/dashboard" className="brand">
           <LogoMark /> Expense Tracker
         </Link>
-        <div className="side-nav hide-scroll">
-          {items.map((i) => (
+        <nav className="side-nav" aria-label="Pages">
+          <p className="nav-label">Main menu</p>
+          {main.map((i) => (
             <Link key={i.href} href={i.href} className="nav-link" data-testid={`side-nav-${i.href.slice(1)}`} aria-current={active(i.href) ? "page" : undefined}>
               {i.icon}
               {i.label}
             </Link>
           ))}
-        </div>
+          <p className="nav-label">Manage</p>
+          {manage.map((i) => (
+            <Link key={i.href} href={i.href} className="nav-link" data-testid={`side-nav-${i.href.slice(1)}`} aria-current={active(i.href) ? "page" : undefined}>
+              {i.icon}
+              {i.label}
+            </Link>
+          ))}
+        </nav>
         <div className="side-foot">
           <div className="who">
             <span className="avatar" aria-hidden="true">{initial}</span>
