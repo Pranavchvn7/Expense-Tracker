@@ -11,8 +11,12 @@ import { parseReportQuery, resolveRange } from "@/lib/report-range";
 import { paymentLabel } from "@/lib/payment-method";
 import { formatMoney, monthLabel } from "@/lib/money";
 import { getUserPrefs, getUserToday } from "@/lib/preferences";
-import { freelanceSummary, reportPicker } from "@/lib/freelance-queries";
+import { clientReport, freelanceSummary, jobReport, reportPicker } from "@/lib/freelance-queries";
 import { formatDay } from "@/lib/job-math";
+import { ReportPicker } from "@/components/ReportPicker";
+import { ClientReportView } from "@/components/reports/ClientReportView";
+import { JobReportView } from "@/components/reports/JobReportView";
+import { uuid } from "@/lib/validation";
 import { FreelanceSummary } from "@/components/FreelanceSummary";
 import { parsePaging } from "@/lib/paging";
 import { IconDownload, IconInbox } from "@/components/icons";
@@ -24,10 +28,36 @@ export default async function ReportsPage({
 }) {
   const sp = await searchParams;
   const today = await getUserToday();
+  const prefs = await getUserPrefs();
+  const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+  const clientId = prefs.workMode === "SALARIED" ? null : uuid.safeParse(first(sp.client));
+  const jobId = prefs.workMode === "SALARIED" || (clientId && clientId.success) ? null : uuid.safeParse(first(sp.job));
+  if ((clientId && clientId.success) || (jobId && jobId.success)) {
+    const [picked, cr, jr] = await Promise.all([
+      reportPicker(),
+      clientId && clientId.success ? clientReport(clientId.data) : Promise.resolve(null),
+      jobId && jobId.success ? jobReport(jobId.data) : Promise.resolve(null),
+    ]);
+    return (
+      <>
+        <div className="page-head">
+          <h1>Reports</h1>
+        </div>
+        <ReportPicker
+          clients={picked.clients.map((c) => ({ id: c.id, label: c.archived ? `${c.name} (archived)` : c.name }))}
+          jobs={picked.jobs.map((j) => ({ id: j.id, label: `${j.title} · ${j.client.name} · ${formatDay(j.eventDate)}` }))}
+          client={cr?.client.id}
+          job={jr?.job.id}
+        />
+        {cr && <ClientReportView r={cr} todayIso={today.iso} />}
+        {jr && <JobReportView r={jr} />}
+        {!cr && !jr && <div className="card"><div className="empty"><IconInbox /><strong>That report was not found</strong></div></div>}
+      </>
+    );
+  }
   const { input, categoryIds, includeNone } = parseReportQuery(sp);
   const { range, notice } = resolveRange(input, today.iso);
   const { page, perPage } = parsePaging(sp);
-  const prefs = await getUserPrefs();
   const [r, tx, fl, picker] = await Promise.all([
     getReport(range, categoryIds, includeNone),
     listReportExpenses(range, categoryIds, includeNone, page, perPage),
@@ -83,44 +113,10 @@ export default async function ReportsPage({
       {notice && <p className="notice" role="note">{notice}</p>}
 
       {picker && (
-        <details className="module" id="client-job-reports" data-testid="report-picker" open>
-          <summary><h2>Client and job reports</h2></summary>
-          <div className="module-body">
-            <div className="grid two equal">
-              <div>
-                <h3>Client report</h3>
-                {picker.clients.length === 0 ? (
-                  <p className="muted">No clients yet. <Link href="/clients?add=1">Add a client</Link></p>
-                ) : (
-                  <ul className="agenda" data-testid="report-picker-clients">
-                    {picker.clients.map((c) => (
-                      <li key={c.id} data-testid="report-picker-client">
-                        <Link className="nm" href={`/reports/client/${c.id}`}>{c.name}</Link>
-                        <span className="muted note">{c.archived ? "Archived" : ""}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-              <div>
-                <h3>Job report (latest jobs)</h3>
-                {picker.jobs.length === 0 ? (
-                  <p className="muted">No jobs yet. <Link href="/jobs?add=1">Add a job</Link></p>
-                ) : (
-                  <ul className="agenda" data-testid="report-picker-jobs">
-                    {picker.jobs.map((j) => (
-                      <li key={j.id} data-testid="report-picker-job">
-                        <Link className="nm" href={`/reports/job/${j.id}`}>{j.title}</Link>
-                        <span className="muted note">{j.client.name} · {formatDay(j.eventDate)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <p className="muted">Older jobs: open the job and choose “Job report”.</p>
-              </div>
-            </div>
-          </div>
-        </details>
+        <ReportPicker
+          clients={picker.clients.map((c) => ({ id: c.id, label: c.archived ? `${c.name} (archived)` : c.name }))}
+          jobs={picker.jobs.map((j) => ({ id: j.id, label: `${j.title} · ${j.client.name} · ${formatDay(j.eventDate)}` }))}
+        />
       )}
 
       {/* Everything below refreshes when the filters change; the filter form above stays put. */}

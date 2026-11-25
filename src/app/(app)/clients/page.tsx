@@ -6,7 +6,8 @@ import { Pager } from "@/components/Pager";
 import { SoftForm } from "@/components/SoftForm";
 import { SortHeader } from "@/components/SortHeader";
 import { createClient } from "@/actions/clients";
-import { clientCounts, listClients, type ClientSort, type ClientStatus } from "@/lib/client-queries";
+import { clientCounts, clientSources, listClients, type ClientSort, type ClientStatus } from "@/lib/client-queries";
+import { countBy } from "@/lib/freelance-math";
 import { getUserPrefs } from "@/lib/preferences";
 import { buildHref, parsePaging } from "@/lib/paging";
 import { IconInbox } from "@/components/icons";
@@ -39,6 +40,9 @@ export default async function ClientsPage({
     clientCounts(),
   ]);
 
+  const sourceRows = await clientSources();
+  const sources = countBy(sourceRows.map((s) => s || "Not recorded"), 5);
+
   const keep = {
     q: q || undefined,
     status: status === "active" ? undefined : status,
@@ -56,7 +60,21 @@ export default async function ClientsPage({
           <h1>Clients</h1>
           <p>{counts.active} active{counts.archived > 0 ? ` · ${counts.archived} archived` : ""}</p>
         </div>
+        <div className="actions">
+          <Link className="btn ghost small" href="/clients/export" prefetch={false} data-testid="clients-export">Export CSV</Link>
+        </div>
       </div>
+
+      {sources.length > 0 && (
+        <div className="card section" data-testid="client-sources">
+          <div className="card-head"><h2>Where clients come from</h2></div>
+          <ul className="src-list">
+            {sources.map((s) => (
+              <li key={s.label}><span>{s.label}</span><span className="num">{s.count}</span></li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <details className="add" open={openAdd || (counts.active + counts.archived === 0)}>
         <summary>Add a client</summary>

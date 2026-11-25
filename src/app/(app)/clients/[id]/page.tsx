@@ -9,6 +9,7 @@ import { paySummary, profitSummary } from "@/lib/pay-math";
 import { formatMoney } from "@/lib/money";
 import { getUserPrefs, getUserToday } from "@/lib/preferences";
 import { uuid } from "@/lib/validation";
+import { groupByYear } from "@/lib/history-math";
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -67,7 +68,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
               <div><dt>Profit</dt><dd data-testid="client-profit">{formatMoney(kept, money)}</dd></div>
             </dl>
             <p className="muted">
-              <Link href={`/reports/client/${client.id}`} data-testid="client-report-link">Client report</Link>{" · "}
+              <Link href={`/reports?client=${client.id}`} data-testid="client-report-link">Client report</Link>{" · "}
               <Link href={`/income?client=${client.id}`} data-testid="client-income-link">Payments in Income</Link>{" · "}
               <Link href={`/expenses?client=${client.id}`} data-testid="client-expenses-link">Costs in Expenses</Link>
             </p>
@@ -93,6 +94,29 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           </>
         )}
       </div>
+
+      {jobs.length > 0 && (
+        <div className="card section" data-testid="client-history">
+          <div className="card-head"><h2>History</h2></div>
+          {groupByYear(jobs.map((j) => ({ id: j.id, title: j.title, status: j.status, date: j.eventDate.toISOString().slice(0, 10), paid: paid[j.id] ?? 0, currency: j.currency }))).map((g) => (
+            <div key={g.year}>
+              <p className="year">{g.year}</p>
+              <ol className="timeline">
+                {g.items.map((e) => (
+                  <li key={e.id}>
+                    <span className="when">{new Date(`${e.date}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" })}</span>
+                    <span>
+                      <Link className="nm" href={`/jobs/${e.id}`}>{e.title}</Link>{" "}
+                      <span className="tag">{STATUS_LABEL[e.status]}</span>{" "}
+                      <span className="muted">{e.paid > 0 ? `${formatMoney(e.paid, e.currency)} received` : "Nothing received yet"}</span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="card section">
         <h2>Manage</h2>

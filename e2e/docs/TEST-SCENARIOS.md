@@ -475,3 +475,41 @@ Your to-do list. Write the tests one by one; tick them off as you go.
 4. SET, SHARE, IMP
 5. MOB, SEC
 6. OFF (new project in the config), A11Y
+
+## UI-01..06 Elevate look and report picker (v0.7.2)
+- UI-01 Reports shows Period / Client / Job buttons; Client and Job open a dropdown
+- UI-02 Choosing a client shows its report in place with a PDF button that downloads a PDF
+- UI-03 Choosing a job does the same
+- UI-04 App bar search sends you to Expenses filtered by the text (desktop)
+- UI-05 No horizontal scroll at 390px and 1280px on every page
+- UI-06 Active sidebar item is highlighted; mobile bottom bar shows the active tab
+
+## UI-07..12 Finance-SaaS look (v0.8.0)
+- UI-07 Sidebar shows Main menu and Manage groups; only the open page is dark
+- UI-08 At 1280x720 the sidebar footer (theme, Sign out) is visible; with many pages the menu scrolls on its own
+- UI-09 Dashboard KPI row has no card alone on a row at 1920, 1366, 1280, 768, 390, 360 wide
+- UI-10 Expenses filters line up; Apply is reachable at every width
+- UI-11 No horizontal page scroll at the six widths, light and dark
+- UI-12 Theme Light/Dark/System changes every page
+
+## UI-13..14 Grid row buttons and accents (v0.8.2)
+- UI-13 In every grid record the action buttons share one height and one centre line, desktop and phone
+- UI-14 Overview: Balance card is the green hero card; income, spending, balance and savings tiles show their colour accent in light and dark
+
+## CSV-01..04, HIS-01..04 (v0.8.3)
+- CSV-01 Clients Export CSV downloads a file with only your clients; names with commas are quoted
+- CSV-02 Jobs Export CSV includes agreed, received and balance; cancelled jobs show balance 0
+- CSV-03 A second user never sees your clients or jobs in an export
+- CSV-04 Export is rate limited (10 per hour, shared with the expense export)
+- HIS-01 Where clients come from lists sources with counts; blank sources show Not recorded
+- HIS-02 Busiest months shows at most 3 months from the last 12, most booked first
+- HIS-03 Client History lists jobs newest first with year headings and money received
+- HIS-04 Freelance-only accounts see the Income page titled Client payments
+
+## UI-15..20 Layout and records (v0.8.4)
+- UI-15 The app fills the screen; no outer margin or frame
+- UI-16 Collapse button makes the sidebar icons-only; the choice survives a reload
+- UI-17 Each Expenses, Income, Jobs and Recurring row has one ellipsis menu holding all its actions
+- UI-18 Jobs has Date and Time columns
+- UI-19 Overview Top clients and Upcoming jobs have no links; their buttons open the report or job
+- UI-20 Goals, debts and budgets cards line up at 1280 and 390 wide
