@@ -97,3 +97,6 @@ Charts, goal calculators and suggestion cards, report summary cards and "Downloa
 
 ## v0.8.3 Clients, jobs, client history
 - `clients-export`, `jobs-export`, `client-sources`, `busiest-months`, `client-history`
+
+## v0.8.4
+- `row-menu` (ellipsis menu on each record row), `nav-toggle`, `upcoming-open`, `top-client-row`, `upcoming-job`

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.8.4
+### Changed
+- Full-bleed app: no outer frame or page margin; content keeps a 24px inner gutter
+- Collapsible sidebar (chevron button, icons-only mode, remembered per browser via cookie, no flicker); soft hover and active motion on menu items (desktop)
+- Expenses, Income, Jobs and Recurring: Match / Edit / Copy / Delete / View / Pause / Delete moved into one ellipsis menu per row
+- Wider Description, Source, Job, Client and Name columns
+- Jobs: separate Time column
+- Overview: pastel colour cards (income lime, spending peach, savings sky, balance lavender) with soft rise-in and hover lift; Top clients and Upcoming jobs redesigned as rows with date tile, share bar and an Open/Report button (no links)
+- One sub-text size (0.78rem) for job, client, city and payment-method lines
+- Goals, debts and budgets cards share one layout
+- Reports use the same stat and list cards as the Overview
+- No database or behaviour change
+
 ## 0.8.3 (roadmap 0.7.1)
 ### Added
 - Clients: "Export CSV" (name, contact, city, address, source, notes, archived); "Where clients come from" summary of lead sources

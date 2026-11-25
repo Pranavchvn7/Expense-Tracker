@@ -505,3 +505,11 @@ Your to-do list. Write the tests one by one; tick them off as you go.
 - HIS-02 Busiest months shows at most 3 months from the last 12, most booked first
 - HIS-03 Client History lists jobs newest first with year headings and money received
 - HIS-04 Freelance-only accounts see the Income page titled Client payments
+
+## UI-15..20 Layout and records (v0.8.4)
+- UI-15 The app fills the screen; no outer margin or frame
+- UI-16 Collapse button makes the sidebar icons-only; the choice survives a reload
+- UI-17 Each Expenses, Income, Jobs and Recurring row has one ellipsis menu holding all its actions
+- UI-18 Jobs has Date and Time columns
+- UI-19 Overview Top clients and Upcoming jobs have no links; their buttons open the report or job
+- UI-20 Goals, debts and budgets cards line up at 1280 and 390 wide

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RowMenu } from "@/components/RowMenu";
 import { ActionForm } from "@/components/ActionForm";
 import { FreelanceOff } from "@/components/FreelanceOff";
 import { JobFields } from "@/components/JobFields";
@@ -200,6 +201,7 @@ export default async function JobsPage({
             <thead>
               <tr>
                 <SortHeader label="Date" column="date" sort={sort} dir={dir} basePath="/jobs" params={sortParams} />
+                <th>Time</th>
                 <th>Job</th>
                 <th>Client</th>
                 <SortHeader label="Agreed" column="amount" sort={sort} dir={dir} basePath="/jobs" params={sortParams} className="num" />
@@ -216,10 +218,8 @@ export default async function JobsPage({
                 const pay = paySummary(j.agreedAmountMinor, paid[j.id] ?? 0);
                 return (
                   <tr key={j.id} id={`job-${j.id}`} data-testid="job-row">
-                    <td data-label="Date">
-                      {formatDay(j.eventDate)}
-                      {when && <span className="muted note">{when}</span>}
-                    </td>
+                    <td data-label="Date">{formatDay(j.eventDate)}</td>
+                    <td data-label="Time">{when || <span className="muted">—</span>}</td>
                     <td data-label="Job">
                       <span className="name-block">
                         <span className="name-cell"><Link className="nm" href={`/jobs/${j.id}`}>{j.title}</Link></span>
@@ -237,7 +237,7 @@ export default async function JobsPage({
                       </span>
                     </td>
                     <td className="nolabel">
-                      <div className="cell-actions">
+                      <RowMenu>
                         {(bucket === "upcoming" || bucket === "overdue") && (
                           <ActionForm action={setJobStatus} testId="set-job-status" submitLabel="Mark completed">
                             <input type="hidden" name="id" value={j.id} />
@@ -246,7 +246,7 @@ export default async function JobsPage({
                         )}
                         <Link className="btn ghost small" href={`/jobs/${j.id}`} data-testid="job-view">View</Link>
                         <Link className="btn ghost small" href={`/jobs/${j.id}/edit`} data-testid="job-edit">Edit</Link>
-                      </div>
+                      </RowMenu>
                     </td>
                   </tr>
                 );

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RowMenu } from "@/components/RowMenu";
 import { materializeRecurring } from "@/lib/recurring";
 import { ActionForm } from "@/components/ActionForm";
 import { Pager } from "@/components/Pager";
@@ -243,7 +244,7 @@ export default async function ExpensesPage({
                   </td>
                   <td className="num" data-label="Amount">{formatMoney(e.amountMinor, e.currency)}</td>
                   <td className="nolabel">
-                    <div className="cell-actions">
+                    <RowMenu>
                       <ActionForm action={setReconciled} testId="set-reconciled" submitLabel={e.reconciled ? "✓ Matched" : "Match"} className={e.reconciled ? "matched" : undefined}>
                         <input type="hidden" name="id" value={e.id} />
                         <input type="hidden" name="reconciled" value={e.reconciled ? "0" : "1"} />
@@ -258,7 +259,7 @@ export default async function ExpensesPage({
                       >
                         <input type="hidden" name="id" value={e.id} />
                       </ActionForm>
-                    </div>
+                    </RowMenu>
                   </td>
                 </tr>
               ))}

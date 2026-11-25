@@ -1243,3 +1243,134 @@ td[data-label="Date"] { white-space: nowrap; }
 .year { margin: 14px 0 8px; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.06em; color: var(--muted); }
 .year:first-child { margin-top: 0; }
 @media (max-width: 719px) { .timeline li { grid-template-columns: 1fr; gap: 2px; } }
+
+/* ===================================================================
+   v0.8.4: full-bleed app, collapsible sidebar, row menus, colour cards,
+   soft motion, list rows, one sub-text size.
+   =================================================================== */
+
+/* Full-bleed: the app fills the screen, no outer frame or margin */
+@media (min-width: 900px) {
+  body { background: var(--bg); }
+  .shell { width: 100%; max-width: none; min-height: 100vh; margin: 0; border-radius: 0; box-shadow: none; grid-template-columns: 252px minmax(0, 1fr); transition: grid-template-columns 0.35s cubic-bezier(0.2, 0.7, 0.2, 1); }
+  .shell:has(> .sidebar.is-collapsed) { grid-template-columns: 76px minmax(0, 1fr); }
+  .sidebar { top: 0; height: 100vh; border-right: 1px solid var(--line); transition: padding 0.35s ease; }
+  .appbar { padding: 12px 24px; }
+  .content { padding: 24px 28px 40px; border-radius: 0; background: var(--bg); }
+}
+
+/* Sidebar: brand row with the collapse button; collapsed = icons only */
+.brand-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 8px 14px; }
+.brand-row .brand { padding: 0; min-width: 0; overflow: hidden; }
+.brand-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: opacity 0.2s ease; }
+.nav-toggle { flex: none; width: 34px; height: 34px; border: 0; border-radius: 10px; background: var(--bg); color: var(--text); display: none; place-items: center; cursor: pointer; transition: background-color 0.2s ease; }
+.nav-toggle:hover { background: var(--line); }
+.nav-toggle svg { width: 18px; height: 18px; transition: transform 0.35s ease; }
+.nav-text { transition: opacity 0.2s ease; white-space: nowrap; }
+@media (min-width: 900px) {
+  .nav-toggle { display: grid; }
+  .sidebar.is-collapsed { padding-inline: 10px; }
+  .sidebar.is-collapsed .brand-row { flex-direction: column; justify-content: center; gap: 10px; padding-bottom: 12px; }
+  .sidebar.is-collapsed .brand-row .brand { display: none; }
+  .sidebar.is-collapsed .nav-toggle svg { transform: rotate(180deg); }
+  .sidebar.is-collapsed .brand-text, .sidebar.is-collapsed .nav-text, .sidebar.is-collapsed .nav-label, .sidebar.is-collapsed .side-foot { display: none; }
+  .sidebar.is-collapsed .nav-link { justify-content: center; padding: 0; }
+  .sidebar.is-collapsed .side-nav { align-items: center; }
+  .sidebar.is-collapsed .nav-link { width: 48px; }
+}
+/* Soft menu motion (desktop, pointer, no reduced motion) */
+@media (min-width: 900px) {
+  .nav-link { transition: background-color 0.25s ease, color 0.25s ease, transform 0.25s ease; }
+  .nav-link .icon { transition: transform 0.25s ease; }
+  .nav-link[aria-current="page"] { animation: nav-in 0.4s ease both; }
+}
+@keyframes nav-in { from { opacity: 0.4; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+@media (hover: hover) and (min-width: 900px) and (prefers-reduced-motion: no-preference) {
+  .nav-link:hover { transform: translateX(3px); }
+  .nav-link:hover .icon { transform: scale(1.08); }
+  .sidebar.is-collapsed .nav-link:hover { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .shell, .nav-link, .nav-link[aria-current="page"] { transition: none !important; animation: none !important; } }
+
+/* Row menu: one ellipsis button per record, all actions inside */
+.row-menu { position: relative; display: inline-block; }
+.row-menu > summary { list-style: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; cursor: pointer; background: var(--card); color: var(--text); box-shadow: inset 0 0 0 1px var(--line); transition: box-shadow 0.2s ease, background-color 0.2s ease; }
+.row-menu > summary::-webkit-details-marker { display: none; }
+.row-menu > summary:hover, .row-menu[open] > summary { box-shadow: inset 0 0 0 1px var(--muted); background: var(--bg); }
+.row-menu > summary svg { width: 18px; height: 18px; }
+.row-menu-panel { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; min-width: 176px; display: grid; gap: 2px; padding: 6px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow-hover); transform-origin: top right; animation: menu-in 0.2s ease both; }
+@keyframes menu-in { from { opacity: 0; transform: translateY(-4px) scale(0.98); } to { opacity: 1; transform: none; } }
+.row-menu-panel form { margin: 0; }
+.row-menu-panel .btn, .row-menu-panel a { display: flex; width: 100%; height: 36px; min-height: 36px; justify-content: flex-start; align-items: center; padding: 0 10px; border-radius: 10px; background: transparent; color: var(--text); box-shadow: none; font-weight: 600; font-size: 0.9rem; }
+.row-menu-panel .btn:hover, .row-menu-panel a:hover { background: var(--bg); opacity: 1; box-shadow: none; }
+.row-menu-panel .btn.danger { color: var(--bad-fg); }
+.row-menu-panel .btn.danger:hover { background: var(--bad-bg); }
+.row-menu-panel .btn.is-on { color: var(--brand); }
+
+/* Column widths: the content columns never squeeze their text */
+@media (min-width: 720px) {
+  table.responsive td[data-label="Description"], table.responsive td[data-label="Source"], table.responsive td[data-label="Job"], table.responsive td[data-label="Client"], table.responsive td[data-label="Name"] { min-width: 220px; white-space: normal; }
+  table.responsive td[data-label="Description"] .name-block, table.responsive td[data-label="Job"] .name-block { min-width: 220px; }
+  table.responsive td[data-label="Description"] .nm, table.responsive td[data-label="Job"] .nm, table.responsive td[data-label="Name"] .nm { max-width: none; white-space: normal; }
+  table.responsive td[data-label="Time"], table.responsive td[data-label="Date"] { white-space: nowrap; }
+}
+
+/* One sub-text size everywhere (job, client, city, payment method, report sub-lines) */
+.name-block .note, .muted.note, .muted.sub, .sub, .stack-sm .muted, .name-block .muted { font-size: 0.78rem; line-height: 1.35; font-weight: 500; }
+.sub { display: block; color: var(--muted); }
+
+/* Record cards: goals, debts and budgets look the same */
+.goal, .budget-card, .record-card { padding: 18px; border-radius: var(--radius); }
+.goal-title, .budget-card strong, .budget-figure strong { font-size: 1rem; font-weight: 800; }
+.goal-meta, .budget-figure .muted { font-size: 0.78rem; color: var(--muted); }
+.goals-grid { gap: 16px; }
+
+/* Stat cards: pastel colours back, icon chips on top of them */
+.stat { border-radius: var(--radius); }
+.stat.income { background: var(--tile-lime); border-color: transparent; }
+.stat.spend { background: var(--tile-peach); border-color: transparent; }
+.stat.pos { background: var(--tile-lav); border-color: transparent; }
+.stat.neg { background: var(--bad-bg); border-color: transparent; }
+.stat.with-ring { background: var(--tile-sky); border-color: transparent; }
+.stat.income .value, .stat.spend .value, .stat.with-ring .value, .stat.pos .value { color: var(--text); }
+.stat.neg .value { color: var(--bad-fg); }
+.stat.income .label, .stat.spend .label, .stat.pos .label, .stat.with-ring .label, .stat.neg .label { color: color-mix(in srgb, var(--text) 72%, transparent); }
+.stat.income .pill-icon, .stat.spend .pill-icon, .stat.pos .pill-icon, .stat.with-ring .pill-icon, .stat.neg .pill-icon { background: rgb(255 255 255 / 0.6); color: var(--text); }
+:root[data-theme="dark"] .stat.income .pill-icon, :root:not([data-theme="light"]) .stat.income .pill-icon, :root[data-theme="dark"] .stat.spend .pill-icon, :root:not([data-theme="light"]) .stat.spend .pill-icon, :root[data-theme="dark"] .stat.pos .pill-icon, :root:not([data-theme="light"]) .stat.pos .pill-icon, :root[data-theme="dark"] .stat.with-ring .pill-icon, :root:not([data-theme="light"]) .stat.with-ring .pill-icon, :root[data-theme="dark"] .stat.neg .pill-icon, :root:not([data-theme="light"]) .stat.neg .pill-icon { background: rgb(255 255 255 / 0.12); }
+.stat.hero, .stat.hero.pos, .stat.hero.neg, .stat.hero.income { background: var(--brand); border-color: var(--brand); }
+
+/* Client and job rows (Overview) */
+.client-list, .job-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.client-row, .job-row { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 10px 8px; border-radius: 14px; }
+.client-row { grid-template-columns: 40px minmax(0, 1fr) auto auto; }
+.client-row:hover, .job-row:hover { background: var(--bg); }
+.avatar-tile, .date-tile { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--tile-lav); color: var(--text); font-weight: 800; }
+.date-tile { background: var(--tile-lime); align-content: center; line-height: 1.05; }
+.date-tile strong { font-size: 1rem; }
+.date-tile span { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.nm-plain { display: block; font-weight: 700; font-size: 0.92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.client-main, .job-main { display: grid; gap: 4px; min-width: 0; }
+progress.share { width: 100%; height: 6px; }
+.client-figs { display: grid; justify-items: end; gap: 2px; }
+.client-figs strong { font-size: 0.92rem; font-variant-numeric: tabular-nums; }
+.job-side { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+@media (max-width: 480px) {
+  .client-row { grid-template-columns: 40px minmax(0, 1fr) auto; }
+  .client-row .btn { grid-column: 2 / -1; justify-self: start; }
+  .job-side { grid-column: 2 / -1; justify-content: flex-start; }
+  .job-row { grid-template-columns: 40px minmax(0, 1fr); }
+}
+
+/* Soft motion on cards (desktop with a pointer, never with reduced motion) */
+@media (hover: hover) and (min-width: 900px) and (prefers-reduced-motion: no-preference) {
+  .grid.stats > .stat { transition: transform 0.3s ease, box-shadow 0.3s ease; animation: soft-rise 0.5s ease both; }
+  .grid.stats > .stat:nth-child(2) { animation-delay: 0.05s; }
+  .grid.stats > .stat:nth-child(3) { animation-delay: 0.1s; }
+  .grid.stats > .stat:nth-child(4) { animation-delay: 0.15s; }
+  .grid.stats > .stat:nth-child(n+5) { animation-delay: 0.2s; }
+  .grid.stats > .stat:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+  .record-card, .goal, .budget-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+  .record-card:hover, .goal:hover, .budget-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+  .client-row, .job-row { transition: background-color 0.2s ease, transform 0.25s ease; }
+  .client-row:hover, .job-row:hover { transform: translateX(3px); }
+}
