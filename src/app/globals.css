@@ -1429,17 +1429,13 @@ progress.share { width: 100%; height: 6px; }
 .crumbs .sep { opacity: 0.5; }
 
 /* v0.8.6 header controls: one theme toggle on every page; month nav fixed beside it on desktop */
-.top-actions { position: fixed; top: 18px; right: 36px; z-index: 40; display: none; align-items: center; gap: 8px; }
-.top-actions .theme-toggle { height: 44px; box-sizing: border-box; display: flex; align-items: center; border-radius: 999px; width: max-content; }
 .month-nav.top-month { height: 44px; box-sizing: border-box; padding: 4px; border-radius: 999px; background: var(--card); box-shadow: 0 6px 18px rgb(0 0 0 / 0.08), inset 0 0 0 1px var(--line); }
 .month-nav.top-month a { width: 36px; height: 36px; }
 .month-nav.top-month .current { min-width: 96px; line-height: 1; }
 @media (min-width: 900px) {
-  .top-actions { display: flex; }
-  .month-nav.top-month { position: fixed; top: 18px; right: 150px; z-index: 40; }
+  .month-nav.top-month { position: fixed; top: 18px; right: 36px; z-index: 40; }
   /* Leave room for the fixed controls so search and the user pill sit to their left. */
-  .shell .appbar { padding-right: 150px; }
-  .shell:has(.top-month) .appbar { padding-right: 380px; }
+  .shell:has(.top-month) .appbar { padding-right: 280px; }
   .month-nav.top-month .current { min-width: 120px; }
 }
 

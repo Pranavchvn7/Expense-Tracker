@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CURRENCY_CODES } from "@/lib/currency";
 import { PAYMENT_METHOD_VALUES } from "@/lib/payment-method";
 import { isCountryCode } from "@/lib/countries";
 import { isValidTimeZone } from "@/lib/tz";
@@ -71,7 +72,7 @@ const optionalInterest = z.preprocess((v) => (v === "" || v === undefined ? unde
 
 export const monthSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "must be a month written like 2026-03");
 
-export const currencySchema = z.enum(["INR", "USD", "EUR", "GBP"]);
+export const currencySchema = z.enum(CURRENCY_CODES);
 
 const optionalPayment = z.preprocess(
   (v) => (v === "" || v === undefined || v === null ? undefined : v),
