@@ -19,6 +19,7 @@ import {
   IconRepeat,
   IconSettings,
   IconUsers,
+  IconUpload,
   IconTarget,
   IconWallet,
   LogoMark,
@@ -32,6 +33,7 @@ const baseItems = [
   { href: "/reports", label: "Reports", icon: <IconReport /> },
   { href: "/debts", label: "Debts", icon: <IconCard /> },
   { href: "/recurring", label: "Recurring", icon: <IconRepeat /> },
+  { href: "/import", label: "Import", icon: <IconUpload /> },
   { href: "/goals", label: "Goals", icon: <IconTarget /> },
   { href: "/settings", label: "Settings", icon: <IconSettings /> },
 ];
