@@ -126,6 +126,7 @@ export function AppNav({
             <span className="avatar" aria-hidden="true">{initial}</span>
             <span className="who-name">{name}</span>
           </div>
+          <ThemeToggle initial={theme} />
           <SignOutButton />
         </div>
       </aside>
