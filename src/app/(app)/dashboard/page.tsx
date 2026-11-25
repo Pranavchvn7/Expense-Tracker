@@ -14,7 +14,7 @@ import { upcomingJobs } from "@/lib/job-queries";
 import { freelanceLifetime, freelanceSummary, outstanding } from "@/lib/freelance-queries";
 import { FreelanceSummary } from "@/components/FreelanceSummary";
 import { clashingIds } from "@/lib/cal-math";
-import { formatDay, timeRangeLabel } from "@/lib/job-math";
+import { timeRangeLabel } from "@/lib/job-math";
 import { monthSchema } from "@/lib/validation";
 import { parsePaging } from "@/lib/paging";
 import { compareSpending, momText } from "@/lib/mom-math";
@@ -96,30 +96,41 @@ export default async function DashboardPage({
   const empty = data.expenseCount === 0 && data.incomeMinor === 0;
 
   const upcomingCard = fl ? (
-        <div className="card section" data-testid="upcoming-jobs">
-          <div className="card-head">
-            <h2>Upcoming jobs</h2>
-            <Link className="btn soft small" href="/calendar" data-testid="upcoming-calendar">Calendar</Link>
-          </div>
-          {upcoming.length === 0 ? (
-            <p className="muted">No upcoming jobs. <Link href="/jobs?add=1">Add a job</Link></p>
-          ) : (
-            <ul className="agenda">
-              {upcoming.map((j) => (
-                <li key={j.id} data-testid="upcoming-job">
-                  <span className="agenda-time">{formatDay(j.eventDate)}</span>
-                  <span className="name-block">
-                    <span className="name-cell">
-                      <Link className="nm" href={`/jobs/${j.id}`}>{j.title}</Link>
-                      {upcomingClash.has(j.id) && <span className="tag st-overdue">Clash</span>}
-                    </span>
-                    <span className="muted note">{j.client.name}{timeRangeLabel(j.startTime, j.endTime) ? ` · ${timeRangeLabel(j.startTime, j.endTime)}` : ""}</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
+    <div className="card section record-card" data-testid="upcoming-jobs">
+      <div className="card-head">
+        <h2>Upcoming jobs</h2>
+        <Link className="btn soft small" href="/calendar" data-testid="upcoming-calendar">Calendar</Link>
+      </div>
+      {upcoming.length === 0 ? (
+        <div className="empty compact">
+          <span className="muted">No upcoming jobs yet.</span>
+          <Link className="btn small" href="/jobs?add=1">Add a job</Link>
         </div>
+      ) : (
+        <ul className="job-list">
+          {upcoming.map((j) => {
+            const d = new Date(`${j.eventDate.toISOString().slice(0, 10)}T00:00:00Z`);
+            const time = timeRangeLabel(j.startTime, j.endTime);
+            return (
+              <li key={j.id} className="job-row" data-testid="upcoming-job">
+                <span className="date-tile" aria-hidden="true">
+                  <strong>{d.toLocaleDateString("en-GB", { day: "numeric", timeZone: "UTC" })}</strong>
+                  <span>{d.toLocaleDateString("en-GB", { month: "short", timeZone: "UTC" })}</span>
+                </span>
+                <span className="job-main">
+                  <span className="nm-plain">{j.title}</span>
+                  <span className="sub">{j.client.name}{time ? ` · ${time}` : ""}</span>
+                </span>
+                <span className="job-side">
+                  {upcomingClash.has(j.id) && <span className="tag st-overdue">Clash</span>}
+                  <Link className="btn soft small" href={`/jobs/${j.id}`} data-testid="upcoming-open">Open</Link>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   ) : null;
   const freelanceBlock = fl ? (
     <>

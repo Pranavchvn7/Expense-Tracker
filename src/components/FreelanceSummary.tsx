@@ -15,6 +15,7 @@ export function FreelanceSummary({
   testId: string;
 }) {
   const cur = s.currency;
+  const topTotal = s.topClients.reduce((n, c) => n + c.value, 0);
   return (
     <div className="section stack" data-testid={testId}>
       <div className="card-head">
@@ -55,18 +56,24 @@ export function FreelanceSummary({
       {(s.topClients.length > 0 || s.services.length > 0) && (
         <div className="grid two equal">
           {s.topClients.length > 0 && (
-            <div className="card panel" data-testid={`${testId}-top-clients`}>
-              <div className="card-head"><h2>Top clients</h2></div>
-              <table className="responsive">
-                <tbody>
-                  {s.topClients.map((c) => (
-                    <tr key={c.id} data-testid="top-client-row">
-                      <td><Link className="nm" href={`/reports?client=${c.id}`}>{c.label}</Link></td>
-                      <td className="num income">{formatMoney(c.value, cur)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="card panel record-card" data-testid={`${testId}-top-clients`}>
+              <div className="card-head"><h2>Top clients</h2><span className="muted sub">{formatMoney(topTotal, cur)} received</span></div>
+              <ul className="client-list">
+                {s.topClients.map((c) => {
+                  const share = topTotal > 0 ? Math.round((c.value / topTotal) * 100) : 0;
+                  return (
+                    <li key={c.id} className="client-row" data-testid="top-client-row">
+                      <span className="avatar-tile" aria-hidden="true">{c.label.trim().charAt(0).toUpperCase() || "?"}</span>
+                      <span className="client-main">
+                        <span className="nm-plain">{c.label}</span>
+                        <progress className="share" max={100} value={share} aria-label={`${share}% of income from this client`} />
+                      </span>
+                      <span className="client-figs"><strong>{formatMoney(c.value, cur)}</strong><span className="sub">{share}% of income</span></span>
+                      <a className="btn soft small" href={`/reports?client=${c.id}`}>Report</a>
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
           )}
           {s.services.length > 0 && (

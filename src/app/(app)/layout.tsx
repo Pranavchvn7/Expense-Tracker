@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { getSession } from "@/lib/session";
 import { getTheme, getUserPrefs } from "@/lib/preferences";
 import { AppNav } from "@/components/AppNav";
@@ -16,6 +17,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!session?.user?.id) redirect("/login");
   const { workMode } = await getUserPrefs();
 
+  const navCollapsed = (await cookies()).get("nav")?.value === "collapsed";
   return (
     <div className="shell">
       <SessionWatcher />
@@ -23,7 +25,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <Shortcuts />
       {/* When this page was produced; shown if a saved copy is opened offline. */}
       <span id="page-rendered" hidden data-at={new Date().toISOString()} />
-      <AppNav name={session.user.name} theme={theme} workMode={workMode} />
+      <AppNav name={session.user.name} theme={theme} workMode={workMode} collapsed={navCollapsed} />
       <header className="appbar">
         <form className="global-search" action="/expenses" method="get" role="search">
           <IconSearch />

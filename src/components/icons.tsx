@@ -210,3 +210,18 @@ export const IconSearch = () => (
     <path d="M20 20l-3.5-3.5" />
   </Icon>
 );
+
+export const IconDots = () => (
+  <Icon>
+    <circle cx="5" cy="12" r="1.6" fill="currentColor" />
+    <circle cx="12" cy="12" r="1.6" fill="currentColor" />
+    <circle cx="19" cy="12" r="1.6" fill="currentColor" />
+  </Icon>
+);
+
+export const IconPanel = () => (
+  <Icon>
+    <rect x="3" y="4" width="18" height="16" rx="3" />
+    <path d="M9 4v16" />
+  </Icon>
+);
