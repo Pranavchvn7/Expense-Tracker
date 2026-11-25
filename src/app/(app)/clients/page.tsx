@@ -61,7 +61,7 @@ export default async function ClientsPage({
           <p>{counts.active} active{counts.archived > 0 ? ` · ${counts.archived} archived` : ""}</p>
         </div>
         <div className="actions">
-          <a className="btn ghost small" href="/clients/export" data-testid="clients-export">Export CSV</a>
+          <Link className="btn ghost small" href="/clients/export" prefetch={false} data-testid="clients-export">Export CSV</Link>
         </div>
       </div>
 
