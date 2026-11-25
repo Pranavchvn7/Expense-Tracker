@@ -5,7 +5,11 @@ const W = 560;
 const H = 240;
 const PAD = { top: 16, right: 14, bottom: 28, left: 52 };
 
-/** Spending per day of the selected month. The biggest day is highlighted. */
+/**
+ * Spending per day of the selected month. The biggest day is highlighted. Hovering a day
+ * highlights its column and shows the amount, its share of the month and how it compares
+ * with the daily average.
+ */
 export function DailyBars({ daily, month, currency }: { daily: number[]; month: string; currency: string }) {
   const max = niceMax(Math.max(...daily, 1));
   const innerW = W - PAD.left - PAD.right;
@@ -26,19 +30,40 @@ export function DailyBars({ daily, month, currency }: { daily: number[]; month: 
           <text className="axis-text" x={PAD.left - 6} y={y(t * max) + 3} textAnchor="end">{formatCompact(t * max, currency)}</text>
         </g>
       ))}
-      {daily.map((v, i) => (
-        <rect
-          key={i}
-          className={i === peakIndex ? "bar-peak" : "bar-day"}
-          x={PAD.left + slot * i + 1.5}
-          y={y(v)}
-          width={barW}
-          height={Math.max(PAD.top + innerH - y(v), v > 0 ? 1 : 0)}
-          rx="2"
-        >
-          <title>{`${monthLabel(month, true)} ${i + 1}: ${formatMoney(v, currency)}`}</title>
-        </rect>
-      ))}
+      {daily.map((v, i) => {
+        const share = total > 0 ? Math.round((v * 100) / total) : 0;
+        const comparison =
+          v === 0
+            ? "No spending"
+            : avg > 0
+              ? `${v > avg ? "Above" : "Below"} the daily average of ${formatMoney(avg, currency)}`
+              : "";
+        return (
+          <g key={i}>
+            <rect
+              className={i === peakIndex ? "bar-peak" : "bar-day"}
+              x={PAD.left + slot * i + 1.5}
+              y={y(v)}
+              width={barW}
+              height={Math.max(PAD.top + innerH - y(v), v > 0 ? 1 : 0)}
+              rx="2"
+              aria-hidden="true"
+            />
+            <rect className="hit-col" x={PAD.left + slot * i} y={PAD.top} width={slot} height={innerH}>
+              <title>
+                {[
+                  `${monthLabel(month, true)} ${i + 1}`,
+                  `Spent: ${formatMoney(v, currency)}`,
+                  `${share}% of the month`,
+                  comparison,
+                ]
+                  .filter(Boolean)
+                  .join("\n")}
+              </title>
+            </rect>
+          </g>
+        );
+      })}
       {avg > 0 && <line className="avg-line" x1={PAD.left} x2={W - PAD.right} y1={y(avg)} y2={y(avg)} strokeDasharray="4 4" />}
       {[1, 5, 10, 15, 20, 25, daily.length].filter((d, i, a) => a.indexOf(d) === i && d <= daily.length).map((d) => (
         <text key={d} className="axis-text" x={PAD.left + slot * (d - 1) + slot / 2} y={H - 6} textAnchor="middle">{d}</text>

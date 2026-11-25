@@ -1374,3 +1374,56 @@ progress.share { width: 100%; height: 6px; }
   .client-row, .job-row { transition: background-color 0.2s ease, transform 0.25s ease; }
   .client-row:hover, .job-row:hover { transform: translateX(3px); }
 }
+
+/* v0.8.5 dashboard: sliders, ranked expenses, staged stat tiles, chart hover */
+.rows.limit6 { max-height: calc(var(--row-h) * 6); }
+.slider { position: relative; min-width: 0; }
+.slider-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; border-radius: 14px; }
+.slider-track::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.slider-track:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.slide { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; box-sizing: border-box; padding: 2px 4px; }
+.slider-btn { position: absolute; top: 0; bottom: 0; width: 22px; border: 0; padding: 0; background: transparent; cursor: pointer; z-index: 1; }
+.slider-btn.prev { left: -6px; }
+.slider-btn.next { right: -6px; }
+.goal-slide, .budget-slide { display: grid; gap: 10px; align-content: start; padding: 14px 16px; border-radius: 18px; background: var(--bg); }
+.goal-slide progress, .budget-slide progress { width: 100%; }
+.budget-figure { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
+.budget-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0; }
+.budget-facts div { display: grid; gap: 2px; }
+.budget-facts dt { font-size: 0.75rem; color: var(--muted); }
+.budget-facts dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.client-main { display: grid; gap: 4px; min-width: 0; }
+.client-main .nm-plain { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.client-main progress.share { width: 100%; height: 6px; }
+.client-figs { display: grid; justify-items: end; gap: 2px; text-align: right; font-variant-numeric: tabular-nums; }
+.rank-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.rank-row { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; background: var(--bg); }
+.rank { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; font-weight: 800; font-size: 0.82rem; background: var(--tile-lav); color: var(--text); }
+.rank-row:first-child .rank { background: var(--tile-lime); }
+.rank-main { display: grid; gap: 4px; min-width: 0; }
+.rank-main .nm-plain { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank-main progress { width: 100%; height: 6px; }
+.rank-row .amt { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* Stat tiles: the headline shows first, the detail line fades in after a short pause. */
+.fx-extra { display: grid; gap: 6px; animation: fx-reveal 0.6s ease 2s both; }
+.fx-costs .fx-extra { animation-delay: 2.6s; }
+.fx-profit .fx-extra { animation-delay: 3.2s; }
+.fx-jobs .fx-extra { animation-delay: 3.8s; }
+.fx-owed .fx-extra { animation-delay: 4.4s; }
+.fx-profit .value { animation: fx-pulse 1.2s ease 3s both; }
+@keyframes fx-reveal { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes fx-pulse { 0% { opacity: 0.35; transform: scale(0.94); } 60% { opacity: 1; transform: scale(1.03); } 100% { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .fx-extra, .fx-profit .value { animation: none; } }
+/* Chart hover: the whole month or day column highlights and shows its tooltip. */
+.hit-col { fill: transparent; cursor: default; }
+.hit-col:hover { fill: var(--line); fill-opacity: 0.45; }
+.bar-day, .bar-peak { transition: opacity 0.2s ease; }
+
+/* v0.8.5 breadcrumb in the app bar */
+.crumbs { min-width: 0; font-size: 0.86rem; color: var(--muted); }
+.crumbs ol { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.crumbs li { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.crumbs a { color: var(--muted); text-decoration: none; border-radius: 8px; padding: 2px 4px; }
+.crumbs a:hover, .crumbs a:focus-visible { color: var(--text); background: var(--bg); }
+.crumbs [aria-current="page"] { color: var(--text); font-weight: 600; padding: 2px 4px; }
+.crumbs .sep { opacity: 0.5; }

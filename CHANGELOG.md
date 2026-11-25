@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.8.5
+### Changed
+- Dashboard: greeting with your name replaces the "Overview" heading
+- Dashboard: "Still owed to you" tile is hidden when nothing is owed
+- Dashboard: Jobs button removed from the freelance block (use the nav bar)
+- Dashboard: Upcoming jobs, Top clients, Savings goals and Budgets are horizontal sliders with invisible previous and next areas; Top clients shows the top two
+- Dashboard: Budgets slides show spent, left or overspent, percent used and a status tag
+- Dashboard: Expenses this month shows 10 per page, with a separate Date column and no date subtext
+- Dashboard: Category detail shows six rows, then scrolls; Largest expenses is a ranked top five
+- Dashboard: Paid with lists only methods used this month (plus Not set)
+- Dashboard: freelance stat tiles show the headline first and reveal detail lines after a short pause
+- Charts: hovering a month or day highlights its column and shows a detailed tooltip
+- Removed the now-unused GoalCarousel component
+
 ## 0.8.4
 ### Changed
 - Full-bleed app: no outer frame or page margin; content keeps a 24px inner gutter
