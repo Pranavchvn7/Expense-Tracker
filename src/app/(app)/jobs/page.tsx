@@ -6,7 +6,8 @@ import { Pager } from "@/components/Pager";
 import { SoftForm } from "@/components/SoftForm";
 import { SortHeader } from "@/components/SortHeader";
 import { createJob, setJobStatus } from "@/actions/jobs";
-import { clientOptions, listJobs, paidByJob, paymentsDue, monthJobCounts, type JobFilter, type JobSort } from "@/lib/job-queries";
+import { clientOptions, listJobs, paidByJob, paymentsDue, monthJobCounts, jobDates, type JobFilter, type JobSort } from "@/lib/job-queries";
+import { busiestMonths } from "@/lib/history-math";
 import { formatDay, jobBucket, STATUS_LABEL, timeRangeLabel } from "@/lib/job-math";
 import { addMonthsKey } from "@/lib/chart-math";
 import { paySummary } from "@/lib/pay-math";
@@ -46,6 +47,8 @@ export default async function JobsPage({
   const { page, perPage } = parsePaging(sp);
   const openAdd = first(sp.add) === "1";
 
+  const busy = busiestMonths(await jobDates(`${addMonthsKey(today.iso.slice(0, 7), -11)}-01`), 3);
+
   const [{ rows, hasNext }, counts, clients] = await Promise.all([
     listJobs({ month, filter, clientId, q: q || undefined, sort, dir, page, perPage }),
     monthJobCounts(month, today.iso),
@@ -75,11 +78,25 @@ export default async function JobsPage({
           <h1>Jobs</h1>
           <p>{monthLabel(month)}</p>
         </div>
+        <Link className="btn ghost small" href="/jobs/export" prefetch={false} data-testid="jobs-export">Export CSV</Link>
         <div className="month-nav" aria-label="Choose month">
           <Link href={monthHref(addMonthsKey(month, -1))} aria-label="Previous month"><IconChevronLeft /></Link>
           <span className="current">{monthLabel(month)}</span>
           <Link href={monthHref(addMonthsKey(month, 1))} aria-label="Next month"><IconChevronRight /></Link>
         </div>
+      </div>
+
+      <div className="card section" data-testid="busiest-months">
+        <div className="card-head"><h2>Busiest months</h2><span className="muted">Last 12 months</span></div>
+        {busy.length === 0 ? (
+          <p className="muted">No jobs in the last 12 months yet.</p>
+        ) : (
+          <ul className="src-list">
+            {busy.map((b) => (
+              <li key={b.month}><span>{monthLabel(b.month)}</span><span className="num">{b.count} job{b.count === 1 ? "" : "s"}</span></li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="grid stats section" data-testid="job-summary">

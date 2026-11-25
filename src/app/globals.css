@@ -1230,3 +1230,16 @@ td[data-label="Date"] { white-space: nowrap; }
   table.responsive td .cell-actions > *, table.responsive td .cell-actions form { flex: none; width: 100%; min-width: 0; margin: 0; }
 }
 .cell-actions .btn, .cell-actions form .btn, table.responsive td .cell-actions .btn { display: inline-flex; align-items: center; justify-content: center; text-align: center; vertical-align: middle; }
+
+/* v0.8.3: lead sources, busiest months, client history timeline */
+.src-list { list-style: none; margin: 0; padding: 0; display: grid; }
+.src-list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); min-width: 0; }
+.src-list li:last-child { border-bottom: 0; }
+.src-list .num { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.timeline { list-style: none; margin: 0 0 4px; padding: 0; display: grid; gap: 12px; }
+.timeline li { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 12px; align-items: start; }
+.timeline .when { color: var(--muted); font-size: 0.85rem; font-variant-numeric: tabular-nums; padding-top: 2px; }
+.timeline .nm { overflow-wrap: anywhere; }
+.year { margin: 14px 0 8px; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.06em; color: var(--muted); }
+.year:first-child { margin-top: 0; }
+@media (max-width: 719px) { .timeline li { grid-template-columns: 1fr; gap: 2px; } }

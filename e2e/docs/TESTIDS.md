@@ -94,3 +94,6 @@ Charts, goal calculators and suggestion cards, report summary cards and "Downloa
 ## v0.7.2 Reports picker and app bar
 - `picker-period-btn`, `picker-client-btn`, `picker-job-btn`, `picker-client-select`, `picker-job-select`
 - `client-report-pdf`, `job-report-pdf`, `appbar-search`, `appbar-user`
+
+## v0.8.3 Clients, jobs, client history
+- `clients-export`, `jobs-export`, `client-sources`, `busiest-months`, `client-history`
