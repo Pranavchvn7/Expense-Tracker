@@ -46,7 +46,7 @@ export default async function IncomePage({
             {totals.length > 0 ? ` · ${totals.map((t) => formatMoney(t._sum.amountMinor ?? 0, t.currency)).join(" · ")}` : ""}
           </p>
         </div>
-        <div className="month-nav" aria-label="Choose month">
+        <div className="month-nav top-month" aria-label="Choose month">
           <Link href={`/income?month=${addMonthsKey(month, -1)}`} aria-label="Previous month"><IconChevronLeft /></Link>
           <span className="current">{monthLabel(month)}</span>
           <Link

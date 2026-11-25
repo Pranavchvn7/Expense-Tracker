@@ -1428,22 +1428,21 @@ progress.share { width: 100%; height: 6px; }
 .crumbs [aria-current="page"] { color: var(--text); font-weight: 600; padding: 2px 4px; }
 .crumbs .sep { opacity: 0.5; }
 
-/* v0.8.6 dashboard: fixed top-right controls, matched money slides, Paid with carousel */
-.top-actions { position: fixed; top: 12px; right: 16px; z-index: 40; display: flex; align-items: center; gap: 8px; }
-.top-actions .month-nav { height: 44px; box-sizing: border-box; padding: 4px; border-radius: 999px; background: var(--card); box-shadow: 0 6px 18px rgb(0 0 0 / 0.08), inset 0 0 0 1px var(--line); }
-.top-actions .month-nav a { width: 36px; height: 36px; }
-.top-actions .month-nav .current { min-width: 96px; line-height: 1; }
-.top-actions .theme-toggle { height: 44px; box-sizing: border-box; display: flex; align-items: center; border-radius: 999px; }
-.top-actions .theme-toggle button { width: 34px; height: 34px; }
+/* v0.8.6 header controls: one theme toggle on every page; month nav fixed beside it on desktop */
+.top-actions { position: fixed; top: 18px; right: 36px; z-index: 40; display: none; align-items: center; gap: 8px; }
+.top-actions .theme-toggle { height: 44px; box-sizing: border-box; display: flex; align-items: center; border-radius: 999px; width: max-content; }
+.month-nav.top-month { height: 44px; box-sizing: border-box; padding: 4px; border-radius: 999px; background: var(--card); box-shadow: 0 6px 18px rgb(0 0 0 / 0.08), inset 0 0 0 1px var(--line); }
+.month-nav.top-month a { width: 36px; height: 36px; }
+.month-nav.top-month .current { min-width: 96px; line-height: 1; }
 @media (min-width: 900px) {
-  .top-actions { top: 18px; right: 36px; }
-  .top-actions .month-nav .current { min-width: 120px; }
+  .top-actions { display: flex; }
+  .month-nav.top-month { position: fixed; top: 18px; right: 150px; z-index: 40; }
   /* Leave room for the fixed controls so search and the user pill sit to their left. */
-  .shell:has(.top-actions) .appbar { padding-right: 380px; }
+  .shell .appbar { padding-right: 150px; }
+  .shell:has(.top-month) .appbar { padding-right: 380px; }
+  .month-nav.top-month .current { min-width: 120px; }
 }
-@media (max-width: 899px) {
-  .dash .page-head { padding-top: 56px; }
-}
+
 .card-foot { display: flex; justify-content: flex-end; padding-top: 14px; }
 .paid-with { display: grid; gap: 14px; justify-items: center; align-content: start; padding: 6px 4px; }
 .paid-with-stage { display: grid; justify-items: center; gap: 10px; text-align: center; animation: pw-in 0.45s ease both; }
@@ -1466,3 +1465,7 @@ progress.share { width: 100%; height: 6px; }
 @keyframes pw-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes pw-pop { from { opacity: 0; transform: scale(0.7) rotate(-8deg); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .paid-with-stage, .pw-icon, .pw-ring { animation: none; } }
+
+/* v0.8.8 Debts: clearer payment rows */
+.pay-main { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; min-width: 0; }
+.pay-facts { display: flex; flex-wrap: wrap; gap: 2px 14px; font-size: 0.82rem; min-width: 0; }

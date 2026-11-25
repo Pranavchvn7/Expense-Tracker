@@ -80,7 +80,7 @@ export default async function JobsPage({
           <p>{monthLabel(month)}</p>
         </div>
         <Link className="btn ghost small" href="/jobs/export" prefetch={false} data-testid="jobs-export">Export CSV</Link>
-        <div className="month-nav" aria-label="Choose month">
+        <div className="month-nav top-month" aria-label="Choose month">
           <Link href={monthHref(addMonthsKey(month, -1))} aria-label="Previous month"><IconChevronLeft /></Link>
           <span className="current">{monthLabel(month)}</span>
           <Link href={monthHref(addMonthsKey(month, 1))} aria-label="Next month"><IconChevronRight /></Link>

@@ -44,7 +44,7 @@ export default async function BudgetsPage({
           <h1>Budgets</h1>
           <p>Monthly limits per category in {currency}. A budget applies to every month.</p>
         </div>
-        <div className="month-nav" aria-label="Choose month">
+        <div className="month-nav top-month" aria-label="Choose month">
           <Link href={buildHref("/budgets", { month: addMonthsKey(month, -1) })} aria-label="Previous month"><IconChevronLeft /></Link>
           <span className="current">{monthLabel(month)}</span>
           <Link

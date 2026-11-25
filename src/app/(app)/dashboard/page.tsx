@@ -9,13 +9,12 @@ import { listGoals } from "@/lib/goal-queries";
 import { monthlyNeeded, percent } from "@/lib/goal-math";
 import { formatMoney, monthLabel } from "@/lib/money";
 import { addMonthsKey } from "@/lib/chart-math";
-import { getTheme, getUserToday, getUserPrefs } from "@/lib/preferences";
+import { getUserToday, getUserPrefs } from "@/lib/preferences";
 import { upcomingJobs } from "@/lib/job-queries";
 import { freelanceLifetime, freelanceSummary, outstanding } from "@/lib/freelance-queries";
 import { FreelanceSummary } from "@/components/FreelanceSummary";
 import { Slider } from "@/components/Slider";
 import { PaidWithCarousel, type PaidWithItem } from "@/components/PaidWithCarousel";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { clashingIds } from "@/lib/cal-math";
 import { timeRangeLabel } from "@/lib/job-math";
 import { monthSchema } from "@/lib/validation";
@@ -48,7 +47,7 @@ export default async function DashboardPage({
   const sp = await searchParams;
   // Create anything that fell due since the last visit before reading the data.
   await materializeRecurring();
-  const [today, prefs, theme] = await Promise.all([getUserToday(), getUserPrefs(), getTheme()]);
+  const [today, prefs] = await Promise.all([getUserToday(), getUserPrefs()]);
   // Every upcoming job is shown in the slider, so take a generous window.
   const upcoming = prefs.workMode === "SALARIED" ? [] : await upcomingJobs(today.iso, 50);
   const upcomingClash = clashingIds(upcoming.map((j) => ({ id: j.id, eventDate: j.eventDate.toISOString().slice(0, 10), startTime: j.startTime, endTime: j.endTime, status: j.status })));
@@ -179,8 +178,12 @@ export default async function DashboardPage({
 
   return (
     <div className="dash">
-      <div className="top-actions" data-testid="top-actions">
-        <div className="month-nav" aria-label="Choose month">
+      <div className="page-head">
+        <div>
+          <h1 data-testid="greeting">{greeting}, {firstName}</h1>
+          <p>Your money in {monthLabel(month)}</p>
+        </div>
+        <div className="month-nav top-month" aria-label="Choose month">
           <Link href={href(addMonthsKey(month, -1))} aria-label="Previous month"><IconChevronLeft /></Link>
           <span className="current">{monthLabel(month)}</span>
           <Link
@@ -191,14 +194,6 @@ export default async function DashboardPage({
           >
             <IconChevronRight />
           </Link>
-        </div>
-        <ThemeToggle initial={theme} />
-      </div>
-
-      <div className="page-head">
-        <div>
-          <h1 data-testid="greeting">{greeting}, {firstName}</h1>
-          <p>Your money in {monthLabel(month)}</p>
         </div>
       </div>
 

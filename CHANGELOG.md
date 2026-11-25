@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.8.8
+### Changed
+- Debts: "Add debt" button in the page header
+- Debts: a notice says how many debts are in another currency and are not shown
+- Debts: payoff month is shown as a label (e.g. "Mar 2027") instead of raw ISO
+- Debts: only the first debt card opens by default; the others are collapsed
+- Debts: payment rows show amount and date first, with principal, interest and balance below
+- Debts: "Undo" on a payment is now "Remove", matching its confirmation
+- Debts: payment list says "Latest 100 of N payments" when capped
+
+## 0.8.7
+### Changed
+- Theme toggle is fixed at the top right on desktop, on every page; removed from the sidebar footer (mobile keeps it in the More menu)
+- Month navigation on Dashboard, Budgets, Calendar, Income and Jobs is fixed beside the theme toggle on desktop; on mobile it stays in the page header
+- Dashboard month navigation moved into the page header
+
 ## 0.8.6
 ### Changed
 - Dashboard: Latest expenses shows the last 5 with a "See all expenses" button (no pager)

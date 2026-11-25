@@ -9,6 +9,7 @@ import Link from "next/link";
 import { IconSearch } from "@/components/icons";
 import { OfflineManager } from "@/components/OfflineManager";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <span>{session.user.name}</span>
         </Link>
       </header>
+      <div className="top-actions" data-testid="top-actions">
+        <ThemeToggle initial={theme} />
+      </div>
       <main className="content">{children}</main>
     </div>
   );
