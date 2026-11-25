@@ -9,7 +9,7 @@ import { listGoals } from "@/lib/goal-queries";
 import { monthlyNeeded, percent } from "@/lib/goal-math";
 import { formatMoney, monthLabel } from "@/lib/money";
 import { addMonthsKey } from "@/lib/chart-math";
-import { getUserToday, getUserPrefs } from "@/lib/preferences";
+import { getTheme, getUserToday, getUserPrefs } from "@/lib/preferences";
 import { upcomingJobs } from "@/lib/job-queries";
 import { freelanceLifetime, freelanceSummary, outstanding } from "@/lib/freelance-queries";
 import { FreelanceSummary } from "@/components/FreelanceSummary";
@@ -194,6 +194,14 @@ export default async function DashboardPage({
           >
             <IconChevronRight />
           </Link>
+        </div>
+        <ThemeToggle initial={theme} />
+      </div>
+
+      <div className="page-head">
+        <div>
+          <h1 data-testid="greeting">{greeting}, {firstName}</h1>
+          <p>Your money in {monthLabel(month)}</p>
         </div>
       </div>
 
