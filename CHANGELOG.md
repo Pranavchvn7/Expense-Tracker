@@ -1,5 +1,90 @@
 # Changelog
 
+## 0.8.7
+### Changed
+- Theme toggle is fixed at the top right on desktop, on every page; removed from the sidebar footer (mobile keeps it in the More menu)
+- Month navigation on Dashboard, Budgets, Calendar, Income and Jobs is fixed beside the theme toggle on desktop; on mobile it stays in the page header
+- Dashboard month navigation moved into the page header
+
+## 0.8.6
+### Changed
+- Dashboard: Latest expenses shows the last 5 with a "See all expenses" button (no pager)
+- Dashboard: Savings goals slides use the same layout as Budgets (figure, progress, two facts)
+- Dashboard: Paid with is an animated carousel per payment method, with a share ring, icon and arrows
+- Dashboard: month navigation and the theme toggle are fixed at the top right; search and the user pill sit to their left
+- Dashboard: Paid with, Latest expenses and the top-right controls are shown on every breakpoint
+
+## 0.8.5
+### Changed
+- Dashboard: greeting with your name replaces the "Overview" heading
+- Dashboard: "Still owed to you" tile is hidden when nothing is owed
+- Dashboard: Jobs button removed from the freelance block (use the nav bar)
+- Dashboard: Upcoming jobs, Top clients, Savings goals and Budgets are horizontal sliders with invisible previous and next areas; Top clients shows the top two
+- Dashboard: Budgets slides show spent, left or overspent, percent used and a status tag
+- Dashboard: Expenses this month shows 10 per page, with a separate Date column and no date subtext
+- Dashboard: Category detail shows six rows, then scrolls; Largest expenses is a ranked top five
+- Dashboard: Paid with lists only methods used this month (plus Not set)
+- Dashboard: freelance stat tiles show the headline first and reveal detail lines after a short pause
+- Charts: hovering a month or day highlights its column and shows a detailed tooltip
+- Removed the now-unused GoalCarousel component
+
+## 0.8.4
+### Changed
+- Full-bleed app: no outer frame or page margin; content keeps a 24px inner gutter
+- Collapsible sidebar (chevron button, icons-only mode, remembered per browser via cookie, no flicker); soft hover and active motion on menu items (desktop)
+- Expenses, Income, Jobs and Recurring: Match / Edit / Copy / Delete / View / Pause / Delete moved into one ellipsis menu per row
+- Wider Description, Source, Job, Client and Name columns
+- Jobs: separate Time column
+- Overview: pastel colour cards (income lime, spending peach, savings sky, balance lavender) with soft rise-in and hover lift; Top clients and Upcoming jobs redesigned as rows with date tile, share bar and an Open/Report button (no links)
+- One sub-text size (0.78rem) for job, client, city and payment-method lines
+- Goals, debts and budgets cards share one layout
+- Reports use the same stat and list cards as the Overview
+- No database or behaviour change
+
+## 0.8.3 (roadmap 0.7.1)
+### Added
+- Clients: "Export CSV" (name, contact, city, address, source, notes, archived); "Where clients come from" summary of lead sources
+- Client page: History timeline, newest first, grouped by year, with each job, its status and what was received
+- Jobs: "Export CSV" (date, start, job, client, service, location, status, currency, agreed, received, balance); "Busiest months" for the last 12 months (top 3, cancelled jobs left out)
+- Income: heading reads "Client payments" for freelance-only accounts
+- Exports are rate limited (shared with the expense export) and contain only your own rows
+- No database change
+
+## 0.8.2
+### Changed
+- Every grid record (Expenses, Income, Jobs, Clients, Budgets, Debts, Recurring, Goals, Job page): Match / Edit / Copy / Delete are one row of equal buttons (same width and height), right aligned and centred on the row; on phones they are four equal buttons across the card
+- Pastel accents back as small icon tiles on the Overview cards (lime income, peach spending, lavender balance, sky savings)
+- Overview Balance card is the green hero card from the reference
+- No database or behaviour change
+
+## 0.8.1
+### Fixed (from staging screenshots)
+- Expense rows: Match / Edit / Copy / Delete sit in one tidy 2x2 block (4 across on phones), no uneven wrapping
+- Description cell: name wraps to two lines, badges and the Job link wrap below instead of squeezing the name; dates no longer break
+- Month switcher arrows are no longer turned into pills
+- Freelance block on the Overview: even spacing between the title, the KPI row and Top clients
+- Sidebar scrollbar hidden (the menu still scrolls)
+- Calendar today / selected / status colours match the new look; loading skeletons match card shape
+- No database or behaviour change
+
+## 0.8.0
+### Changed (finance-SaaS look, replaces the 0.7.2 pastel colours)
+- White frame, light grey work area, white cards with a hairline border, one green accent, black active menu item, status tags with a dot
+- Sidebar: labelled groups (Main menu, Manage), its own scroll area, footer (theme and Sign out) always visible, fits all pages at 1280x720 without scrolling
+- KPI rows never leave a single card alone on a row (5 cards: one row on wide screens, 3+2 on medium, full-width last card on phones)
+- Expenses: compact Paid with cards, filter bar on one baseline, long descriptions shorten with an ellipsis, Actions column aligned right, 40px controls
+- Same rhythm (20px desktop, 16px mobile) between all blocks; dark theme tokens updated to match
+- No database or behaviour change
+
+## 0.7.2
+### Changed (Elevate look)
+- New look: soft grey frame on a pale blue page, white cards, pastel stat cards (lime, lavender, peach, sky), black pill buttons, Manrope font, rounded sidebar with a lime active item, top bar with search and user pill (desktop)
+- Links now look like buttons everywhere
+- **Reports**: "Period report", "Client report" and "Job report" buttons; the last two open a dropdown to pick a client or job, then show that report on the page with a PDF button
+- Soft rise and hover-lift animations on desktop cards (off with reduced motion)
+- Fewer explanatory lines on the job page
+- No database change
+
 ## 0.7.0
 ### Added (freelance mode, part 7: dashboard and reports)
 - **Freelance summary** on the Overview for the chosen month: money received from clients, job costs, profit, jobs done / booked, clients handled, **still owed to you** (with a link to Payments due), top clients and services

@@ -49,7 +49,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
           </p>
         </div>
         <div className="actions">
-          <Link className="btn soft small" href={`/reports/job/${job.id}`} data-testid="job-report-link">Job report</Link>
+          <Link className="btn soft small" href={`/reports?job=${job.id}`} data-testid="job-report-link">Job report</Link>
           <Link className="btn soft small" href={`/jobs/${job.id}/edit`} data-testid="job-edit">Edit</Link>
         </div>
       </div>
@@ -137,9 +137,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
             </ActionForm>
           </div>
         </details>
-        <p className="muted">Payments also appear in Income, labelled with this client and job.{" "}
-          {payments.length > 0 && <Link href={`/income?job=${job.id}`} data-testid="job-income-link">See them in Income</Link>}
-        </p>
+        {payments.length > 0 && <p><Link href={`/income?job=${job.id}`} data-testid="job-income-link">In Income</Link></p>}
       </div>
 
       <div className="card section" data-testid="job-costs">
@@ -209,10 +207,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
             </ActionForm>
           </div>
         </details>
-        <p className="muted">
-          Costs also appear in Expenses, labelled with this client and job.{" "}
-          {costs.length > 0 && <Link href={`/expenses?job=${job.id}`} data-testid="job-expenses-link">See them in Expenses</Link>}
-        </p>
+        {costs.length > 0 && <p><Link href={`/expenses?job=${job.id}`} data-testid="job-expenses-link">In Expenses</Link></p>}
       </div>
 
       <div className="card section">

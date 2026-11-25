@@ -46,7 +46,7 @@ export default async function CalendarPage({
           <h1>Calendar</h1>
           <p>{monthLabel(month)} · {monthCount} job{monthCount === 1 ? "" : "s"}</p>
         </div>
-        <div className="month-nav" aria-label="Choose month">
+        <div className="month-nav top-month" aria-label="Choose month">
           <Link href={`/calendar?month=${addMonthsKey(month, -1)}`} aria-label="Previous month" data-testid="cal-prev"><IconChevronLeft /></Link>
           <span className="current">{monthLabel(month)}</span>
           <Link href={`/calendar?month=${addMonthsKey(month, 1)}`} aria-label="Next month" data-testid="cal-next"><IconChevronRight /></Link>

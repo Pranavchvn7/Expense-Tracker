@@ -261,3 +261,14 @@ async function dueRows(userId: string, cursor?: string) {
   });
   return rows.map((r) => ({ ...r, paidMinor: 0, balanceMinor: 0 }));
 }
+
+/** Dates (YYYY-MM-DD) of this user's non-cancelled jobs since a date, for the busiest-months summary. */
+export async function jobDates(sinceIso: string): Promise<string[]> {
+  const { userId } = await requireSession();
+  const rows = await prisma.job.findMany({
+    where: { userId, status: { not: "CANCELLED" }, eventDate: { gte: new Date(sinceIso) } },
+    take: 2000,
+    select: { eventDate: true },
+  });
+  return rows.map((r) => r.eventDate.toISOString().slice(0, 10));
+}

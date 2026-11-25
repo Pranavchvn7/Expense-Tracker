@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { RowMenu } from "@/components/RowMenu";
 import { materializeRecurring } from "@/lib/recurring";
 import { ActionForm } from "@/components/ActionForm";
 import { createIncome, deleteIncome } from "@/actions/income";
 import { listIncome } from "@/lib/finance-queries";
 import { formatMoney, monthLabel } from "@/lib/money";
-import { getUserToday } from "@/lib/preferences";
+import { getUserPrefs, getUserToday } from "@/lib/preferences";
 import { Pager } from "@/components/Pager";
 import { parsePaging } from "@/lib/paging";
 import { KIND_LABEL } from "@/lib/pay-math";
@@ -21,6 +22,7 @@ export default async function IncomePage({
   const sp = await searchParams;
   const today = await getUserToday();
   const now = today.month;
+  const prefs = await getUserPrefs();
   const { page, perPage } = parsePaging(sp);
   const openAdd = (Array.isArray(sp.add) ? sp.add[0] : sp.add) === "1";
   const parsed = monthSchema.safeParse(Array.isArray(sp.month) ? sp.month[0] : sp.month);
@@ -38,13 +40,13 @@ export default async function IncomePage({
     <>
       <div className="page-head">
         <div>
-          <h1>Income</h1>
+          <h1>{prefs.workMode === "FREELANCE" ? "Client payments" : "Income"}</h1>
           <p>
             {filtered ? "All months" : monthLabel(month)}
             {totals.length > 0 ? ` · ${totals.map((t) => formatMoney(t._sum.amountMinor ?? 0, t.currency)).join(" · ")}` : ""}
           </p>
         </div>
-        <div className="month-nav" aria-label="Choose month">
+        <div className="month-nav top-month" aria-label="Choose month">
           <Link href={`/income?month=${addMonthsKey(month, -1)}`} aria-label="Previous month"><IconChevronLeft /></Link>
           <span className="current">{monthLabel(month)}</span>
           <Link
@@ -119,7 +121,7 @@ export default async function IncomePage({
                   </td>
                   <td className="num income" data-label="Amount">+{formatMoney(r.amountMinor, r.currency)}</td>
                   <td className="nolabel">
-                    <div className="cell-actions">
+                    <RowMenu>
                       <Link className="btn ghost small" href={`/income/${r.id}/edit`}>Edit</Link>
                       <ActionForm
                         action={deleteIncome} testId="delete-income"
@@ -129,7 +131,7 @@ export default async function IncomePage({
                       >
                         <input type="hidden" name="id" value={r.id} />
                       </ActionForm>
-                    </div>
+                    </RowMenu>
                   </td>
                 </tr>
               ))}

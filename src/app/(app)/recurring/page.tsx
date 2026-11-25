@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RowMenu } from "@/components/RowMenu";
 import { ActionForm } from "@/components/ActionForm";
 import { createRule, deleteRule, toggleRule } from "@/actions/recurring";
 import { listRules } from "@/lib/recurring-queries";
@@ -114,7 +115,7 @@ export default async function RecurringPage({
                     {r.kind === "INCOME" ? "+" : ""}{formatMoney(r.amountMinor, r.currency)}
                   </td>
                   <td className="nolabel">
-                    <div className="cell-actions">
+                    <RowMenu>
                       <Link className="btn ghost small" href={`/recurring/${r.id}/edit`}>Edit</Link>
                       {(r.active || !(r.endDate && r.nextDue > r.endDate)) && (
                         <ActionForm action={toggleRule} testId="toggle-rule" submitLabel={r.active ? "Pause" : "Resume"}>
@@ -129,7 +130,7 @@ export default async function RecurringPage({
                       >
                         <input type="hidden" name="id" value={r.id} />
                       </ActionForm>
-                    </div>
+                    </RowMenu>
                   </td>
                 </tr>
               ))}

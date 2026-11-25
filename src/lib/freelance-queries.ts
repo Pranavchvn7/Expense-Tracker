@@ -177,7 +177,7 @@ export async function reportPicker() {
     prisma.job.findMany({
       where: { userId },
       orderBy: [{ eventDate: "desc" }, { id: "asc" }],
-      take: 15,
+      take: 200,
       select: { id: true, title: true, eventDate: true, client: { select: { name: true } } },
     }),
   ]);

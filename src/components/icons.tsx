@@ -203,3 +203,25 @@ export const IconCalendar = () => (
     <path d="M3 10h18M8 3v4M16 3v4" />
   </Icon>
 );
+
+export const IconSearch = () => (
+  <Icon>
+    <circle cx="11" cy="11" r="7" />
+    <path d="M20 20l-3.5-3.5" />
+  </Icon>
+);
+
+export const IconDots = () => (
+  <Icon>
+    <circle cx="5" cy="12" r="1.6" fill="currentColor" />
+    <circle cx="12" cy="12" r="1.6" fill="currentColor" />
+    <circle cx="19" cy="12" r="1.6" fill="currentColor" />
+  </Icon>
+);
+
+export const IconPanel = () => (
+  <Icon>
+    <rect x="3" y="4" width="18" height="16" rx="3" />
+    <path d="M9 4v16" />
+  </Icon>
+);

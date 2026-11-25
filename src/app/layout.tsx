@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Manrope } from "next/font/google";
 import "./globals.css";
 import { env } from "@/env";
 import { getTheme } from "@/lib/preferences";
@@ -6,6 +7,9 @@ import { getTheme } from "@/lib/preferences";
 // The CSP uses a per-request nonce (src/middleware.ts). Next.js can only attach that
 // nonce to its scripts when pages are rendered per request, so static prerendering
 // must stay off, otherwise production blocks every script.
+// Self-hosted at build time by next/font, so the CSP (font-src 'self') still holds.
+const manrope = Manrope({ subsets: ["latin"], display: "swap", variable: "--font-manrope" });
+
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
@@ -27,7 +31,7 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const theme = await getTheme();
   return (
-    <html lang="en" data-theme={theme === "system" ? undefined : theme}>
+    <html lang="en" className={manrope.variable} data-theme={theme === "system" ? undefined : theme}>
       <head>
         {/* use-credentials: the manifest is requested with the sign-in cookie, so hosts that sit behind a login (e.g. Vercel preview protection) do not redirect it elsewhere. */}
         <link rel="manifest" href="/manifest.webmanifest" crossOrigin="use-credentials" />
