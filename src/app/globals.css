@@ -1428,14 +1428,13 @@ progress.share { width: 100%; height: 6px; }
 .crumbs [aria-current="page"] { color: var(--text); font-weight: 600; padding: 2px 4px; }
 .crumbs .sep { opacity: 0.5; }
 
-/* v0.8.6 header controls: one theme toggle on every page; month nav fixed beside it on desktop */
+/* Month nav sits in the page header, in the flow, on every breakpoint. It is not fixed on desktop:
+   a fixed nav covered the header buttons on Calendar, Income and Jobs. */
 .month-nav.top-month { height: 44px; box-sizing: border-box; padding: 4px; border-radius: 999px; background: var(--card); box-shadow: 0 6px 18px rgb(0 0 0 / 0.08), inset 0 0 0 1px var(--line); }
 .month-nav.top-month a { width: 36px; height: 36px; }
 .month-nav.top-month .current { min-width: 96px; line-height: 1; }
+.page-head .month-nav.top-month { margin-left: auto; }
 @media (min-width: 900px) {
-  .month-nav.top-month { position: fixed; top: 18px; right: 36px; z-index: 40; }
-  /* Leave room for the fixed controls so search and the user pill sit to their left. */
-  .shell:has(.top-month) .appbar { padding-right: 280px; }
   .month-nav.top-month .current { min-width: 120px; }
 }
 
