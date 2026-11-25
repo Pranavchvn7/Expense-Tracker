@@ -8,7 +8,8 @@ import { createCategory, deleteCategory } from "@/actions/categories";
 import { createShare, revokeShare } from "@/actions/share";
 import { deleteAccount } from "@/actions/account";
 import { setCurrency } from "@/actions/preferences";
-import { getUserPrefs } from "@/lib/preferences";
+import { getUserPrefs, getUserToday } from "@/lib/preferences";
+import { CURRENCY_OPTIONS } from "@/lib/currency";
 import { setWorkMode, updateProfile } from "@/actions/profile";
 import { countryOptions } from "@/lib/countries";
 import { listTimeZones } from "@/lib/tz";
@@ -34,7 +35,8 @@ export default async function SettingsPage() {
   const notify = await prisma.user.findFirst({ where: { id: userId }, select: { notifyBudget: true, notifyRenewals: true, notifyJobs: true } });
   const countries = countryOptions();
   const zones = listTimeZones();
-  const thisMonth = new Date().toISOString().slice(0, 7);
+  // Month in the user's own timezone, not UTC.
+  const { month: thisMonth } = await getUserToday();
 
   return (
     <>
@@ -48,6 +50,7 @@ export default async function SettingsPage() {
           <Link className="chip" href="#profile">Profile</Link>
           <Link className="chip" href="#preferences">Currency</Link>
           <Link className="chip" href="#security">Security</Link>
+          <Link className="chip" href="#notifications">Notifications</Link>
           <Link className="chip" href="#categories">Categories</Link>
           <Link className="chip" href="#work-type">Work type</Link>
           <Link className="chip" href="#sharing">Sharing</Link>
@@ -81,18 +84,18 @@ export default async function SettingsPage() {
         </div>
       </details>
 
-      <details id="work-type" className="module" open>
+      <details id="work-type" className="module">
         <summary><h2>Work type</h2></summary>
         <div className="module-body">
           <p className="lead muted">
             Choose how you earn. Freelance and Both add Clients, Jobs and the Calendar to the menu, and a freelance
-            summary (money received, job costs, profit, who owes you) to the Overview and Reports. Nothing is hidden or
+            summary (money received, job costs, profit, who owes you) to the Dashboard and Reports. Nothing is hidden or
             deleted when you switch, and everything for salaried work stays available.
           </p>
           <ul className="muted">
             <li><strong>Salaried:</strong> the regular money tools only.</li>
-            <li><strong>Freelance:</strong> work comes first. The Overview opens with your freelance summary and a client and job checklist, and income is labelled “Money in” (client payments plus anything else).</li>
-            <li><strong>Both:</strong> the usual Overview first (income, spending, savings), with the freelance summary right below it.</li>
+            <li><strong>Freelance:</strong> work comes first. The Dashboard opens with your freelance summary and a client and job checklist, and income is labelled “Money in” (client payments plus anything else).</li>
+            <li><strong>Both:</strong> the usual Dashboard first (income, spending, savings), with the freelance summary right below it.</li>
           </ul>
           <div className="card">
             <ActionForm action={setWorkMode} testId="set-work-mode" submitLabel="Save work type" className="row">
@@ -108,7 +111,7 @@ export default async function SettingsPage() {
         </div>
       </details>
 
-      <details id="preferences" className="module" open>
+      <details id="preferences" className="module">
         <summary><h2>Currency</h2></summary>
         <div className="module-body">
         <p className="lead muted">
@@ -119,10 +122,9 @@ export default async function SettingsPage() {
           <ActionForm action={setCurrency} testId="set-currency" submitLabel="Save currency" className="row">
             <label>Currency
               <select name="currency" defaultValue={currency}>
-                <option value="INR">INR – Indian rupee</option>
-                <option value="USD">USD – US dollar</option>
-                <option value="EUR">EUR – Euro</option>
-                <option value="GBP">GBP – British pound</option>
+                {CURRENCY_OPTIONS.map((c) => (
+                  <option key={c.code} value={c.code}>{`${c.symbol} ${c.code} – ${c.name}`}</option>
+                ))}
               </select>
             </label>
           </ActionForm>
@@ -130,8 +132,8 @@ export default async function SettingsPage() {
       </div>
       </details>
 
-      <details id="security" className="module" open>
-        <summary><h2>Password</h2></summary>
+      <details id="security" className="module">
+        <summary><h2>Security</h2></summary>
         <div className="module-body">
         <div className="card"><ChangePasswordForm /></div>
 
@@ -151,7 +153,13 @@ export default async function SettingsPage() {
             {sessions.map((s) => (
               <li key={s.ref}>
                 {s.current ? (
-                  <strong>This device</strong>
+                  <div>
+                    <strong>This device</strong>
+                    <div className="muted">{s.device}</div>
+                    <div className="muted">
+                      IP {s.ipAddress} · signed in {s.createdAt.toISOString().slice(0, 16).replace("T", " ")} UTC
+                    </div>
+                  </div>
                 ) : (
                   <ActionForm
                     action={revokeSession} testId="revoke-session"
@@ -161,13 +169,15 @@ export default async function SettingsPage() {
                     confirmMessage="Sign out this device?"
                   >
                     <input type="hidden" name="ref" value={s.ref} />
-                    <strong>Another device</strong>
+                    <div>
+                      <strong>Another device</strong>
+                      <div className="muted">{s.device}</div>
+                      <div className="muted">
+                        IP {s.ipAddress} · signed in {s.createdAt.toISOString().slice(0, 16).replace("T", " ")} UTC
+                      </div>
+                    </div>
                   </ActionForm>
                 )}
-                <div className="muted">{s.device}</div>
-                <div className="muted">
-                  IP {s.ipAddress} · signed in {s.createdAt.toISOString().slice(0, 16).replace("T", " ")} UTC
-                </div>
               </li>
             ))}
           </ul>
@@ -183,7 +193,7 @@ export default async function SettingsPage() {
       </div>
       </details>
 
-      <details id="categories" className="module" open>
+      <details id="categories" className="module">
         <summary><h2>Categories</h2></summary>
         <div className="module-body">
         <div className="card stack">
@@ -227,7 +237,7 @@ export default async function SettingsPage() {
         </div>
       </details>
 
-      <details id="sharing" className="module" open>
+      <details id="sharing" className="module">
         <summary><h2>Share a monthly summary</h2></summary>
         <div className="module-body">
         <p className="lead muted">
@@ -251,7 +261,7 @@ export default async function SettingsPage() {
                   >
                     <input type="hidden" name="id" value={s.id} />
                     <span>
-                      <a href={`/share/${s.id}`}>{s.month}</a>{" "}
+                      <a className="btn soft small" href={`/share/${s.id}`}>{s.month}</a>{" "}
                       <span className="muted">expires {s.expiresAt.toISOString().slice(0, 10)}</span>
                     </span>
                   </ActionForm>

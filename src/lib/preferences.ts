@@ -4,8 +4,9 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 import { isValidTimeZone, todayDate, todayIso, currentMonthIn } from "@/lib/tz";
+import type { CurrencyCode } from "@/lib/currency";
 
-export type Currency = "INR" | "USD" | "EUR" | "GBP";
+export type Currency = CurrencyCode;
 
 /**
  * The signed-in user's own preferences, read from the database for the session user only

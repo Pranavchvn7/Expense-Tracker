@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.8.9
+### Changed
+- Settings: the Security chip now jumps to the Security section, and a Notifications chip is added
+- Settings: the Share month defaults to the current month in your timezone (it used UTC)
+- Settings: work-type copy says "Dashboard" instead of "Overview"
+- Settings: only Profile is open by default; the other sections open when you expand them
+- Settings: device details (device, IP, sign-in time) show above the Sign out button
+- Settings: a shared monthly link is a button-style link
+- Settings: currency picker shows each currency's symbol, from one shared list used by validation too
+
+
 ## 0.8.8
 ### Changed
 - Debts: "Add debt" button in the page header
