@@ -41,7 +41,12 @@ model User {
   // Which push notifications this person wants (they still need to enable push on a device).
   notifyBudget   Boolean @default(true)
   notifyRenewals Boolean @default(true)
+  notifyJobs     Boolean @default(true)
   pushSubscriptions PushSubscription[]
+  // Freelance mode (v0.6): SALARIED is today's behaviour; FREELANCE and BOTH add Clients, Jobs and more.
+  workMode      WorkMode  @default(SALARIED)
+  clients       Client[]
+  jobs          Job[]
   notificationLogs  NotificationLog[]
   twoFactor     TwoFactor[]
 
@@ -155,6 +160,11 @@ model Expense {
   // How it was paid, and whether it has been ticked off against a bank/card statement.
   paymentMethod PaymentMethod?
   reconciled    Boolean   @default(false)
+  // Freelance: a cost of doing a job (travel, assistant, products). NoAction: a job with costs cannot be deleted.
+  jobId         String?
+  job           Job?      @relation(fields: [jobId], references: [id], onDelete: NoAction)
+  costKind      JobCostKind?
+  payee         String?   @db.VarChar(80)
   // Random id made on the device when an entry was added offline, so a retried sync can never
   // create it twice. Null for entries added normally.
   clientRef     String?   @db.VarChar(36)
@@ -171,7 +181,15 @@ model Expense {
   @@index([userId, spentOn])
   @@index([userId, categoryId])
   @@index([userId, paymentMethod, spentOn])
+  @@index([userId, jobId])
   @@unique([userId, clientRef])
+}
+
+enum JobCostKind {
+  TRAVEL
+  ASSISTANT
+  PRODUCTS
+  OTHER
 }
 
 enum PaymentMethod {
@@ -201,9 +219,22 @@ model Income {
 
   clientRef   String?  @db.VarChar(36)
 
+  // Freelance: a payment received for a job. NoAction so a job with payments cannot be deleted
+  // (account deletion still cascades because every row is removed in the same statement).
+  jobId       String?
+  job         Job?     @relation(fields: [jobId], references: [id], onDelete: NoAction)
+  paymentKind PaymentKind?
+
   @@unique([recurringRuleId, receivedOn])
   @@unique([userId, clientRef])
   @@index([userId, receivedOn])
+  @@index([userId, jobId])
+}
+
+enum PaymentKind {
+  ADVANCE
+  PARTIAL
+  FINAL
 }
 
 enum RecurringKind {
@@ -378,4 +409,69 @@ model ActionLimit {
   key         String   @id
   count       Int
   windowStart DateTime
+}
+
+enum WorkMode {
+  SALARIED
+  FREELANCE
+  BOTH
+}
+
+// A person or business the user works for (a bride, a studio...). Personal data: every query is
+// scoped by userId. Jobs will link to a client in a later release.
+model Client {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String   @db.VarChar(80)
+  phone     String?  @db.VarChar(20)
+  email     String?  @db.VarChar(254)
+  city      String?  @db.VarChar(80)
+  address   String?  @db.VarChar(200)
+  source    String?  @db.VarChar(60) // how they found you: Instagram, referral...
+  notes     String?  @db.VarChar(1000)
+  archived  Boolean  @default(false)
+  jobs      Job[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, archived, name])
+  @@index([userId, createdAt])
+}
+
+enum JobStatus {
+  ENQUIRY
+  BOOKED
+  COMPLETED
+  CANCELLED
+}
+
+// One piece of work for a client (a bridal booking, a shoot...). Payments and job costs will link
+// here through the existing Income and Expense tables in a later release.
+model Job {
+  id                String    @id @default(uuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientId          String
+  // NoAction (not Cascade): a client with jobs cannot be deleted by accident. Deleting the whole
+  // account still works because jobs and clients are both removed by the user cascade.
+  client            Client    @relation(fields: [clientId], references: [id], onDelete: NoAction)
+  title             String    @db.VarChar(100)
+  serviceType       String?   @db.VarChar(60)
+  eventDate         DateTime  @db.Date
+  startTime         String?   @db.VarChar(5) // "HH:MM", local time of the job
+  endTime           String?   @db.VarChar(5)
+  location          String?   @db.VarChar(200)
+  status            JobStatus @default(BOOKED)
+  agreedAmountMinor Int       @default(0) // the price agreed with the client; 0 = not agreed yet
+  currency          String    @db.VarChar(3)
+  notes             String?   @db.VarChar(1000)
+  payments          Income[]
+  costs             Expense[]
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([userId, eventDate])
+  @@index([userId, clientId])
+  @@index([userId, status, eventDate])
 }

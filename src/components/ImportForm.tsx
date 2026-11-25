@@ -85,13 +85,13 @@ export function ImportForm({ currency }: { currency: string }) {
       <div className="card stack">
         <div className="row">
           <label>What are you importing?
-            <select value={kind} onChange={(e) => { setKind(e.target.value as Kind); reset(); }}>
+            <select data-testid="import-kind" value={kind} onChange={(e) => { setKind(e.target.value as Kind); reset(); }}>
               <option value="EXPENSE">Expenses</option>
               <option value="INCOME">Income</option>
             </select>
           </label>
           <label>Date format in the file
-            <select value={fmt} onChange={(e) => { setFmt(e.target.value as Fmt); reset(); }}>
+            <select data-testid="import-format" value={fmt} onChange={(e) => { setFmt(e.target.value as Fmt); reset(); }}>
               <option value="YMD">2026-03-31 (year-month-day)</option>
               <option value="DMY">31/03/2026 (day/month/year)</option>
               <option value="MDY">03/31/2026 (month/day/year)</option>
@@ -99,17 +99,17 @@ export function ImportForm({ currency }: { currency: string }) {
           </label>
         </div>
         <label>CSV file
-          <input type="file" accept=".csv,text/csv" onChange={onFile} />
+          <input type="file" accept=".csv,text/csv" onChange={onFile} data-testid="import-file" />
         </label>
         <div className="actions">
-          <button type="button" className="btn" disabled={busy || !csv} onClick={() => run("preview")}>
+          <button type="button" className="btn" disabled={busy || !csv} onClick={() => run("preview")} data-testid="import-preview">
             {busy && !preview ? "Checking…" : "Preview"}
           </button>
           {fileName && <span className="muted">{fileName}</span>}
         </div>
-        {error && <p role="alert" className="error">{error}</p>}
+        {error && <p role="alert" className="error" data-testid="import-error">{error}</p>}
         {done !== null && (
-          <p className="notice" role="status">
+          <p className="notice" role="status" data-testid="import-notice">
             Imported {done} {done === 1 ? "entry" : "entries"}.
           </p>
         )}
@@ -159,6 +159,7 @@ export function ImportForm({ currency }: { currency: string }) {
               className="btn"
               disabled={busy || preview.importable === 0}
               onClick={() => run("commit")}
+              data-testid="import-confirm"
             >
               {busy ? "Importing…" : `Import ${preview.importable} ${preview.importable === 1 ? "entry" : "entries"}`}
             </button>

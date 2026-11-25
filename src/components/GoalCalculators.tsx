@@ -43,7 +43,7 @@ export function CarRuleCard({ currency }: { currency: string }) {
             <div><dt>Income needed (payment is 10%)</dt><dd>{formatMoney(r.minMonthlyIncome, currency)}</dd></div>
           </dl>
           <p className="muted">Insurance and fuel count towards the 10% too, so the real income you need is higher.</p>
-          <ActionForm action={createGoal} submitLabel="Create down payment goal" className="row" resetOnSuccess focusPrefix="goal-" focusHref="/goals">
+          <ActionForm action={createGoal} testId="create-goal" submitLabel="Create down payment goal" className="row" resetOnSuccess focusPrefix="goal-" focusHref="/goals">
             <input type="hidden" name="name" value="Car down payment (20%)" />
             <input type="hidden" name="target" value={major(r.downPayment)} />
           </ActionForm>
@@ -71,7 +71,7 @@ export function HomeDepositCard({ currency }: { currency: string }) {
       {deposit !== null && (
         <>
           <p>Deposit: <strong>{formatMoney(deposit, currency)}</strong></p>
-          <ActionForm action={createGoal} submitLabel="Create deposit goal" className="row" resetOnSuccess focusPrefix="goal-" focusHref="/goals">
+          <ActionForm action={createGoal} testId="create-goal" submitLabel="Create deposit goal" className="row" resetOnSuccess focusPrefix="goal-" focusHref="/goals">
             <input type="hidden" name="name" value="Home deposit (20%)" />
             <input type="hidden" name="target" value={major(deposit)} />
           </ActionForm>

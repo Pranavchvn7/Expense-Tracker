@@ -6,6 +6,9 @@ import { useEffect, useState } from "react";
 import { SignOutButton } from "@/components/SignOutButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
+  IconPanel,
+  IconBriefcase,
+  IconCalendar,
   IconCard,
   IconDashboard,
   IconMore,
@@ -15,12 +18,13 @@ import {
   IconReceipt,
   IconRepeat,
   IconSettings,
+  IconUsers,
   IconTarget,
   IconWallet,
   LogoMark,
 } from "@/components/icons";
 
-const items = [
+const baseItems = [
   { href: "/dashboard", label: "Dashboard", icon: <IconDashboard /> },
   { href: "/expenses", label: "Expenses", icon: <IconReceipt /> },
   { href: "/income", label: "Income", icon: <IconWallet /> },
@@ -31,11 +35,32 @@ const items = [
   { href: "/goals", label: "Goals", icon: <IconTarget /> },
   { href: "/settings", label: "Settings", icon: <IconSettings /> },
 ];
-// Phone bottom bar: the three daily pages, everything else lives under "More".
-const primary = items.slice(0, 3);
-const secondary = items.slice(3);
+// Freelance pages appear after Income for people who work as freelancers (alone or next to a job).
+const freelanceItems = [
+  { href: "/clients", label: "Clients", icon: <IconUsers /> },
+  { href: "/jobs", label: "Jobs", icon: <IconBriefcase /> },
+  { href: "/calendar", label: "Calendar", icon: <IconCalendar /> },
+];
 
-export function AppNav({ name, theme }: { name: string; theme: "light" | "dark" | "system" }) {
+export function AppNav({
+  collapsed,
+  name,
+  theme,
+  workMode = "SALARIED",
+}: {
+  collapsed?: boolean;
+  name: string;
+  theme: "light" | "dark" | "system";
+  workMode?: "SALARIED" | "FREELANCE" | "BOTH";
+}) {
+  const items = workMode === "SALARIED" ? baseItems : [...baseItems.slice(0, 3), ...freelanceItems, ...baseItems.slice(3)];
+  // Phone bottom bar: the three daily pages, everything else lives under "More".
+  const primary = items.slice(0, 3);
+  const secondary = items.slice(3);
+  // Desktop sidebar groups: daily pages first, setup and planning pages under their own label.
+  const mainCount = workMode === "SALARIED" ? 3 : 6;
+  const main = items.slice(0, mainCount);
+  const manage = items.slice(mainCount);
   const pathname = usePathname();
   const [more, setMore] = useState(false);
   const active = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
@@ -58,26 +83,49 @@ export function AppNav({ name, theme }: { name: string; theme: "light" | "dark" 
       ? { href: "/expenses?add=1", label: "Add expense" }
       : null;
 
+  const [isCollapsed, setIsCollapsed] = useState(collapsed ?? false);
+  function toggleNav() {
+    const next = !isCollapsed;
+    setIsCollapsed(next);
+    try {
+      document.cookie = `nav=${next ? "collapsed" : "open"}; path=/; max-age=31536000; samesite=lax`;
+    } catch {
+      // Cookies blocked: the menu still toggles for this visit.
+    }
+  }
+
   return (
     <>
-      <aside className="sidebar" aria-label="Main">
-        <Link href="/dashboard" className="brand">
-          <LogoMark /> Expense Tracker
-        </Link>
-        <div className="side-nav hide-scroll">
-          {items.map((i) => (
-            <Link key={i.href} href={i.href} className="nav-link" aria-current={active(i.href) ? "page" : undefined}>
+      <aside className={isCollapsed ? "sidebar is-collapsed" : "sidebar"} aria-label="Main">
+        <div className="brand-row">
+          <Link href="/dashboard" className="brand" title="Expense Tracker">
+            <LogoMark /><span className="brand-text">Expense Tracker</span>
+          </Link>
+          <button type="button" className="nav-toggle" onClick={toggleNav} aria-expanded={!isCollapsed} aria-label={isCollapsed ? "Expand menu" : "Collapse menu"} data-testid="nav-toggle">
+            <IconPanel />
+          </button>
+        </div>
+        <nav className="side-nav" aria-label="Pages">
+          <p className="nav-label">Main menu</p>
+          {main.map((i) => (
+            <Link key={i.href} href={i.href} className="nav-link" title={i.label} data-testid={`side-nav-${i.href.slice(1)}`} aria-current={active(i.href) ? "page" : undefined}>
               {i.icon}
-              {i.label}
+              <span className="nav-text">{i.label}</span>
             </Link>
           ))}
-        </div>
+          <p className="nav-label">Manage</p>
+          {manage.map((i) => (
+            <Link key={i.href} href={i.href} className="nav-link" title={i.label} data-testid={`side-nav-${i.href.slice(1)}`} aria-current={active(i.href) ? "page" : undefined}>
+              {i.icon}
+              <span className="nav-text">{i.label}</span>
+            </Link>
+          ))}
+        </nav>
         <div className="side-foot">
           <div className="who">
             <span className="avatar" aria-hidden="true">{initial}</span>
             <span className="who-name">{name}</span>
           </div>
-          <ThemeToggle initial={theme} />
           <SignOutButton />
         </div>
       </aside>
@@ -90,7 +138,7 @@ export function AppNav({ name, theme }: { name: string; theme: "light" | "dark" 
       </header>
 
       {fab && (
-        <Link href={fab.href} className="fab" aria-label={fab.label}>
+        <Link href={fab.href} className="fab" data-testid="fab-add" aria-label={fab.label} title={`${fab.label} (N)`}>
           <IconPlus />
         </Link>
       )}
@@ -103,9 +151,9 @@ export function AppNav({ name, theme }: { name: string; theme: "light" | "dark" 
             <span className="who-name">{name}</span>
           </div>
           {secondary.map((i) => (
-            <Link key={i.href} href={i.href} className="nav-link" aria-current={active(i.href) ? "page" : undefined}>
+            <Link key={i.href} href={i.href} className="nav-link" data-testid={`sheet-nav-${i.href.slice(1)}`} aria-current={active(i.href) ? "page" : undefined}>
               {i.icon}
-              {i.label}
+              <span className="nav-text">{i.label}</span>
             </Link>
           ))}
           <div className="sheet-foot">
@@ -117,14 +165,15 @@ export function AppNav({ name, theme }: { name: string; theme: "light" | "dark" 
 
       <nav className="bottom-bar" aria-label="Main">
         {primary.map((i) => (
-          <Link key={i.href} href={i.href} className="tab" aria-current={active(i.href) ? "page" : undefined}>
+          <Link key={i.href} href={i.href} className="tab" data-testid={`tab-${i.href.slice(1)}`} aria-current={active(i.href) ? "page" : undefined}>
             {i.icon}
-            {i.label}
+            <span className="nav-text">{i.label}</span>
           </Link>
         ))}
         <button
           type="button"
           className="tab"
+          data-testid="tab-more"
           aria-expanded={more}
           aria-current={moreActive ? "page" : undefined}
           onClick={() => setMore((v) => !v)}

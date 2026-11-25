@@ -5,7 +5,8 @@ import { PayoffWhatIf } from "@/components/PayoffWhatIf";
 import { addDebtPayment, createDebt, deleteDebt, deleteDebtPayment } from "@/actions/debts";
 import { debtOverview, listDebtsPage } from "@/lib/debt-queries";
 import { addMonths, orderDebts, paidOffPercent, projectPayoff } from "@/lib/debt-math";
-import { formatMoney } from "@/lib/money";
+import { formatMoney, monthLabel } from "@/lib/money";
+import { formatDay } from "@/lib/job-math";
 import { getUserPrefs, getUserToday } from "@/lib/preferences";
 import { parsePaging } from "@/lib/paging";
 import { IconInbox } from "@/components/icons";
@@ -31,6 +32,7 @@ export default async function DebtsPage({
   const currency = prefs.currency;
 
   const mine = overview.filter((d) => d.currency === currency);
+  const otherCount = overview.length - mine.length;
   const owed = mine.reduce((a, d) => a + d.balanceMinor, 0);
   const interestPaid = mine.reduce((a, d) => a + d.totalInterestMinor, 0);
   const principalPaid = mine.reduce((a, d) => a + d.totalPrincipalMinor, 0);
@@ -44,12 +46,21 @@ export default async function DebtsPage({
           <h1>Debts</h1>
           <p>Track loans and credit cards: see how much of each payment cuts the balance and how much is interest</p>
         </div>
+        <div className="actions">
+          <Link className="btn" href="/debts?add=1">Add debt</Link>
+        </div>
       </div>
+      {otherCount > 0 && (
+        <p className="notice" role="note">
+          {otherCount} debt{otherCount === 1 ? "" : "s"} in another currency {otherCount === 1 ? "is" : "are"} not shown.
+          Your currency is {currency}; change it in <Link href="/settings#preferences">Settings</Link>.
+        </p>
+      )}
 
       <details className="add" open={openAdd || (debts.length === 0 && page === 1)}>
         <summary>Add a debt</summary>
         <div className="body">
-          <ActionForm action={createDebt} submitLabel="Add debt" className="stack" resetOnSuccess focusPrefix="debt-" focusHref="/debts">
+          <ActionForm action={createDebt} testId="create-debt" submitLabel="Add debt" className="stack" resetOnSuccess focusPrefix="debt-" focusHref="/debts">
             <div className="row">
               <label>Name
                 <input name="name" maxLength={80} placeholder="Car loan, HDFC card…" required />
@@ -123,7 +134,7 @@ export default async function DebtsPage({
       ) : (
         <>
           <div className="grid two section goals-grid">
-            {debts.map((d) => {
+            {debts.map((d, i) => {
               const l = d.ledger;
               const paid = paidOffPercent(d.originalMinor, l.balanceMinor);
               const total = l.totalPaidMinor;
@@ -131,7 +142,7 @@ export default async function DebtsPage({
               const plan = projectPayoff(l.balanceMinor, d.aprBp, d.minPaymentMinor);
               const clear = l.balanceMinor <= 0;
               return (
-                <details key={d.id} id={`debt-${d.id}`} className="card goal" open>
+                <details key={d.id} id={`debt-${d.id}`} className="card goal" open={i === 0}>
                   <summary>
                     <span className="goal-title">{d.name}</span>
                     <span className="goal-meta">
@@ -162,7 +173,7 @@ export default async function DebtsPage({
                     <dl className="facts">
                       <div><dt>Monthly payment</dt><dd>{formatMoney(d.minPaymentMinor, d.currency)}</dd></div>
                       <div><dt>Paid so far</dt><dd>{formatMoney(total, d.currency)}</dd></div>
-                      <div><dt>Payoff at this pace</dt><dd>{clear ? "Done" : plan.months === null ? "Never: payment is below the interest" : `${plan.months} month${plan.months === 1 ? "" : "s"} (${addMonths(today.date, plan.months).toISOString().slice(0, 7)})`}</dd></div>
+                      <div><dt>Payoff at this pace</dt><dd>{clear ? "Done" : plan.months === null ? "Never: payment is below the interest" : `${plan.months} month${plan.months === 1 ? "" : "s"} (${monthLabel(addMonths(today.date, plan.months).toISOString().slice(0, 7))})`}</dd></div>
                       <div><dt>Interest still to come</dt><dd>{clear || plan.months === null ? "–" : formatMoney(plan.totalInterestMinor, d.currency)}</dd></div>
                     </dl>
 
@@ -171,7 +182,7 @@ export default async function DebtsPage({
                     )}
 
                     {!clear && (
-                      <ActionForm action={addDebtPayment} submitLabel="Add payment" className="row" resetOnSuccess>
+                      <ActionForm action={addDebtPayment} testId="add-debt-payment" submitLabel="Add payment" className="row" resetOnSuccess>
                         <input type="hidden" name="debtId" value={d.id} />
                         <label>Amount
                           <input name="amount" inputMode="decimal" pattern="\d{1,9}(\.\d{1,2})?" placeholder="0.00" required />
@@ -187,16 +198,21 @@ export default async function DebtsPage({
 
                     {l.rows.length > 0 && (
                       <>
-                        <p className="muted">{l.rows.length} payment{l.rows.length === 1 ? "" : "s"}, newest first</p>
+                        <p className="muted">{l.rows.length > 100 ? `Latest 100 of ${l.rows.length} payments` : `${l.rows.length} payment${l.rows.length === 1 ? "" : "s"}`}, newest first</p>
                         <ul className="contrib scroll">
                           {[...l.rows].reverse().slice(0, 100).map((r) => (
                             <li key={r.id}>
-                              <ActionForm action={deleteDebtPayment} submitLabel="Undo" danger className="row between" confirmMessage="Remove this payment?">
+                              <ActionForm action={deleteDebtPayment} testId="delete-debt-payment" submitLabel="Remove" danger className="row between" confirmMessage="Remove this payment?">
                                 <input type="hidden" name="id" value={r.id} />
-                                <span>
-                                  <strong>{formatMoney(r.amountMinor, d.currency)}</strong>{" "}
-                                  <span className="muted">{r.paidOn.toISOString().slice(0, 10)} · principal {formatMoney(r.principalMinor, d.currency)} · interest {formatMoney(r.interestMinor, d.currency)} · owed after {formatMoney(Math.max(r.balanceAfterMinor, 0), d.currency)}</span>
-                                  {r.note && <span className="muted"> · {r.note}</span>}
+                                <span className="pay-main">
+                                  <strong>{formatMoney(r.amountMinor, d.currency)}</strong>
+                                  <span className="muted">{formatDay(r.paidOn)}</span>
+                                  {r.note && <span className="muted">· {r.note}</span>}
+                                </span>
+                                <span className="pay-facts muted">
+                                  <span>Principal {formatMoney(r.principalMinor, d.currency)}</span>
+                                  <span>Interest {formatMoney(r.interestMinor, d.currency)}</span>
+                                  <span>Owed after {formatMoney(Math.max(r.balanceAfterMinor, 0), d.currency)}</span>
                                 </span>
                               </ActionForm>
                             </li>
@@ -207,7 +223,7 @@ export default async function DebtsPage({
 
                     <div className="cell-actions">
                       <Link className="btn ghost small" href={`/debts/${d.id}/edit`}>Edit</Link>
-                      <ActionForm action={deleteDebt} submitLabel="Delete debt" danger confirmMessage="Delete this debt and all its payments?">
+                      <ActionForm action={deleteDebt} testId="delete-debt" submitLabel="Delete debt" danger confirmMessage="Delete this debt and all its payments?">
                         <input type="hidden" name="id" value={d.id} />
                       </ActionForm>
                     </div>

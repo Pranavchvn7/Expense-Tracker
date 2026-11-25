@@ -36,3 +36,17 @@ export function budgetMessage(category: string, level: Exclude<BudgetLevel, "non
 export function renewalMessage(label: string, daysAhead: number) {
   return { title: "Renewal coming up", body: `${label} renews in ${daysAhead} day${daysAhead === 1 ? "" : "s"}.` };
 }
+
+/** Job reminder text. No client names, places, times or amounts: a lock screen can be seen by others. */
+export function jobReminderMessage(count: number) {
+  const n = Math.max(1, Math.trunc(count) || 1);
+  return { title: "Job tomorrow", body: n === 1 ? "You have 1 job tomorrow. Open the calendar for details." : `You have ${n} jobs tomorrow. Open the calendar for details.` };
+}
+
+/** How many of the given event dates (YYYY-MM-DD) fall on the user's local tomorrow. */
+export function countJobsTomorrow(eventDates: string[], userTodayIso: string): number {
+  const target = addDaysIso(userTodayIso, 1);
+  let n = 0;
+  for (const d of eventDates) if (d === target) n += 1;
+  return n;
+}

@@ -10,7 +10,14 @@ import { getReport, listReportExpenses } from "@/lib/report-queries";
 import { parseReportQuery, resolveRange } from "@/lib/report-range";
 import { paymentLabel } from "@/lib/payment-method";
 import { formatMoney, monthLabel } from "@/lib/money";
-import { getUserToday } from "@/lib/preferences";
+import { getUserPrefs, getUserToday } from "@/lib/preferences";
+import { clientReport, freelanceSummary, jobReport, reportPicker } from "@/lib/freelance-queries";
+import { formatDay } from "@/lib/job-math";
+import { ReportPicker } from "@/components/ReportPicker";
+import { ClientReportView } from "@/components/reports/ClientReportView";
+import { JobReportView } from "@/components/reports/JobReportView";
+import { uuid } from "@/lib/validation";
+import { FreelanceSummary } from "@/components/FreelanceSummary";
 import { parsePaging } from "@/lib/paging";
 import { IconDownload, IconInbox } from "@/components/icons";
 
@@ -21,12 +28,41 @@ export default async function ReportsPage({
 }) {
   const sp = await searchParams;
   const today = await getUserToday();
+  const prefs = await getUserPrefs();
+  const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+  const clientId = prefs.workMode === "SALARIED" ? null : uuid.safeParse(first(sp.client));
+  const jobId = prefs.workMode === "SALARIED" || (clientId && clientId.success) ? null : uuid.safeParse(first(sp.job));
+  if ((clientId && clientId.success) || (jobId && jobId.success)) {
+    const [picked, cr, jr] = await Promise.all([
+      reportPicker(),
+      clientId && clientId.success ? clientReport(clientId.data) : Promise.resolve(null),
+      jobId && jobId.success ? jobReport(jobId.data) : Promise.resolve(null),
+    ]);
+    return (
+      <>
+        <div className="page-head">
+          <h1>Reports</h1>
+        </div>
+        <ReportPicker
+          clients={picked.clients.map((c) => ({ id: c.id, label: c.archived ? `${c.name} (archived)` : c.name }))}
+          jobs={picked.jobs.map((j) => ({ id: j.id, label: `${j.title} · ${j.client.name} · ${formatDay(j.eventDate)}` }))}
+          client={cr?.client.id}
+          job={jr?.job.id}
+        />
+        {cr && <ClientReportView r={cr} todayIso={today.iso} />}
+        {jr && <JobReportView r={jr} />}
+        {!cr && !jr && <div className="card"><div className="empty"><IconInbox /><strong>That report was not found</strong></div></div>}
+      </>
+    );
+  }
   const { input, categoryIds, includeNone } = parseReportQuery(sp);
   const { range, notice } = resolveRange(input, today.iso);
   const { page, perPage } = parsePaging(sp);
-  const [r, tx] = await Promise.all([
+  const [r, tx, fl, picker] = await Promise.all([
     getReport(range, categoryIds, includeNone),
     listReportExpenses(range, categoryIds, includeNone, page, perPage),
+    prefs.workMode === "SALARIED" ? Promise.resolve(null) : freelanceSummary(range),
+    prefs.workMode === "SALARIED" ? Promise.resolve(null) : reportPicker(),
   ]);
 
   // Only the validated range and ids are used to build links (PDF, pager).
@@ -45,7 +81,8 @@ export default async function ReportsPage({
   const lastShown = range.endIso > today.iso ? today.iso : range.endIso;
   const days = Math.max(1, Math.round((Date.parse(lastShown) - Date.parse(range.startIso)) / 86_400_000) + 1);
   const net = r.incomeMinor - r.spentMinor;
-  const empty = r.expenseCount === 0 && r.incomeMinor === 0;
+  const flHasData = Boolean(fl && (fl.jobsCompleted + fl.jobsPending + fl.jobsCancelled > 0 || fl.receivedMinor > 0 || fl.costsMinor > 0));
+  const empty = r.expenseCount === 0 && r.incomeMinor === 0 && !flHasData;
 
   return (
     <>
@@ -75,6 +112,13 @@ export default async function ReportsPage({
       />
       {notice && <p className="notice" role="note">{notice}</p>}
 
+      {picker && (
+        <ReportPicker
+          clients={picker.clients.map((c) => ({ id: c.id, label: c.archived ? `${c.name} (archived)` : c.name }))}
+          jobs={picker.jobs.map((j) => ({ id: j.id, label: `${j.title} · ${j.client.name} · ${formatDay(j.eventDate)}` }))}
+        />
+      )}
+
       {/* Everything below refreshes when the filters change; the filter form above stays put. */}
       <div id="report-body" className="region">
         {empty ? (
@@ -101,6 +145,13 @@ export default async function ReportsPage({
               )}
               <div className="card stat"><span className="label">Average per day</span><span className="value">{formatMoney(Math.round(r.spentMinor / days), r.currency)}</span><span className="hint">Over {days} day{days === 1 ? "" : "s"}</span></div>
             </div>
+
+            {fl && flHasData && (
+              <>
+                <FreelanceSummary s={fl} periodLabel={range.label} testId="report-freelance" />
+                {r.filtered && <p className="muted">Freelance figures ignore the category filter.</p>}
+              </>
+            )}
 
             {r.months.length > 1 && (
               <div className="card section">

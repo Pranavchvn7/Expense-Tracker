@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
-import { HttpError, notFound, safely, type ActionResult, limitReached } from "@/lib/errors";
+import { notFound, safely, type ActionResult, limitReached } from "@/lib/errors";
 import { getUserCurrency } from "@/lib/preferences";
 import { assertOwnCategory } from "@/lib/ownership";
 import { budgetInput, formToObject, idInput } from "@/lib/validation";

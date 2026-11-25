@@ -1,5 +1,238 @@
 # Changelog
 
+## 0.8.8
+### Changed
+- Debts: "Add debt" button in the page header
+- Debts: a notice says how many debts are in another currency and are not shown
+- Debts: payoff month is shown as a label (e.g. "Mar 2027") instead of raw ISO
+- Debts: only the first debt card opens by default; the others are collapsed
+- Debts: payment rows show amount and date first, with principal, interest and balance below
+- Debts: "Undo" on a payment is now "Remove", matching its confirmation
+- Debts: payment list says "Latest 100 of N payments" when capped
+
+## 0.8.7
+### Changed
+- Theme toggle is fixed at the top right on desktop, on every page; removed from the sidebar footer (mobile keeps it in the More menu)
+- Month navigation on Dashboard, Budgets, Calendar, Income and Jobs is fixed beside the theme toggle on desktop; on mobile it stays in the page header
+- Dashboard month navigation moved into the page header
+
+## 0.8.6
+### Changed
+- Dashboard: Latest expenses shows the last 5 with a "See all expenses" button (no pager)
+- Dashboard: Savings goals slides use the same layout as Budgets (figure, progress, two facts)
+- Dashboard: Paid with is an animated carousel per payment method, with a share ring, icon and arrows
+- Dashboard: month navigation and the theme toggle are fixed at the top right; search and the user pill sit to their left
+- Dashboard: Paid with, Latest expenses and the top-right controls are shown on every breakpoint
+
+## 0.8.5
+### Changed
+- Dashboard: greeting with your name replaces the "Overview" heading
+- Dashboard: "Still owed to you" tile is hidden when nothing is owed
+- Dashboard: Jobs button removed from the freelance block (use the nav bar)
+- Dashboard: Upcoming jobs, Top clients, Savings goals and Budgets are horizontal sliders with invisible previous and next areas; Top clients shows the top two
+- Dashboard: Budgets slides show spent, left or overspent, percent used and a status tag
+- Dashboard: Expenses this month shows 10 per page, with a separate Date column and no date subtext
+- Dashboard: Category detail shows six rows, then scrolls; Largest expenses is a ranked top five
+- Dashboard: Paid with lists only methods used this month (plus Not set)
+- Dashboard: freelance stat tiles show the headline first and reveal detail lines after a short pause
+- Charts: hovering a month or day highlights its column and shows a detailed tooltip
+- Removed the now-unused GoalCarousel component
+
+## 0.8.4
+### Changed
+- Full-bleed app: no outer frame or page margin; content keeps a 24px inner gutter
+- Collapsible sidebar (chevron button, icons-only mode, remembered per browser via cookie, no flicker); soft hover and active motion on menu items (desktop)
+- Expenses, Income, Jobs and Recurring: Match / Edit / Copy / Delete / View / Pause / Delete moved into one ellipsis menu per row
+- Wider Description, Source, Job, Client and Name columns
+- Jobs: separate Time column
+- Overview: pastel colour cards (income lime, spending peach, savings sky, balance lavender) with soft rise-in and hover lift; Top clients and Upcoming jobs redesigned as rows with date tile, share bar and an Open/Report button (no links)
+- One sub-text size (0.78rem) for job, client, city and payment-method lines
+- Goals, debts and budgets cards share one layout
+- Reports use the same stat and list cards as the Overview
+- No database or behaviour change
+
+## 0.8.3 (roadmap 0.7.1)
+### Added
+- Clients: "Export CSV" (name, contact, city, address, source, notes, archived); "Where clients come from" summary of lead sources
+- Client page: History timeline, newest first, grouped by year, with each job, its status and what was received
+- Jobs: "Export CSV" (date, start, job, client, service, location, status, currency, agreed, received, balance); "Busiest months" for the last 12 months (top 3, cancelled jobs left out)
+- Income: heading reads "Client payments" for freelance-only accounts
+- Exports are rate limited (shared with the expense export) and contain only your own rows
+- No database change
+
+## 0.8.2
+### Changed
+- Every grid record (Expenses, Income, Jobs, Clients, Budgets, Debts, Recurring, Goals, Job page): Match / Edit / Copy / Delete are one row of equal buttons (same width and height), right aligned and centred on the row; on phones they are four equal buttons across the card
+- Pastel accents back as small icon tiles on the Overview cards (lime income, peach spending, lavender balance, sky savings)
+- Overview Balance card is the green hero card from the reference
+- No database or behaviour change
+
+## 0.8.1
+### Fixed (from staging screenshots)
+- Expense rows: Match / Edit / Copy / Delete sit in one tidy 2x2 block (4 across on phones), no uneven wrapping
+- Description cell: name wraps to two lines, badges and the Job link wrap below instead of squeezing the name; dates no longer break
+- Month switcher arrows are no longer turned into pills
+- Freelance block on the Overview: even spacing between the title, the KPI row and Top clients
+- Sidebar scrollbar hidden (the menu still scrolls)
+- Calendar today / selected / status colours match the new look; loading skeletons match card shape
+- No database or behaviour change
+
+## 0.8.0
+### Changed (finance-SaaS look, replaces the 0.7.2 pastel colours)
+- White frame, light grey work area, white cards with a hairline border, one green accent, black active menu item, status tags with a dot
+- Sidebar: labelled groups (Main menu, Manage), its own scroll area, footer (theme and Sign out) always visible, fits all pages at 1280x720 without scrolling
+- KPI rows never leave a single card alone on a row (5 cards: one row on wide screens, 3+2 on medium, full-width last card on phones)
+- Expenses: compact Paid with cards, filter bar on one baseline, long descriptions shorten with an ellipsis, Actions column aligned right, 40px controls
+- Same rhythm (20px desktop, 16px mobile) between all blocks; dark theme tokens updated to match
+- No database or behaviour change
+
+## 0.7.2
+### Changed (Elevate look)
+- New look: soft grey frame on a pale blue page, white cards, pastel stat cards (lime, lavender, peach, sky), black pill buttons, Manrope font, rounded sidebar with a lime active item, top bar with search and user pill (desktop)
+- Links now look like buttons everywhere
+- **Reports**: "Period report", "Client report" and "Job report" buttons; the last two open a dropdown to pick a client or job, then show that report on the page with a PDF button
+- Soft rise and hover-lift animations on desktop cards (off with reduced motion)
+- Fewer explanatory lines on the job page
+- No database change
+
+## 0.7.0
+### Added (freelance mode, part 7: dashboard and reports)
+- **Freelance summary** on the Overview for the chosen month: money received from clients, job costs, profit, jobs done / booked, clients handled, **still owed to you** (with a link to Payments due), top clients and services
+- **Freelance vs Both is now real**: *Freelance* opens the Overview with the freelance summary and upcoming jobs first, a client / job / payment checklist, and income labelled "Money in". *Both* keeps the usual income / spending / savings Overview first, with the freelance summary right below it. *Salaried* is unchanged
+- **Reports** gain a Freelance section (same figures for the report period) and a Freelance block in the report PDF
+- **Client report** (`/reports/client/<id>`): every job with agreed, received, costs and profit; totals; payments and costs lists; **PDF download**
+- **Job report** (`/reports/job/<id>`): job details, payments, costs, balance and profit; **PDF download**
+- "Client report" and "Job report" buttons on the client and job pages; top clients on the Overview and Reports link to their client report
+- **Reports page picker**: a "Client and job reports" section on the Reports page lists your clients and your 15 latest jobs, each linking straight to its report
+- Settings → Work type explains the three modes
+
+### Security
+- All freelance report queries are scoped by `userId` with explicit `select`s and bounded row counts; report ids are validated UUIDs and another user's id returns "not found"
+- PDFs are built on the server with the existing no-network PDF library, share the 10-a-minute PDF rate limit, use only Latin-1 text, and carry no phone, email, address or private notes (client name and job details only). Filenames contain only the date
+
+### Operations
+- **No migration**, no new dependency or environment variable
+
+## 0.6.5
+### Added (freelance mode, part 6: reminders and payments due)
+- **Job reminders**: the daily reminder run (about 09:00 India time) now also sends one push per person listing how many **booked** jobs they have tomorrow, in their own timezone. Tapping it opens that day in the Calendar
+- **Settings → Notifications**: new "Job reminders" choice (On by default), shown for Freelance and Both accounts
+- **Payments due** list (Jobs page card and `/jobs/due`): completed jobs with an agreed price that are not fully paid, oldest first, with days since the event, amount paid, balance and a total owed
+- The two reminder types run independently, so a failure in one does not stop the other
+
+### Security
+- Reminder text never contains client names, places, times or amounts. One reminder per person per day (`NotificationLog` key `jobs:<date>`); the run is bounded (one query, 5,000 jobs) and only reads jobs of users who opted in and have a push device
+- The payments-due query is scoped by `userId` with explicit `select`s and reads at most 5,000 completed jobs
+
+### Operations
+- **Migration**: `add_job_reminders` (`User.notifyJobs` boolean, default true). Apply to production with `migrate deploy` (both `DATABASE_URL` and `DIRECT_URL`) before merging
+- No new dependency or environment variable; the existing cron schedule and `CRON_SECRET` are reused. Push must already be set up (VAPID keys) for reminders to be sent
+
+## 0.6.4
+### Added (freelance mode, part 5: calendar)
+- **Calendar** page (Freelance and Both): a month grid (Monday first) showing each day's jobs, coloured by status, with month navigation and a Today button. Tap a day to see its **agenda**: time, job, client, place, status
+- **Double-booking warning**: two jobs overlap when their times overlap (a job with no end time is assumed to last 2 hours); a job with no time on the same date as another is flagged softly ("Same day"). Cancelled jobs never clash. Warnings appear on the job page, in the day agenda and as a red day in the grid. Saving is never blocked
+- **Upcoming jobs** card on the Dashboard (next 5 pending jobs, with a Clash tag)
+- Phone layout: the grid shows a job count per day instead of titles
+
+### Security
+- Calendar and conflict queries are scoped by `userId` with explicit `select`; month and day come from validated query strings only; no new action or write path
+
+### Operations
+- **No migration**, no new dependency or environment variable. `/calendar` was added to the protected routes, the security-header paths and the offline page list
+
+## 0.6.3
+### Added (freelance mode, part 4: job costs and profit)
+- **Costs and profit** section on each job: add travel, an assistant/helper payment, products or other costs (amount, date, type, "paid to", what for). Shows Costs, Profit so far (received minus costs) and Profit when paid in full
+- Costs are stored as normal **Expenses**, so the dashboard, budgets, reports and CSV include them. The Expenses page labels each one with its type, job and client
+- **Filter by job or client**: "See them in Expenses / Income" links on the job and client pages show only that job's or client's entries across all months
+- Client page now also shows total **Costs** and **Profit**, with links to that client's payments and costs
+- Edit or delete a cost from the job page or the Expenses page
+
+### Security
+- The job is verified as the caller's own before a cost is created; `userId` in every query (including the job/client filters, which are validated UUIDs); Zod validation; rate limit; shared 50,000 expense limit
+- A job with payments **or costs** cannot be deleted (cancel it instead), in the action and in the database (`ON DELETE NO ACTION`)
+
+### Operations
+- **Migration**: `add_job_costs` (new `JobCostKind` enum, `Expense.jobId`, `costKind`, `payee`, index). Apply to production with `migrate deploy` (both `DATABASE_URL` and `DIRECT_URL`) before merging. Existing expenses are untouched
+- Costs are saved without a category for now (choose one by editing the expense). No new dependency or environment variable
+
+## 0.6.2
+### Added (freelance mode, part 3: job payments)
+- **Payments** section on each job: add an advance, part payment or final payment (amount, date, type, note). Shows Agreed, Received and Balance due, with a badge: Unpaid, Part paid, Paid in full, Overpaid (or "No price set")
+- The amount is pre-filled with the balance still due and the type is suggested (first payment = Advance)
+- Payments are stored as normal **Income**, so the dashboard, reports, CSV and PDFs include them. The Income page labels each one with its type, job and client
+- Jobs list and client page show a **Balance** column; the client page shows **Total received** and **Balance due**
+- Edit or delete a payment from the job page or the Income page
+
+### Security
+- The job is verified as the caller's own (`assertOwnJob`) before a payment is created; `userId` in every query; Zod validation; rate limit; shared 20,000 income-entry limit
+- A job that has payments cannot be deleted (cancel it instead); enforced in the action and by the database (`ON DELETE NO ACTION`). Account deletion still removes everything
+
+### Operations
+- **Migration**: `add_job_payments` (new `PaymentKind` enum, `Income.jobId`, `Income.paymentKind`, index). Apply to production with `migrate deploy` (both `DATABASE_URL` and `DIRECT_URL`) before merging. Existing income rows are untouched
+- No new dependency or environment variable
+
+## 0.6.1
+### Added (freelance mode, part 2: jobs)
+- **Jobs** page (Freelance and Both): create, edit, delete and list jobs with client, title, service type, date, start/end time, location, status (Enquiry, Booked, Completed, Cancelled), agreed amount and notes
+- Month navigation with "Completed" and "Pending" sections, status/client filters and paging; future jobs can be created
+- **Job page** with all details; **client page** now lists that client's jobs and has an "Add job" shortcut
+- A client that has jobs cannot be deleted (archive it instead); deleting the whole account still removes everything
+
+### Security
+- Every job query and change is scoped by `userId`; the chosen client must belong to the same user (`assertOwnClient`); explicit `select`s; Zod validation (real calendar dates, HH:MM times, end after start); rate limits; 20,000 jobs per user
+
+### Operations
+- **Migration**: `add_jobs` (new `JobStatus` enum and `Job` table). Apply to production with `migrate deploy` (both `DATABASE_URL` and `DIRECT_URL`) before merging
+- Fixed a duplicate `.card-head` CSS rule. No new dependency or environment variable
+
+## 0.6.0
+### Added (freelance mode, part 1: foundation and clients)
+- **Work type** in Settings: Salaried (default), Freelance, or Both. It only changes what is shown; nothing is hidden or deleted when you switch
+- **Clients** page (visible for Freelance and Both): add, edit, archive/restore and delete clients with name, phone, email, city, address, how they found you, and private notes; search by name, phone, email or city; show Active / Archived / All; sort by name or date added; 10/20/50 per page
+- **Client page** with all details (tap-to-call and email links) and a section where jobs and payments will appear in the next release
+- Phone numbers are cleaned and validated (7 to 15 digits, optional +); email is validated and lower-cased
+- Salaried-only accounts see a short "Freelance mode is off" page at /clients and a 404 for client detail pages
+
+### Security
+- Every client query and change is scoped to the signed-in user (`userId` in every `where`), with explicit `select`s, Zod validation, rate limits and a limit of 5,000 clients per user
+- Client details are removed with the account (database cascade). Search text is escaped by Prisma; links use only validated phone/email values
+
+### Operations
+- **Migration**: `add_work_mode_and_clients` (new `WorkMode` enum, `User.workMode` default SALARIED, new `Client` table). Apply to production with `migrate deploy` (set both `DATABASE_URL` and `DIRECT_URL`) before merging
+- No new dependency, no new environment variable. Existing users stay Salaried and see no change
+
+## Unreleased
+### Added
+- `e2e/`: base setup for a Playwright + TypeScript test framework (config, env guard, folder READMEs, scenario list, test-id reference) and `.github/workflows/e2e.yml` (manual + nightly). The page objects, fixtures, helpers and tests are written by hand. See `e2e/README.md`
+- More `data-testid` hooks: password, 2FA, import and report forms, create-goal forms
+- The app's `tsconfig.json` and ESLint config now exclude `e2e/`
+- No application code, migration or environment variable changes
+
+## 0.5.2
+### Fixed
+- Copy expense: a **Clear** link in the "Copied from…" note resets the form; copying a second expense re-opens the add form even if you had collapsed it, and the page scrolls to the form
+- Offline: pages other than the dashboard failed with "Something went wrong" because their scripts were never saved. Saved pages now bring their scripts/styles with them, and a page opened with filters falls back to its unfiltered saved copy. If a page truly was never saved the message now says "You are offline" instead of a generic error
+- CI: added the new `effect` advisory (GHSA-7589-6fvf-x4pw, dev tooling only) to the documented audit allowlist
+
+### Operations
+- No migration, no new dependency, no new environment variable
+- After deploying, open the app once online and wait ~10 seconds: the offline copies are rebuilt automatically (the old ones are replaced)
+
+## 0.5.1
+### Added
+- **Home Screen shortcuts**: long-press the installed app icon for "Add expense" and "Add income"
+- **Copy** button on each expense: opens the add form pre-filled (date = today) so repeat purchases take seconds
+- **Month-over-month**: the Spent card on the dashboard says how spending compares with the previous month
+- **Offline label**: when you are offline the banner says when the data you are looking at was saved
+- **Getting started** card on the dashboard for new accounts (first expense, budget, goal); it disappears once done
+- Press **N** anywhere (not while typing) to add an expense
+- `data-testid` attributes on navigation, forms (`<action-name>` / `-submit` / `-error`), rows, filters, pager, banner and notification settings, for the Playwright framework
+
+### Operations
+- No migration, no new dependency, no new environment variable
+
 ## 0.5.0
 ### Added
 - **Installable app (PWA)**: add it to your phone's Home Screen or install it from the browser; it opens like a normal app

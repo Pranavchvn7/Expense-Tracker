@@ -179,3 +179,49 @@ export const IconCard = () => (
     <path d="M3 10h18M7 15h4" />
   </Icon>
 );
+
+export const IconUsers = () => (
+  <Icon>
+    <circle cx="9" cy="8" r="3.5" />
+    <path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5" />
+    <circle cx="17.5" cy="9" r="2.5" />
+    <path d="M17 14.2c2.5.2 4.1 1.7 4.5 4.3" />
+  </Icon>
+);
+
+export const IconBriefcase = () => (
+  <Icon>
+    <rect x="3" y="7" width="18" height="13" rx="2" />
+    <path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7" />
+    <path d="M3 13h18" />
+  </Icon>
+);
+
+export const IconCalendar = () => (
+  <Icon>
+    <rect x="3" y="5" width="18" height="16" rx="2" />
+    <path d="M3 10h18M8 3v4M16 3v4" />
+  </Icon>
+);
+
+export const IconSearch = () => (
+  <Icon>
+    <circle cx="11" cy="11" r="7" />
+    <path d="M20 20l-3.5-3.5" />
+  </Icon>
+);
+
+export const IconDots = () => (
+  <Icon>
+    <circle cx="5" cy="12" r="1.6" fill="currentColor" />
+    <circle cx="12" cy="12" r="1.6" fill="currentColor" />
+    <circle cx="19" cy="12" r="1.6" fill="currentColor" />
+  </Icon>
+);
+
+export const IconPanel = () => (
+  <Icon>
+    <rect x="3" y="4" width="18" height="16" rx="3" />
+    <path d="M9 4v16" />
+  </Icon>
+);

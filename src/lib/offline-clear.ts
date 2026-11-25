@@ -1,7 +1,7 @@
 import { clearOutbox } from "@/lib/outbox";
 
 export const LAST_USER_KEY = "et-last-user";
-export const LAST_WARM_KEY = "et-last-warm";
+export const LAST_WARM_KEY = "et-last-warm-2";
 
 /** Remove this device's saved pages. Never throws. */
 export async function clearOfflineCaches(): Promise<void> {

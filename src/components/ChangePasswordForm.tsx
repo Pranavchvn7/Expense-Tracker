@@ -35,7 +35,7 @@ export function ChangePasswordForm() {
   }
 
   return (
-    <form method="post" onSubmit={onSubmit} className="stack">
+    <form method="post" onSubmit={onSubmit} className="stack" data-testid="change-password">
       <label>
         Current password
         <input name="current" type="password" maxLength={128} autoComplete="current-password" required />
@@ -49,11 +49,11 @@ export function ChangePasswordForm() {
         <input name="confirm" type="password" minLength={12} maxLength={128} autoComplete="new-password" required />
       </label>
       <small>At least 12 characters.</small>
-      <button className="btn" disabled={pending} type="submit">
+      <button className="btn" disabled={pending} type="submit" data-testid="change-password-submit">
         {pending ? "Please wait…" : "Change password"}
       </button>
       {message && (
-        <p role={message.ok ? "status" : "alert"} className={message.ok ? "muted" : "error"}>
+        <p role={message.ok ? "status" : "alert"} className={message.ok ? "muted" : "error"} data-testid="change-password-message">
           {message.text}
         </p>
       )}

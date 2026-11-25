@@ -19,10 +19,14 @@ export function NotificationSettings({
   publicKey,
   notifyBudget,
   notifyRenewals,
+  notifyJobs,
+  showJobs,
 }: {
   publicKey: string | null;
   notifyBudget: boolean;
   notifyRenewals: boolean;
+  notifyJobs: boolean;
+  showJobs: boolean;
 }) {
   const router = useRouter();
   const [, startRefresh] = useTransition();
@@ -124,7 +128,7 @@ export function NotificationSettings({
   }
 
   return (
-    <div className="card stack">
+    <div className="card stack" data-testid="notification-settings">
       <h3>Push notifications</h3>
       {!publicKey ? (
         <p className="muted">Push notifications are not set up on this server yet.</p>
@@ -137,11 +141,11 @@ export function NotificationSettings({
         <div className="row">
           {enabledHere ? (
             <>
-              <button className="btn ghost" type="button" disabled={busy} onClick={() => void disable()}>Turn off on this device</button>
-              <button className="btn soft" type="button" disabled={busy} onClick={() => void test()}>Send test notification</button>
+              <button className="btn ghost" type="button" disabled={busy} data-testid="push-disable" onClick={() => void disable()}>Turn off on this device</button>
+              <button className="btn soft" type="button" disabled={busy} data-testid="push-test" onClick={() => void test()}>Send test notification</button>
             </>
           ) : (
-            <button className="btn" type="button" disabled={busy || permission === "denied"} onClick={() => void enable()}>Turn on for this device</button>
+            <button className="btn" type="button" disabled={busy || permission === "denied"} data-testid="push-enable" onClick={() => void enable()}>Turn on for this device</button>
           )}
         </div>
       )}
@@ -149,7 +153,7 @@ export function NotificationSettings({
       {note && <p role="status" className="notice">{note}</p>}
       {problem && <p role="alert" className="error">{problem}</p>}
 
-      <ActionForm action={setNotifyPrefs} submitLabel="Save alert choices" className="stack">
+      <ActionForm action={setNotifyPrefs} testId="set-notify-prefs" submitLabel="Save alert choices" className="stack">
         <div className="row">
           <label>Budget alerts (80% used, and over budget)
             <select name="budget" defaultValue={notifyBudget ? "1" : "0"}>
@@ -164,8 +168,16 @@ export function NotificationSettings({
             </select>
           </label>
         </div>
+        {showJobs && (
+          <label>Job reminders (the day before, about 09:00)
+            <select name="jobs" defaultValue={notifyJobs ? "1" : "0"} data-testid="notify-jobs">
+              <option value="1">On</option>
+              <option value="0">Off</option>
+            </select>
+          </label>
+        )}
       </ActionForm>
-      <p className="muted">Notifications never show amounts, so nothing private appears on a locked screen.</p>
+      <p className="muted">Notifications never show amounts or client names, so nothing private appears on a locked screen.</p>
 
       <h3>Offline use</h3>
       <p className="muted">
@@ -174,7 +186,7 @@ export function NotificationSettings({
         Add to Home Screen.
       </p>
       <div className="row">
-        <button className="btn ghost" type="button" onClick={() => void clearDevice()}>Clear offline data on this device</button>
+        <button className="btn ghost" type="button" data-testid="clear-offline" onClick={() => void clearDevice()}>Clear offline data on this device</button>
       </div>
     </div>
   );

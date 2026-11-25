@@ -72,21 +72,22 @@ export function AuthForm({
   return (
     // method="post": if JavaScript ever fails to load, the browser must never fall back
     // to a GET submit that would put the email and password into the URL.
-    <form method="post" onSubmit={onSubmit} className="stack" autoComplete="on">
+    <form method="post" onSubmit={onSubmit} className="stack" autoComplete="on" data-testid={`auth-${mode}`}>
       {mode === "signup" && (
         <label>
           Name
-          <input name="name" type="text" maxLength={60} autoComplete="name" required />
+          <input name="name" data-testid="auth-name" type="text" maxLength={60} autoComplete="name" required />
         </label>
       )}
       <label>
         Email
-        <input name="email" type="email" maxLength={254} autoComplete="email" required />
+        <input name="email" data-testid="auth-email" type="email" maxLength={254} autoComplete="email" required />
       </label>
       <label>
         Password
         <input
           name="password"
+          data-testid="auth-password"
           type="password"
           minLength={mode === "signup" ? 12 : 1}
           maxLength={128}
@@ -95,11 +96,11 @@ export function AuthForm({
         />
       </label>
       {mode === "signup" && <small>At least 12 characters.</small>}
-      <button className="btn" disabled={pending} type="submit">
+      <button className="btn" data-testid="auth-submit" disabled={pending} type="submit">
         {pending ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"}
       </button>
       {error && (
-        <p role="alert" className="error">
+        <p role="alert" className="error" data-testid="auth-error">
           {error}
         </p>
       )}

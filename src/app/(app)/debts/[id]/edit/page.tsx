@@ -15,7 +15,7 @@ export default async function EditDebtPage({ params }: { params: Promise<{ id: s
   return (
     <>
       <div className="page-head"><h1>Edit debt</h1></div>
-      <ActionForm action={updateDebt} submitLabel="Save changes" className="card stack" successHref="/debts">
+      <ActionForm action={updateDebt} testId="update-debt" submitLabel="Save changes" className="card stack" successHref="/debts">
         <input type="hidden" name="id" value={debt.id} />
         <div className="row">
           <label>Name<input name="name" maxLength={80} defaultValue={debt.name} required /></label>

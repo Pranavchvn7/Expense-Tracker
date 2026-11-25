@@ -2,8 +2,7 @@ import { CardHead } from "@/components/cards/CardHead";
 import { CategoryTag } from "@/components/CategoryTag";
 import { formatMoney } from "@/lib/money";
 
-// Shared by Reports and Dashboard so both show the same cards: five rows tall, then the list
-// scrolls with an invisible scrollbar. Server components; no client JavaScript.
+// Shared by Reports and Dashboard so both show the same cards. Server components; no client JavaScript.
 
 export function CategoryDetailCard({
   categories,
@@ -14,13 +13,14 @@ export function CategoryDetailCard({
   spentMinor: number;
   currency: string;
 }) {
+  // Six rows fit the card; the rest scroll behind an invisible scrollbar.
   return (
     <div className="card panel">
       <CardHead title="Category detail" />
       <div className="rows-head cols-cat" aria-hidden="true">
         <span>Category</span><span className="r">Expenses</span><span className="r">Amount</span><span className="r">Share</span>
       </div>
-      <ul className="rows cols-cat limit5 hide-scroll">
+      <ul className="rows cols-cat limit6 hide-scroll">
         {categories.map((c) => (
           <li key={c.label}>
             <span className="main"><CategoryTag name={c.label === "Uncategorised" ? null : c.label} color={c.color} /></span>
@@ -40,6 +40,7 @@ export function CategoryDetailCard({
   );
 }
 
+/** Top five expenses, ranked. Each bar is that expense's size against the largest one. */
 export function TopExpensesCard({
   rows,
   currency,
@@ -47,23 +48,26 @@ export function TopExpensesCard({
   rows: { description: string; sub: string; amountMinor: number }[];
   currency: string;
 }) {
+  const largest = rows.reduce((m, r) => Math.max(m, r.amountMinor), 0);
   return (
     <div className="card panel">
       <CardHead title="Largest expenses" />
       {rows.length === 0 ? (
         <p className="muted">No expenses in this period.</p>
       ) : (
-        <ul className="rows cols-2 limit5 hide-scroll">
-          {rows.map((t, i) => (
-            <li key={i}>
-              <span className="stack-sm">
-                <span className="nm">{t.description}</span>
-                <span className="muted sub">{t.sub}</span>
+        <ol className="rank-list">
+          {rows.slice(0, 5).map((t, i) => (
+            <li key={i} className="rank-row">
+              <span className="rank" aria-hidden="true">{i + 1}</span>
+              <span className="rank-main">
+                <span className="nm-plain">{t.description}</span>
+                <progress max={largest || 1} value={t.amountMinor} aria-label={`${t.description} compared with the largest expense`} />
+                <span className="sub">{t.sub}</span>
               </span>
               <span className="r amt">{formatMoney(t.amountMinor, currency)}</span>
             </li>
           ))}
-        </ul>
+        </ol>
       )}
     </div>
   );

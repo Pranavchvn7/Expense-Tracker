@@ -44,7 +44,7 @@ export default async function BudgetsPage({
           <h1>Budgets</h1>
           <p>Monthly limits per category in {currency}. A budget applies to every month.</p>
         </div>
-        <div className="month-nav" aria-label="Choose month">
+        <div className="month-nav top-month" aria-label="Choose month">
           <Link href={buildHref("/budgets", { month: addMonthsKey(month, -1) })} aria-label="Previous month"><IconChevronLeft /></Link>
           <span className="current">{monthLabel(month)}</span>
           <Link
@@ -65,7 +65,7 @@ export default async function BudgetsPage({
             <p className="muted">Add a category in <Link href="/settings#categories">Settings</Link> first, then set a budget for it.</p>
           ) : (
             <>
-              <ActionForm action={setBudget} submitLabel="Save budget" className="row" resetOnSuccess>
+              <ActionForm action={setBudget} testId="set-budget" submitLabel="Save budget" className="row" resetOnSuccess>
                 <label>Category
                   <select name="categoryId" required defaultValue="">
                     <option value="" disabled>Choose…</option>
@@ -144,7 +144,7 @@ export default async function BudgetsPage({
                   )}
                 </dl>
                 <div className="budget-actions">
-                  <ActionForm action={setBudget} submitLabel="Update limit" className="row" >
+                  <ActionForm action={setBudget} testId="set-budget" submitLabel="Update limit" className="row" >
                     <input type="hidden" name="categoryId" value={c.category.id} />
                     <label>New monthly limit
                       <input name="amount" inputMode="decimal" pattern="\d{1,9}(\.\d{1,2})?" defaultValue={(c.limitMinor / 100).toFixed(2)} required />
@@ -152,7 +152,7 @@ export default async function BudgetsPage({
                   </ActionForm>
                   <div className="cell-actions">
                     <Link className="btn soft small" href={buildHref("/expenses", { month, categoryId: c.category.id })}>View expenses</Link>
-                    <ActionForm action={deleteBudget} submitLabel="Remove" danger confirmMessage="Remove this budget?">
+                    <ActionForm action={deleteBudget} testId="delete-budget" submitLabel="Remove" danger confirmMessage="Remove this budget?">
                       <input type="hidden" name="id" value={c.id} />
                     </ActionForm>
                   </div>

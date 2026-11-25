@@ -1,23 +1,28 @@
 import Link from "next/link";
 import { materializeRecurring } from "@/lib/recurring";
-import { listBudgets, monthTotalsByCategory } from "@/lib/queries";
-import { getDashboardData, getMonthHighlights, listRecentExpenses } from "@/lib/finance-queries";
+import { listBudgets, monthRange, monthTotalsByCategory } from "@/lib/queries";
+import { getDashboardData, getLifetimeCounts, getMonthHighlights, listRecentExpenses } from "@/lib/finance-queries";
 import { paymentLabel } from "@/lib/payment-method";
 import { CardHead } from "@/components/cards/CardHead";
-import { CategoryDetailCard, PaymentMethodsCard, TopExpensesCard } from "@/components/cards/ListCards";
+import { CategoryDetailCard, TopExpensesCard } from "@/components/cards/ListCards";
 import { listGoals } from "@/lib/goal-queries";
 import { monthlyNeeded, percent } from "@/lib/goal-math";
 import { formatMoney, monthLabel } from "@/lib/money";
 import { addMonthsKey } from "@/lib/chart-math";
 import { getUserToday, getUserPrefs } from "@/lib/preferences";
+import { upcomingJobs } from "@/lib/job-queries";
+import { freelanceLifetime, freelanceSummary, outstanding } from "@/lib/freelance-queries";
+import { FreelanceSummary } from "@/components/FreelanceSummary";
+import { Slider } from "@/components/Slider";
+import { PaidWithCarousel, type PaidWithItem } from "@/components/PaidWithCarousel";
+import { clashingIds } from "@/lib/cal-math";
+import { timeRangeLabel } from "@/lib/job-math";
 import { monthSchema } from "@/lib/validation";
-import { parsePaging } from "@/lib/paging";
+import { compareSpending, momText } from "@/lib/mom-math";
 import { DonutChart } from "@/components/charts/DonutChart";
 import { AreaChart } from "@/components/charts/AreaChart";
 import { DailyBars } from "@/components/charts/DailyBars";
 import { Ring } from "@/components/charts/Ring";
-import { GoalCarousel } from "@/components/GoalCarousel";
-import { Pager } from "@/components/Pager";
 import { CategoryTag } from "@/components/CategoryTag";
 import { colorClass } from "@/lib/category-color";
 import {
@@ -30,6 +35,10 @@ import {
   IconScale,
 } from "@/components/icons";
 
+const EXPENSES_SHOWN = 5;
+
+const shortDate = (d: Date) => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+
 export default async function DashboardPage({
   searchParams,
 }: {
@@ -38,20 +47,22 @@ export default async function DashboardPage({
   const sp = await searchParams;
   // Create anything that fell due since the last visit before reading the data.
   await materializeRecurring();
-  const today = await getUserToday();
-  const prefs = await getUserPrefs();
+  const [today, prefs] = await Promise.all([getUserToday(), getUserPrefs()]);
+  // Every upcoming job is shown in the slider, so take a generous window.
+  const upcoming = prefs.workMode === "SALARIED" ? [] : await upcomingJobs(today.iso, 50);
+  const upcomingClash = clashingIds(upcoming.map((j) => ({ id: j.id, eventDate: j.eventDate.toISOString().slice(0, 10), startTime: j.startTime, endTime: j.endTime, status: j.status })));
   // Query strings are untrusted: validate, fall back to safe defaults.
   const rawMonth = monthSchema.safeParse(Array.isArray(sp.month) ? sp.month[0] : sp.month);
   const month = rawMonth.success && rawMonth.data <= today.month ? rawMonth.data : today.month;
-  const { page, perPage } = parsePaging(sp, { pageKey: "ep", sizeKey: "epp" });
 
-  const [data, budgets, totals, goals, recent, highlights] = await Promise.all([
+  const [data, budgets, totals, goals, recent, highlights, lifetime] = await Promise.all([
     getDashboardData(month),
     listBudgets(),
     monthTotalsByCategory(month),
     listGoals(12),
-    listRecentExpenses(month, page, perPage),
+    listRecentExpenses(month, 1, EXPENSES_SHOWN),
     getMonthHighlights(month),
+    getLifetimeCounts(),
   ]);
 
   const { currency } = data;
@@ -59,35 +70,120 @@ export default async function DashboardPage({
   const rate = data.incomeMinor > 0 ? Math.round((net / data.incomeMinor) * 100) : null;
   const href = (m: string) => `/dashboard?month=${m}`;
 
+  // Greeting from the user's own clock, so "morning" means morning where they live.
+  const firstName = prefs.name.trim().split(" ")[0] || "there";
+  const hour = Number(new Intl.DateTimeFormat("en-GB", { hour: "numeric", hour12: false, timeZone: today.timezone }).format(new Date())) % 24;
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+
   const spent = new Map<string, number>();
   for (const t of totals) {
     if (t.categoryId) spent.set(`${t.categoryId}|${t.currency}`, t._sum.amountMinor ?? 0);
   }
   const shownBudgets = budgets.filter((b) => b.currency === currency);
+  const prevSpent = data.trend.spent.length >= 2 ? (data.trend.spent[data.trend.spent.length - 2] ?? 0) : 0;
+  const momLine = momText(compareSpending(data.spentMinor, prevSpent), monthLabel(addMonthsKey(month, -1)));
+  const mode = prefs.workMode;
+  const flData = mode === "SALARIED" ? null : await Promise.all([freelanceSummary(monthRange(month)), outstanding(), mode === "FREELANCE" ? freelanceLifetime() : Promise.resolve(null)]);
+  const fl = flData?.[0] ?? null;
+  const owed = flData?.[1] ?? null;
+  const life = flData?.[2] ?? null;
+  const salariedSteps = [
+    { done: lifetime.expenses > 0, label: "Add your first expense", href: "/expenses?add=1" },
+    { done: budgets.length > 0, label: "Set a monthly budget for a category", href: "/budgets?add=1" },
+    { done: goals.length > 0, label: "Create a savings goal", href: "/goals" },
+  ];
+  // Freelance accounts get a work-first checklist; Salaried and Both keep the money-basics one.
+  const freelanceSteps = [
+    { done: (life?.clients ?? 0) > 0, label: "Add your first client", href: "/clients?add=1" },
+    { done: (life?.jobs ?? 0) > 0, label: "Add a job", href: "/jobs?add=1" },
+    { done: (life?.payments ?? 0) > 0, label: "Record a client payment on a job", href: "/jobs" },
+  ];
+  const steps = prefs.workMode === "FREELANCE" ? freelanceSteps : salariedSteps;
+  const showStarter = steps.some((s) => !s.done);
   const empty = data.expenseCount === 0 && data.incomeMinor === 0;
 
-  const carousel = goals.map((g) => {
-    const per = monthlyNeeded(Math.max(g.targetMinor - g.savedMinor, 0), g.targetDate, today.date);
+  const upcomingCard = fl ? (
+    <div className="card section record-card" data-testid="upcoming-jobs">
+      <div className="card-head">
+        <h2>Upcoming jobs</h2>
+        <Link className="btn soft small" href="/calendar" data-testid="upcoming-calendar">Calendar</Link>
+      </div>
+      {upcoming.length === 0 ? (
+        <div className="empty compact">
+          <span className="muted">No upcoming jobs yet.</span>
+          <Link className="btn small" href="/jobs?add=1">Add a job</Link>
+        </div>
+      ) : (
+        <Slider label="upcoming job">
+          {upcoming.map((j) => {
+            const d = new Date(`${j.eventDate.toISOString().slice(0, 10)}T00:00:00Z`);
+            const time = timeRangeLabel(j.startTime, j.endTime);
+            return (
+              <div key={j.id} className="slide" data-testid="upcoming-job">
+                <div className="job-row">
+                  <span className="date-tile" aria-hidden="true">
+                    <strong>{d.toLocaleDateString("en-GB", { day: "numeric", timeZone: "UTC" })}</strong>
+                    <span>{d.toLocaleDateString("en-GB", { month: "short", timeZone: "UTC" })}</span>
+                  </span>
+                  <span className="job-main">
+                    <span className="nm-plain">{j.title}</span>
+                    <span className="sub">{j.client.name}{time ? ` · ${time}` : ""}</span>
+                  </span>
+                  <span className="job-side">
+                    {upcomingClash.has(j.id) && <span className="tag st-overdue">Clash</span>}
+                    <Link className="btn soft small" href={`/jobs/${j.id}`} data-testid="upcoming-open">Open</Link>
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </Slider>
+      )}
+    </div>
+  ) : null;
+  const freelanceBlock = fl ? (
+    <>
+      <FreelanceSummary s={fl} periodLabel={monthLabel(month)} outstanding={owed} testId="dash-freelance" />
+      {upcomingCard}
+    </>
+  ) : null;
+
+  // Goals use the same slide shape as budgets: figure, progress, then two facts.
+  const goalSlides = goals.map((g) => {
+    const toGo = Math.max(g.targetMinor - g.savedMinor, 0);
+    const per = g.targetDate ? monthlyNeeded(toGo, g.targetDate, today.date) : null;
     return {
       id: g.id,
       name: g.name,
       savedText: formatMoney(g.savedMinor, g.currency),
       targetText: formatMoney(g.targetMinor, g.currency),
       pct: percent(g.savedMinor, g.targetMinor),
-      note: g.targetDate
-        ? `By ${g.targetDate.toISOString().slice(0, 10)}${per !== null ? ` · about ${formatMoney(per, g.currency)} a month` : ""}`
-        : "",
+      toGoText: formatMoney(toGo, g.currency),
+      // Second fact: what it needs each month if there is a date, otherwise the date itself.
+      secondLabel: per !== null ? "A month" : "By",
+      secondText: per !== null ? formatMoney(per, g.currency) : g.targetDate ? shortDate(g.targetDate) : "No date",
     };
   });
 
+  // Paid with: every method used this month, plus "Not set", each with its share of spending.
+  const paidWith: PaidWithItem[] = highlights.payments
+    .filter((p) => p.value > 0)
+    .map((p) => ({
+      method: p.method,
+      label: paymentLabel(p.method),
+      count: p.count,
+      valueText: formatMoney(p.value, currency),
+      share: data.spentMinor > 0 ? Math.round((p.value * 100) / data.spentMinor) : 0,
+    }));
+
   return (
-    <>
+    <div className="dash">
       <div className="page-head">
         <div>
-          <h1>Overview</h1>
+          <h1 data-testid="greeting">{greeting}, {firstName}</h1>
           <p>Your money in {monthLabel(month)}</p>
         </div>
-        <div className="month-nav" aria-label="Choose month">
+        <div className="month-nav top-month" aria-label="Choose month">
           <Link href={href(addMonthsKey(month, -1))} aria-label="Previous month"><IconChevronLeft /></Link>
           <span className="current">{monthLabel(month)}</span>
           <Link
@@ -115,18 +211,41 @@ export default async function DashboardPage({
         </p>
       )}
 
+      {showStarter && (
+        <div className="card section starter" data-testid="starter-card">
+          <h2>Getting started</h2>
+          <ul className="starter-list">
+            {steps.map((s) => (
+              <li key={s.label} className={s.done ? "done" : undefined}>
+                <span className="check" aria-hidden="true">{s.done ? "✓" : "○"}</span>
+                {s.done ? <span>{s.label}</span> : <Link href={s.href}>{s.label}</Link>}
+              </li>
+            ))}
+            <li>
+              <span className="check" aria-hidden="true">○</span>
+              <Link href="/settings#notifications">Turn on alerts and install the app (optional)</Link>
+            </li>
+          </ul>
+        </div>
+      )}
+
+      {mode === "FREELANCE" && freelanceBlock}
+
       <div className="grid stats section">
         <div className="card stat income">
-          <span className="label"><span className="pill-icon income"><IconArrowDown /></span>Income</span>
+          <span className="label"><span className="pill-icon income"><IconArrowDown /></span>{mode === "FREELANCE" ? "Money in" : "Income"}</span>
           <span className="value">{formatMoney(data.incomeMinor, currency)}</span>
-          <span className="hint">Money received</span>
+          <span className="hint">{mode === "FREELANCE" ? "Client payments and other income" : "Money received"}</span>
         </div>
         <div className="card stat spend">
           <span className="label"><span className="pill-icon spend"><IconArrowUp /></span>Spent</span>
           <span className="value">{formatMoney(data.spentMinor, currency)}</span>
-          <span className="hint">{data.expenseCount} expense{data.expenseCount === 1 ? "" : "s"}</span>
+          <span className="hint" data-testid="spent-hint">
+            {data.expenseCount} expense{data.expenseCount === 1 ? "" : "s"}
+            {momLine ? <><br /><span data-testid="mom-line">{momLine}</span></> : null}
+          </span>
         </div>
-        <div className={`card stat ${net >= 0 ? "pos" : "neg"}`}>
+        <div className={`card stat hero ${net >= 0 ? "pos" : "neg"}`}>
           <span className="label"><span className="pill-icon net"><IconScale /></span>Balance</span>
           <span className="value">{formatMoney(net, currency)}</span>
           <span className="hint">Income minus spending</span>
@@ -140,6 +259,8 @@ export default async function DashboardPage({
           <Ring percent={rate ?? 0} tone={rate !== null && rate < 0 ? "neg" : "pos"} label={rate === null ? "No savings rate yet" : `Savings rate ${rate}%`} />
         </div>
       </div>
+
+      {mode === "BOTH" && freelanceBlock}
 
       {empty && (
         <div className="card section">
@@ -197,16 +318,42 @@ export default async function DashboardPage({
 
           <div className="grid two section equal">
             <TopExpensesCard rows={highlights.top} currency={currency} />
-            <PaymentMethodsCard rows={highlights.payments.map((p) => ({ label: paymentLabel(p.method), count: p.count, value: p.value }))} currency={currency} />
+            <div className="card panel" data-testid="paid-with-card">
+              <CardHead title="Paid with" />
+              {paidWith.length === 0 ? (
+                <p className="muted">No expenses in this period.</p>
+              ) : (
+                <PaidWithCarousel items={paidWith} />
+              )}
+            </div>
           </div>
 
           <div className="grid two section equal">
-            <div className="card panel">
+            <div className="card panel record-card" data-testid="goals-card">
               <CardHead title="Savings goals">
                 <Link className="btn soft small" href="/goals">Manage <IconArrowRight /></Link>
               </CardHead>
-              {carousel.length > 0 ? (
-                <GoalCarousel goals={carousel} />
+              {goalSlides.length > 0 ? (
+                <Slider label="savings goal">
+                  {goalSlides.map((g) => (
+                    <div key={g.id} className="slide goal-slide" data-testid="goal-slide">
+                      <div className="row between">
+                        <strong className="nm-plain">{g.name}</strong>
+                        <span className={g.pct >= 100 ? "tag done" : "tag"}>{g.pct >= 100 ? "Reached" : `${g.pct}%`}</span>
+                      </div>
+                      <div className="budget-figure">
+                        <strong>{g.savedText}</strong>
+                        <span className="muted">of {g.targetText} · {g.pct}%</span>
+                      </div>
+                      {/* <progress> instead of a styled div: the CSP forbids inline style attributes. */}
+                      <progress max={100} value={g.pct} aria-label={`${g.name} progress`} />
+                      <dl className="budget-facts">
+                        <div><dt>To go</dt><dd>{g.toGoText}</dd></div>
+                        <div><dt>{g.secondLabel}</dt><dd>{g.secondText}</dd></div>
+                      </dl>
+                    </div>
+                  ))}
+                </Slider>
               ) : (
                 <div className="empty compact">
                   <strong>No goals yet</strong>
@@ -215,7 +362,7 @@ export default async function DashboardPage({
                 </div>
               )}
             </div>
-            <div className="card panel">
+            <div className="card panel record-card" data-testid="budgets-card">
               <CardHead title="Budgets">
                 <Link className="btn soft small" href="/budgets">Manage <IconArrowRight /></Link>
               </CardHead>
@@ -226,18 +373,21 @@ export default async function DashboardPage({
                   <Link className="btn small" href="/budgets?add=1">Set a budget</Link>
                 </div>
               ) : (
-                <div className="budget-list hide-scroll">
+                <Slider label="budget">
                   {shownBudgets.map((b) => {
                     const used = spent.get(`${b.category.id}|${b.currency}`) ?? 0;
                     const over = used > b.amountMinor;
                     const pct = Math.round((used * 100) / b.amountMinor);
+                    const left = Math.max(b.amountMinor - used, 0);
                     return (
-                      <div key={b.id} className="budget">
+                      <div key={b.id} className="slide budget-slide" data-testid="budget-slide">
                         <div className="row between">
                           <CategoryTag name={b.category.name} color={b.category.color} />
-                          <span className={over ? "error" : "muted"}>
-                            {formatMoney(used, b.currency)} of {formatMoney(b.amountMinor, b.currency)} ({pct}%)
-                          </span>
+                          <span className={over ? "tag status over" : "tag status ok"}>{over ? "Over" : "On track"}</span>
+                        </div>
+                        <div className="budget-figure">
+                          <strong>{formatMoney(used, b.currency)}</strong>
+                          <span className="muted">of {formatMoney(b.amountMinor, b.currency)} · {pct}%</span>
                         </div>
                         {/* <progress> instead of a styled div: the CSP forbids inline style attributes. */}
                         <progress
@@ -246,10 +396,14 @@ export default async function DashboardPage({
                           value={Math.min(used, b.amountMinor)}
                           aria-label={`${b.category.name} budget used`}
                         />
+                        <dl className="budget-facts">
+                          <div><dt>{over ? "Over by" : "Left"}</dt><dd>{formatMoney(over ? used - b.amountMinor : left, b.currency)}</dd></div>
+                          <div><dt>Used</dt><dd>{pct}%</dd></div>
+                        </dl>
                       </div>
                     );
                   })}
-                </div>
+                </Slider>
               )}
             </div>
           </div>
@@ -258,35 +412,29 @@ export default async function DashboardPage({
 
       {recent.rows.length > 0 && (
         <div className="card section" id="latest">
-          <CardHead title="Expenses this month">
-            <Link className="btn soft small" href={`/expenses?month=${month}`}>See all <IconArrowRight /></Link>
-          </CardHead>
+          <CardHead title="Latest expenses" />
           <table className="responsive">
+            <thead>
+              <tr><th>Date</th><th>Expense</th><th>Category</th><th className="num">Amount</th></tr>
+            </thead>
             <tbody>
               {recent.rows.map((e) => (
                 <tr key={e.id}>
-                  <td data-label="Expense">
-                    <span>{e.description}<div className="muted">{e.spentOn.toISOString().slice(0, 10)}</div></span>
-                  </td>
+                  <td data-label="Date">{shortDate(e.spentOn)}</td>
+                  <td data-label="Expense">{e.description}</td>
                   <td data-label="Category"><CategoryTag name={e.category?.name} color={e.category?.color} /></td>
                   <td className="num" data-label="Amount">{formatMoney(e.amountMinor, currency)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <Pager
-            basePath="/dashboard"
-            params={{ month }}
-            page={page}
-            perPage={perPage}
-            hasNext={recent.hasNext}
-            rowCount={recent.rows.length}
-            pageKey="ep"
-            sizeKey="epp"
-            anchor="latest"
-          />
+          <div className="card-foot">
+            <Link className="btn" href={`/expenses?month=${month}`} data-testid="see-all-expenses">
+              See all expenses <IconArrowRight />
+            </Link>
+          </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

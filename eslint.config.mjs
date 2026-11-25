@@ -13,6 +13,7 @@ const config = [
       "coverage/**",
       "playwright-report/**",
       "test-results/**",
+      "e2e/**",
     ],
   },
   ...compat.extends("next/core-web-vitals", "next/typescript"),

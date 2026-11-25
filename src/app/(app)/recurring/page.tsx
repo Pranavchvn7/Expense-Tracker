@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RowMenu } from "@/components/RowMenu";
 import { ActionForm } from "@/components/ActionForm";
 import { createRule, deleteRule, toggleRule } from "@/actions/recurring";
 import { listRules } from "@/lib/recurring-queries";
@@ -37,7 +38,7 @@ export default async function RecurringPage({
       <details className="add">
         <summary>Add a recurring item</summary>
         <div className="body">
-          <ActionForm action={createRule} submitLabel="Save recurring item" className="stack" resetOnSuccess>
+          <ActionForm action={createRule} testId="create-rule" submitLabel="Save recurring item" className="stack" resetOnSuccess>
             <div className="row">
               <label>Type
                 <select name="kind" defaultValue="EXPENSE">
@@ -114,22 +115,22 @@ export default async function RecurringPage({
                     {r.kind === "INCOME" ? "+" : ""}{formatMoney(r.amountMinor, r.currency)}
                   </td>
                   <td className="nolabel">
-                    <div className="cell-actions">
+                    <RowMenu>
                       <Link className="btn ghost small" href={`/recurring/${r.id}/edit`}>Edit</Link>
                       {(r.active || !(r.endDate && r.nextDue > r.endDate)) && (
-                        <ActionForm action={toggleRule} submitLabel={r.active ? "Pause" : "Resume"}>
+                        <ActionForm action={toggleRule} testId="toggle-rule" submitLabel={r.active ? "Pause" : "Resume"}>
                           <input type="hidden" name="id" value={r.id} />
                         </ActionForm>
                       )}
                       <ActionForm
-                        action={deleteRule}
+                        action={deleteRule} testId="delete-rule"
                         submitLabel="Delete"
                         danger
                         confirmMessage="Delete this recurring item? Entries already created are kept."
                       >
                         <input type="hidden" name="id" value={r.id} />
                       </ActionForm>
-                    </div>
+                    </RowMenu>
                   </td>
                 </tr>
               ))}
