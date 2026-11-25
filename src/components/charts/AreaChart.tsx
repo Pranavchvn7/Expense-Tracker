@@ -7,7 +7,8 @@ const PAD = { top: 16, right: 14, bottom: 28, left: 52 };
 
 /**
  * Income vs spending as two smooth gradient areas. Server-rendered SVG: colours and gradients
- * come from CSS classes (no inline styles), values appear in hover/tap tooltips.
+ * come from CSS classes (no inline styles). Hovering a month (or tapping it) highlights its column
+ * and shows income, spending and what was left over.
  */
 export function AreaChart({
   months,
@@ -34,6 +35,8 @@ export function AreaChart({
   const ticks = [0, 0.25, 0.5, 0.75, 1].map((t) => t * max);
   const labelStep = Math.ceil(months.length / 12); // long ranges: label every 2nd/3rd month
   const dotR = months.length > 18 ? 2.5 : 4;
+  const colW = months.length > 1 ? innerW / (months.length - 1) : innerW;
+  const hitX = (i: number) => (months.length === 1 ? PAD.left : x(i) - colW / 2);
 
   return (
     <svg className="areachart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Income and spending over ${months.length} month${months.length === 1 ? "" : "s"}`}>
@@ -57,17 +60,28 @@ export function AreaChart({
       <path d={area(spPts)} fill="url(#grad-spend)" />
       <path className="line-income" d={monotonePath(incPts)} fill="none" strokeWidth="2.5" strokeLinecap="round" />
       <path className="line-spend" d={monotonePath(spPts)} fill="none" strokeWidth="2.5" strokeLinecap="round" />
-      {months.map((m, i) => (
-        <g key={m}>
-          {i % labelStep === 0 && <text className="axis-text" x={x(i)} y={H - 8} textAnchor="middle">{monthLabel(m, true)}</text>}
-          <circle className="dot-income" cx={x(i)} cy={y(income[i] ?? 0)} r={dotR}>
-            <title>{`${monthLabel(m)} income: ${formatMoney(income[i] ?? 0, currency)}`}</title>
-          </circle>
-          <circle className="dot-spend" cx={x(i)} cy={y(spent[i] ?? 0)} r={dotR}>
-            <title>{`${monthLabel(m)} spent: ${formatMoney(spent[i] ?? 0, currency)}`}</title>
-          </circle>
-        </g>
-      ))}
+      {months.map((m, i) => {
+        const inc = income[i] ?? 0;
+        const sp = spent[i] ?? 0;
+        const left = inc - sp;
+        return (
+          <g key={m}>
+            {i % labelStep === 0 && <text className="axis-text" x={x(i)} y={H - 8} textAnchor="middle">{monthLabel(m, true)}</text>}
+            <circle className="dot-income" cx={x(i)} cy={y(inc)} r={dotR} aria-hidden="true" />
+            <circle className="dot-spend" cx={x(i)} cy={y(sp)} r={dotR} aria-hidden="true" />
+            <rect className="hit-col" x={hitX(i)} y={PAD.top} width={colW} height={innerH}>
+              <title>
+                {[
+                  monthLabel(m),
+                  `Income: ${formatMoney(inc, currency)}`,
+                  `Spent: ${formatMoney(sp, currency)}`,
+                  left >= 0 ? `Left over: ${formatMoney(left, currency)}` : `Overspent by: ${formatMoney(-left, currency)}`,
+                ].join("\n")}
+              </title>
+            </rect>
+          </g>
+        );
+      })}
     </svg>
   );
 }

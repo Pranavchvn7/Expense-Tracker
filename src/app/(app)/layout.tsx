@@ -8,6 +8,7 @@ import { Shortcuts } from "@/components/Shortcuts";
 import Link from "next/link";
 import { IconSearch } from "@/components/icons";
 import { OfflineManager } from "@/components/OfflineManager";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <span id="page-rendered" hidden data-at={new Date().toISOString()} />
       <AppNav name={session.user.name} theme={theme} workMode={workMode} collapsed={navCollapsed} />
       <header className="appbar">
+        <Breadcrumbs />
         <form className="global-search" action="/expenses" method="get" role="search">
           <IconSearch />
           <input name="q" type="search" placeholder="Search expenses" aria-label="Search expenses" maxLength={80} autoComplete="off" data-testid="appbar-search" />

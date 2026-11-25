@@ -13,6 +13,7 @@ import { getUserToday, getUserPrefs } from "@/lib/preferences";
 import { upcomingJobs } from "@/lib/job-queries";
 import { freelanceLifetime, freelanceSummary, outstanding } from "@/lib/freelance-queries";
 import { FreelanceSummary } from "@/components/FreelanceSummary";
+import { Slider } from "@/components/Slider";
 import { clashingIds } from "@/lib/cal-math";
 import { timeRangeLabel } from "@/lib/job-math";
 import { monthSchema } from "@/lib/validation";
@@ -22,7 +23,6 @@ import { DonutChart } from "@/components/charts/DonutChart";
 import { AreaChart } from "@/components/charts/AreaChart";
 import { DailyBars } from "@/components/charts/DailyBars";
 import { Ring } from "@/components/charts/Ring";
-import { GoalCarousel } from "@/components/GoalCarousel";
 import { Pager } from "@/components/Pager";
 import { CategoryTag } from "@/components/CategoryTag";
 import { colorClass } from "@/lib/category-color";
@@ -36,6 +36,8 @@ import {
   IconScale,
 } from "@/components/icons";
 
+const shortDate = (d: Date) => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+
 export default async function DashboardPage({
   searchParams,
 }: {
@@ -46,12 +48,13 @@ export default async function DashboardPage({
   await materializeRecurring();
   const today = await getUserToday();
   const prefs = await getUserPrefs();
-  const upcoming = prefs.workMode === "SALARIED" ? [] : await upcomingJobs(today.iso, 5);
+  // Every upcoming job is shown in the slider, so take a generous window.
+  const upcoming = prefs.workMode === "SALARIED" ? [] : await upcomingJobs(today.iso, 50);
   const upcomingClash = clashingIds(upcoming.map((j) => ({ id: j.id, eventDate: j.eventDate.toISOString().slice(0, 10), startTime: j.startTime, endTime: j.endTime, status: j.status })));
   // Query strings are untrusted: validate, fall back to safe defaults.
   const rawMonth = monthSchema.safeParse(Array.isArray(sp.month) ? sp.month[0] : sp.month);
   const month = rawMonth.success && rawMonth.data <= today.month ? rawMonth.data : today.month;
-  const { page, perPage } = parsePaging(sp, { pageKey: "ep", sizeKey: "epp" });
+  const { page, perPage } = parsePaging(sp, { pageKey: "ep", sizeKey: "epp", defaultSize: 10 });
 
   const [data, budgets, totals, goals, recent, highlights, lifetime] = await Promise.all([
     getDashboardData(month),
@@ -67,6 +70,11 @@ export default async function DashboardPage({
   const net = data.incomeMinor - data.spentMinor;
   const rate = data.incomeMinor > 0 ? Math.round((net / data.incomeMinor) * 100) : null;
   const href = (m: string) => `/dashboard?month=${m}`;
+
+  // Greeting from the user's own clock, so "morning" means morning where they live.
+  const firstName = prefs.name.trim().split(" ")[0] || "there";
+  const hour = Number(new Intl.DateTimeFormat("en-GB", { hour: "numeric", hour12: false, timeZone: today.timezone }).format(new Date())) % 24;
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   const spent = new Map<string, number>();
   for (const t of totals) {
@@ -107,28 +115,30 @@ export default async function DashboardPage({
           <Link className="btn small" href="/jobs?add=1">Add a job</Link>
         </div>
       ) : (
-        <ul className="job-list">
+        <Slider label="upcoming job">
           {upcoming.map((j) => {
             const d = new Date(`${j.eventDate.toISOString().slice(0, 10)}T00:00:00Z`);
             const time = timeRangeLabel(j.startTime, j.endTime);
             return (
-              <li key={j.id} className="job-row" data-testid="upcoming-job">
-                <span className="date-tile" aria-hidden="true">
-                  <strong>{d.toLocaleDateString("en-GB", { day: "numeric", timeZone: "UTC" })}</strong>
-                  <span>{d.toLocaleDateString("en-GB", { month: "short", timeZone: "UTC" })}</span>
-                </span>
-                <span className="job-main">
-                  <span className="nm-plain">{j.title}</span>
-                  <span className="sub">{j.client.name}{time ? ` · ${time}` : ""}</span>
-                </span>
-                <span className="job-side">
-                  {upcomingClash.has(j.id) && <span className="tag st-overdue">Clash</span>}
-                  <Link className="btn soft small" href={`/jobs/${j.id}`} data-testid="upcoming-open">Open</Link>
-                </span>
-              </li>
+              <div key={j.id} className="slide" data-testid="upcoming-job">
+                <div className="job-row">
+                  <span className="date-tile" aria-hidden="true">
+                    <strong>{d.toLocaleDateString("en-GB", { day: "numeric", timeZone: "UTC" })}</strong>
+                    <span>{d.toLocaleDateString("en-GB", { month: "short", timeZone: "UTC" })}</span>
+                  </span>
+                  <span className="job-main">
+                    <span className="nm-plain">{j.title}</span>
+                    <span className="sub">{j.client.name}{time ? ` · ${time}` : ""}</span>
+                  </span>
+                  <span className="job-side">
+                    {upcomingClash.has(j.id) && <span className="tag st-overdue">Clash</span>}
+                    <Link className="btn soft small" href={`/jobs/${j.id}`} data-testid="upcoming-open">Open</Link>
+                  </span>
+                </div>
+              </div>
             );
           })}
-        </ul>
+        </Slider>
       )}
     </div>
   ) : null;
@@ -157,7 +167,7 @@ export default async function DashboardPage({
     <>
       <div className="page-head">
         <div>
-          <h1>Overview</h1>
+          <h1 data-testid="greeting">{greeting}, {firstName}</h1>
           <p>Your money in {monthLabel(month)}</p>
         </div>
         <div className="month-nav" aria-label="Choose month">
@@ -295,16 +305,37 @@ export default async function DashboardPage({
 
           <div className="grid two section equal">
             <TopExpensesCard rows={highlights.top} currency={currency} />
-            <PaymentMethodsCard rows={highlights.payments.map((p) => ({ label: paymentLabel(p.method), count: p.count, value: p.value }))} currency={currency} />
+            <PaymentMethodsCard
+              rows={highlights.payments
+                .filter((p) => p.value > 0) // only methods that were actually used this month
+                .map((p) => ({ label: paymentLabel(p.method), count: p.count, value: p.value }))}
+              currency={currency}
+            />
           </div>
 
           <div className="grid two section equal">
-            <div className="card panel">
+            <div className="card panel record-card" data-testid="goals-card">
               <CardHead title="Savings goals">
                 <Link className="btn soft small" href="/goals">Manage <IconArrowRight /></Link>
               </CardHead>
               {carousel.length > 0 ? (
-                <GoalCarousel goals={carousel} />
+                <Slider label="savings goal">
+                  {carousel.map((g) => (
+                    <div key={g.id} className="slide goal-slide" data-testid="goal-slide">
+                      <div className="row between">
+                        <strong className="nm-plain">{g.name}</strong>
+                        <span className={g.pct >= 100 ? "tag done" : "tag"}>{g.pct >= 100 ? "Reached" : `${g.pct}%`}</span>
+                      </div>
+                      {/* <progress> instead of a styled div: the CSP forbids inline style attributes. */}
+                      <progress max={100} value={g.pct} aria-label={`${g.name} progress`} />
+                      <div className="row between">
+                        <strong>{g.savedText}</strong>
+                        <span className="muted">of {g.targetText}</span>
+                      </div>
+                      {g.note && <span className="sub">{g.note}</span>}
+                    </div>
+                  ))}
+                </Slider>
               ) : (
                 <div className="empty compact">
                   <strong>No goals yet</strong>
@@ -313,7 +344,7 @@ export default async function DashboardPage({
                 </div>
               )}
             </div>
-            <div className="card panel">
+            <div className="card panel record-card" data-testid="budgets-card">
               <CardHead title="Budgets">
                 <Link className="btn soft small" href="/budgets">Manage <IconArrowRight /></Link>
               </CardHead>
@@ -324,18 +355,21 @@ export default async function DashboardPage({
                   <Link className="btn small" href="/budgets?add=1">Set a budget</Link>
                 </div>
               ) : (
-                <div className="budget-list hide-scroll">
+                <Slider label="budget">
                   {shownBudgets.map((b) => {
                     const used = spent.get(`${b.category.id}|${b.currency}`) ?? 0;
                     const over = used > b.amountMinor;
                     const pct = Math.round((used * 100) / b.amountMinor);
+                    const left = Math.max(b.amountMinor - used, 0);
                     return (
-                      <div key={b.id} className="budget">
+                      <div key={b.id} className="slide budget-slide" data-testid="budget-slide">
                         <div className="row between">
                           <CategoryTag name={b.category.name} color={b.category.color} />
-                          <span className={over ? "error" : "muted"}>
-                            {formatMoney(used, b.currency)} of {formatMoney(b.amountMinor, b.currency)} ({pct}%)
-                          </span>
+                          <span className={over ? "tag status over" : "tag status ok"}>{over ? "Over" : "On track"}</span>
+                        </div>
+                        <div className="budget-figure">
+                          <strong>{formatMoney(used, b.currency)}</strong>
+                          <span className="muted">of {formatMoney(b.amountMinor, b.currency)} · {pct}%</span>
                         </div>
                         {/* <progress> instead of a styled div: the CSP forbids inline style attributes. */}
                         <progress
@@ -344,10 +378,14 @@ export default async function DashboardPage({
                           value={Math.min(used, b.amountMinor)}
                           aria-label={`${b.category.name} budget used`}
                         />
+                        <dl className="budget-facts">
+                          <div><dt>{over ? "Over by" : "Left"}</dt><dd>{formatMoney(over ? used - b.amountMinor : left, b.currency)}</dd></div>
+                          <div><dt>Used</dt><dd>{pct}%</dd></div>
+                        </dl>
                       </div>
                     );
                   })}
-                </div>
+                </Slider>
               )}
             </div>
           </div>
@@ -360,12 +398,14 @@ export default async function DashboardPage({
             <Link className="btn soft small" href={`/expenses?month=${month}`}>See all <IconArrowRight /></Link>
           </CardHead>
           <table className="responsive">
+            <thead>
+              <tr><th>Date</th><th>Expense</th><th>Category</th><th className="num">Amount</th></tr>
+            </thead>
             <tbody>
               {recent.rows.map((e) => (
                 <tr key={e.id}>
-                  <td data-label="Expense">
-                    <span>{e.description}<div className="muted">{e.spentOn.toISOString().slice(0, 10)}</div></span>
-                  </td>
+                  <td data-label="Date">{shortDate(e.spentOn)}</td>
+                  <td data-label="Expense">{e.description}</td>
                   <td data-label="Category"><CategoryTag name={e.category?.name} color={e.category?.color} /></td>
                   <td className="num" data-label="Amount">{formatMoney(e.amountMinor, currency)}</td>
                 </tr>
