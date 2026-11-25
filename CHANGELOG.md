@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.6
+### Changed
+- Dashboard: Latest expenses shows the last 5 with a "See all expenses" button (no pager)
+- Dashboard: Savings goals slides use the same layout as Budgets (figure, progress, two facts)
+- Dashboard: Paid with is an animated carousel per payment method, with a share ring, icon and arrows
+- Dashboard: month navigation and the theme toggle are fixed at the top right; search and the user pill sit to their left
+- Dashboard: Paid with, Latest expenses and the top-right controls are shown on every breakpoint
+
 ## 0.8.5
 ### Changed
 - Dashboard: greeting with your name replaces the "Overview" heading

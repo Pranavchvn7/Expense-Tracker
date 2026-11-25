@@ -4,26 +4,26 @@ import { listBudgets, monthRange, monthTotalsByCategory } from "@/lib/queries";
 import { getDashboardData, getLifetimeCounts, getMonthHighlights, listRecentExpenses } from "@/lib/finance-queries";
 import { paymentLabel } from "@/lib/payment-method";
 import { CardHead } from "@/components/cards/CardHead";
-import { CategoryDetailCard, PaymentMethodsCard, TopExpensesCard } from "@/components/cards/ListCards";
+import { CategoryDetailCard, TopExpensesCard } from "@/components/cards/ListCards";
 import { listGoals } from "@/lib/goal-queries";
 import { monthlyNeeded, percent } from "@/lib/goal-math";
 import { formatMoney, monthLabel } from "@/lib/money";
 import { addMonthsKey } from "@/lib/chart-math";
-import { getUserToday, getUserPrefs } from "@/lib/preferences";
+import { getTheme, getUserToday, getUserPrefs } from "@/lib/preferences";
 import { upcomingJobs } from "@/lib/job-queries";
 import { freelanceLifetime, freelanceSummary, outstanding } from "@/lib/freelance-queries";
 import { FreelanceSummary } from "@/components/FreelanceSummary";
 import { Slider } from "@/components/Slider";
+import { PaidWithCarousel, type PaidWithItem } from "@/components/PaidWithCarousel";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { clashingIds } from "@/lib/cal-math";
 import { timeRangeLabel } from "@/lib/job-math";
 import { monthSchema } from "@/lib/validation";
-import { parsePaging } from "@/lib/paging";
 import { compareSpending, momText } from "@/lib/mom-math";
 import { DonutChart } from "@/components/charts/DonutChart";
 import { AreaChart } from "@/components/charts/AreaChart";
 import { DailyBars } from "@/components/charts/DailyBars";
 import { Ring } from "@/components/charts/Ring";
-import { Pager } from "@/components/Pager";
 import { CategoryTag } from "@/components/CategoryTag";
 import { colorClass } from "@/lib/category-color";
 import {
@@ -36,6 +36,8 @@ import {
   IconScale,
 } from "@/components/icons";
 
+const EXPENSES_SHOWN = 5;
+
 const shortDate = (d: Date) => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 
 export default async function DashboardPage({
@@ -46,22 +48,20 @@ export default async function DashboardPage({
   const sp = await searchParams;
   // Create anything that fell due since the last visit before reading the data.
   await materializeRecurring();
-  const today = await getUserToday();
-  const prefs = await getUserPrefs();
+  const [today, prefs, theme] = await Promise.all([getUserToday(), getUserPrefs(), getTheme()]);
   // Every upcoming job is shown in the slider, so take a generous window.
   const upcoming = prefs.workMode === "SALARIED" ? [] : await upcomingJobs(today.iso, 50);
   const upcomingClash = clashingIds(upcoming.map((j) => ({ id: j.id, eventDate: j.eventDate.toISOString().slice(0, 10), startTime: j.startTime, endTime: j.endTime, status: j.status })));
   // Query strings are untrusted: validate, fall back to safe defaults.
   const rawMonth = monthSchema.safeParse(Array.isArray(sp.month) ? sp.month[0] : sp.month);
   const month = rawMonth.success && rawMonth.data <= today.month ? rawMonth.data : today.month;
-  const { page, perPage } = parsePaging(sp, { pageKey: "ep", sizeKey: "epp", defaultSize: 10 });
 
   const [data, budgets, totals, goals, recent, highlights, lifetime] = await Promise.all([
     getDashboardData(month),
     listBudgets(),
     monthTotalsByCategory(month),
     listGoals(12),
-    listRecentExpenses(month, page, perPage),
+    listRecentExpenses(month, 1, EXPENSES_SHOWN),
     getMonthHighlights(month),
     getLifetimeCounts(),
   ]);
@@ -149,27 +149,37 @@ export default async function DashboardPage({
     </>
   ) : null;
 
-  const carousel = goals.map((g) => {
-    const per = monthlyNeeded(Math.max(g.targetMinor - g.savedMinor, 0), g.targetDate, today.date);
+  // Goals use the same slide shape as budgets: figure, progress, then two facts.
+  const goalSlides = goals.map((g) => {
+    const toGo = Math.max(g.targetMinor - g.savedMinor, 0);
+    const per = g.targetDate ? monthlyNeeded(toGo, g.targetDate, today.date) : null;
     return {
       id: g.id,
       name: g.name,
       savedText: formatMoney(g.savedMinor, g.currency),
       targetText: formatMoney(g.targetMinor, g.currency),
       pct: percent(g.savedMinor, g.targetMinor),
-      note: g.targetDate
-        ? `By ${g.targetDate.toISOString().slice(0, 10)}${per !== null ? ` · about ${formatMoney(per, g.currency)} a month` : ""}`
-        : "",
+      toGoText: formatMoney(toGo, g.currency),
+      // Second fact: what it needs each month if there is a date, otherwise the date itself.
+      secondLabel: per !== null ? "A month" : "By",
+      secondText: per !== null ? formatMoney(per, g.currency) : g.targetDate ? shortDate(g.targetDate) : "No date",
     };
   });
 
+  // Paid with: every method used this month, plus "Not set", each with its share of spending.
+  const paidWith: PaidWithItem[] = highlights.payments
+    .filter((p) => p.value > 0)
+    .map((p) => ({
+      method: p.method,
+      label: paymentLabel(p.method),
+      count: p.count,
+      valueText: formatMoney(p.value, currency),
+      share: data.spentMinor > 0 ? Math.round((p.value * 100) / data.spentMinor) : 0,
+    }));
+
   return (
-    <>
-      <div className="page-head">
-        <div>
-          <h1 data-testid="greeting">{greeting}, {firstName}</h1>
-          <p>Your money in {monthLabel(month)}</p>
-        </div>
+    <div className="dash">
+      <div className="top-actions" data-testid="top-actions">
         <div className="month-nav" aria-label="Choose month">
           <Link href={href(addMonthsKey(month, -1))} aria-label="Previous month"><IconChevronLeft /></Link>
           <span className="current">{monthLabel(month)}</span>
@@ -181,6 +191,14 @@ export default async function DashboardPage({
           >
             <IconChevronRight />
           </Link>
+        </div>
+        <ThemeToggle initial={theme} />
+      </div>
+
+      <div className="page-head">
+        <div>
+          <h1 data-testid="greeting">{greeting}, {firstName}</h1>
+          <p>Your money in {monthLabel(month)}</p>
         </div>
       </div>
 
@@ -305,12 +323,14 @@ export default async function DashboardPage({
 
           <div className="grid two section equal">
             <TopExpensesCard rows={highlights.top} currency={currency} />
-            <PaymentMethodsCard
-              rows={highlights.payments
-                .filter((p) => p.value > 0) // only methods that were actually used this month
-                .map((p) => ({ label: paymentLabel(p.method), count: p.count, value: p.value }))}
-              currency={currency}
-            />
+            <div className="card panel" data-testid="paid-with-card">
+              <CardHead title="Paid with" />
+              {paidWith.length === 0 ? (
+                <p className="muted">No expenses in this period.</p>
+              ) : (
+                <PaidWithCarousel items={paidWith} />
+              )}
+            </div>
           </div>
 
           <div className="grid two section equal">
@@ -318,21 +338,24 @@ export default async function DashboardPage({
               <CardHead title="Savings goals">
                 <Link className="btn soft small" href="/goals">Manage <IconArrowRight /></Link>
               </CardHead>
-              {carousel.length > 0 ? (
+              {goalSlides.length > 0 ? (
                 <Slider label="savings goal">
-                  {carousel.map((g) => (
+                  {goalSlides.map((g) => (
                     <div key={g.id} className="slide goal-slide" data-testid="goal-slide">
                       <div className="row between">
                         <strong className="nm-plain">{g.name}</strong>
                         <span className={g.pct >= 100 ? "tag done" : "tag"}>{g.pct >= 100 ? "Reached" : `${g.pct}%`}</span>
                       </div>
+                      <div className="budget-figure">
+                        <strong>{g.savedText}</strong>
+                        <span className="muted">of {g.targetText} · {g.pct}%</span>
+                      </div>
                       {/* <progress> instead of a styled div: the CSP forbids inline style attributes. */}
                       <progress max={100} value={g.pct} aria-label={`${g.name} progress`} />
-                      <div className="row between">
-                        <strong>{g.savedText}</strong>
-                        <span className="muted">of {g.targetText}</span>
-                      </div>
-                      {g.note && <span className="sub">{g.note}</span>}
+                      <dl className="budget-facts">
+                        <div><dt>To go</dt><dd>{g.toGoText}</dd></div>
+                        <div><dt>{g.secondLabel}</dt><dd>{g.secondText}</dd></div>
+                      </dl>
                     </div>
                   ))}
                 </Slider>
@@ -394,9 +417,7 @@ export default async function DashboardPage({
 
       {recent.rows.length > 0 && (
         <div className="card section" id="latest">
-          <CardHead title="Expenses this month">
-            <Link className="btn soft small" href={`/expenses?month=${month}`}>See all <IconArrowRight /></Link>
-          </CardHead>
+          <CardHead title="Latest expenses" />
           <table className="responsive">
             <thead>
               <tr><th>Date</th><th>Expense</th><th>Category</th><th className="num">Amount</th></tr>
@@ -412,19 +433,13 @@ export default async function DashboardPage({
               ))}
             </tbody>
           </table>
-          <Pager
-            basePath="/dashboard"
-            params={{ month }}
-            page={page}
-            perPage={perPage}
-            hasNext={recent.hasNext}
-            rowCount={recent.rows.length}
-            pageKey="ep"
-            sizeKey="epp"
-            anchor="latest"
-          />
+          <div className="card-foot">
+            <Link className="btn" href={`/expenses?month=${month}`} data-testid="see-all-expenses">
+              See all expenses <IconArrowRight />
+            </Link>
+          </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
